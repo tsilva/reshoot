@@ -73,6 +73,29 @@ type GeneratedReference = {
   image: string;
 };
 
+type GenerationImageProfile = "original" | "reference";
+
+type GenerationResponse = {
+  image?: string;
+  error?: string;
+};
+
+const GENERATION_IMAGE_OPTIONS: Record<
+  GenerationImageProfile,
+  { maxDimension: number; maxLength: number; quality: number }
+> = {
+  original: {
+    maxDimension: 1600,
+    maxLength: 1_800_000,
+    quality: 0.86,
+  },
+  reference: {
+    maxDimension: 768,
+    maxLength: 420_000,
+    quality: 0.72,
+  },
+};
+
 function normalizeDegrees(value: number) {
   return ((value % 360) + 360) % 360;
 }
@@ -106,6 +129,105 @@ function fileToDataUrl(file: Blob): Promise<string> {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
+}
+
+function loadDataUrlImage(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = document.createElement("img");
+    image.onload = () => resolve(image);
+    image.onerror = () =>
+      reject(new Error("The image could not be prepared for generation."));
+    image.src = dataUrl;
+  });
+}
+
+function canvasToDataUrl(
+  canvas: HTMLCanvasElement,
+  quality: number,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("The image could not be prepared for generation."));
+          return;
+        }
+        fileToDataUrl(blob).then(resolve, reject);
+      },
+      "image/webp",
+      quality,
+    );
+  });
+}
+
+async function compactGenerationImage(
+  dataUrl: string,
+  profile: GenerationImageProfile,
+) {
+  const image = await loadDataUrlImage(dataUrl);
+  const options = GENERATION_IMAGE_OPTIONS[profile];
+  let maxDimension = options.maxDimension;
+  let quality = options.quality;
+  let compacted = dataUrl;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const scale = Math.min(
+      1,
+      maxDimension / Math.max(image.naturalWidth, image.naturalHeight),
+    );
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      throw new Error("The image could not be prepared for generation.");
+    }
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    compacted = await canvasToDataUrl(canvas, quality);
+
+    if (compacted.length <= options.maxLength) return compacted;
+
+    maxDimension = Math.round(maxDimension * 0.8);
+    quality = Math.max(0.58, quality - 0.08);
+  }
+
+  return compacted;
+}
+
+async function readGenerationResponse(response: Response) {
+  const responseText = await response.text();
+  let result: GenerationResponse | null = null;
+
+  if (responseText) {
+    try {
+      result = JSON.parse(responseText) as GenerationResponse;
+    } catch {
+      result = null;
+    }
+  }
+
+  if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error(
+        "The generation service rejected this image request as too large. Retry the shot; if it repeats, use a smaller original photo.",
+      );
+    }
+
+    throw new Error(
+      result?.error ??
+        `The generation service returned an unexpected response (${response.status}). Retry this shot.`,
+    );
+  }
+
+  if (!result?.image) {
+    throw new Error(
+      "The generation service did not return an image. Retry this shot.",
+    );
+  }
+
+  return result.image;
 }
 
 function dataUrlToBytes(dataUrl: string) {
@@ -186,6 +308,12 @@ export function Studio() {
   const inputRef = useRef<HTMLInputElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const previousStepRef = useRef<StudioStep | null>(null);
+  const preparedImagesRef = useRef(
+    new Map<
+      string,
+      Partial<Record<GenerationImageProfile, Promise<string>>>
+    >(),
+  );
 
   useEffect(() => {
     let active = true;
@@ -283,6 +411,7 @@ export function Studio() {
     }
 
     const image = await fileToDataUrl(file);
+    preparedImagesRef.current.clear();
     setState((current) => ({
       ...createInitialState(),
       original: image,
@@ -298,6 +427,7 @@ export function Studio() {
     try {
       const response = await fetch("/assets/sample-doll.png");
       const image = await fileToDataUrl(await response.blob());
+      preparedImagesRef.current.clear();
       setState({
         ...createInitialState(),
         original: image,
@@ -408,25 +538,58 @@ export function Studio() {
   ) {
     if (!original) throw new Error("The original image is missing.");
 
+    function prepareImage(
+      image: string,
+      profile: GenerationImageProfile,
+    ): Promise<string> {
+      const cached = preparedImagesRef.current.get(image) ?? {};
+      const existing = cached[profile];
+      if (existing) return existing;
+
+      if (
+        !preparedImagesRef.current.has(image) &&
+        preparedImagesRef.current.size >= 12
+      ) {
+        const oldestImage = preparedImagesRef.current.keys().next().value;
+        if (oldestImage) preparedImagesRef.current.delete(oldestImage);
+      }
+
+      const prepared = compactGenerationImage(image, profile);
+      cached[profile] = prepared;
+      preparedImagesRef.current.set(image, cached);
+      void prepared.catch(() => {
+        if (cached[profile] === prepared) {
+          delete cached[profile];
+          if (!cached.original && !cached.reference) {
+            preparedImagesRef.current.delete(image);
+          }
+        }
+      });
+      return prepared;
+    }
+
+    const [preparedOriginal, ...preparedReferences] = await Promise.all([
+      prepareImage(original, "original"),
+      ...references.map((reference) =>
+        prepareImage(reference.image, "reference"),
+      ),
+    ]);
+
     const response = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        original,
-        references,
+        original: preparedOriginal,
+        references: references.map((reference, index) => ({
+          ...reference,
+          image: preparedReferences[index],
+        })),
         target,
         feedback,
       }),
     });
-    const result = (await response.json()) as {
-      image?: string;
-      error?: string;
-    };
 
-    if (!response.ok || !result.image) {
-      throw new Error(result.error ?? "Generation failed.");
-    }
-    return result.image;
+    return readGenerationResponse(response);
   }
 
   async function generateAll() {
@@ -445,31 +608,24 @@ export function Studio() {
       shots,
     }));
 
-    const generatedReferences: GeneratedReference[] = [];
-
-    for (const shot of shots) {
-      updateShot(shot.id, { status: "generating", error: undefined });
-      try {
-        const image = await requestGeneration(
-          shot.angle,
-          generatedReferences.slice(-3),
-        );
-        generatedReferences.push({
-          label: shot.angle.label,
-          image,
-        });
-        updateShot(shot.id, {
-          imageUrl: image,
-          status: "ready",
-          error: undefined,
-        });
-      } catch (error) {
-        updateShot(shot.id, {
-          status: "error",
-          error: generationErrorMessage(error),
-        });
-      }
-    }
+    await Promise.all(
+      shots.map(async (shot) => {
+        updateShot(shot.id, { status: "generating", error: undefined });
+        try {
+          const image = await requestGeneration(shot.angle, []);
+          updateShot(shot.id, {
+            imageUrl: image,
+            status: "ready",
+            error: undefined,
+          });
+        } catch (error) {
+          updateShot(shot.id, {
+            status: "error",
+            error: generationErrorMessage(error),
+          });
+        }
+      }),
+    );
 
     setState((current) => ({ ...current, step: "review" }));
   }
@@ -577,6 +733,7 @@ export function Studio() {
       return;
     }
     await clearShoot();
+    preparedImagesRef.current.clear();
     setState(createInitialState());
     setActiveShotId(null);
     setLastSaved(null);
@@ -1228,8 +1385,8 @@ function GeneratingView({
   state: StudioState;
   original: string;
 }) {
-  const completed = state.shots.filter((shot) =>
-    ["ready", "approved", "rejected"].includes(shot.status),
+  const completed = state.shots.filter(
+    (shot) => shot.status !== "queued" && shot.status !== "generating",
   ).length;
   const progress =
     state.shots.length === 0
@@ -1238,20 +1395,36 @@ function GeneratingView({
 
   return (
     <section className="generating-layout">
-      <div className="generating-orbit" aria-hidden="true">
-        <div className="generating-original">
-          <Image
-            src={original}
-            alt=""
-            fill
-            sizes="220px"
-            unoptimized
-            priority
-          />
+      <div className="generation-preview">
+        <div className="generation-preview-heading">
+          <div>
+            <span className="panel-label">Live contact sheet</span>
+            <strong>Results appear as they finish</strong>
+          </div>
+          <span className="generation-original-chip">
+            <span>
+              <Image
+                src={original}
+                alt=""
+                fill
+                sizes="36px"
+                unoptimized
+                priority
+              />
+            </span>
+            Original
+          </span>
         </div>
-        <span className="generating-spark">
-          <SpinnerGap size={28} weight="bold" className="spin" />
-        </span>
+
+        <div className="generation-preview-grid" aria-live="polite">
+          {state.shots.map((shot, index) => (
+            <GenerationPreviewCard
+              key={shot.id}
+              shot={shot}
+              index={index}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="generating-copy">
@@ -1260,12 +1433,12 @@ function GeneratingView({
           Building your contact sheet
         </span>
         <h1 data-step-heading tabIndex={-1}>
-          Keeping every view in character.
+          Every view is in motion.
         </h1>
         <p>
-          The original remains the identity anchor. Each finished AI view is
-          clearly labelled and used only as an additional spatial reference for
-          the next angle.
+          All selected perspectives are generating in parallel from the same
+          original identity anchor. Finished photos appear in the contact sheet
+          immediately—there is no need to wait for the full batch.
         </p>
 
         <div className="progress-track" aria-label={`${progress}% complete`}>
@@ -1289,6 +1462,51 @@ function GeneratingView({
         </div>
       </div>
     </section>
+  );
+}
+
+function GenerationPreviewCard({
+  shot,
+  index,
+}: {
+  shot: Shot;
+  index: number;
+}) {
+  const isReady = shot.status === "ready";
+  const isError = shot.status === "error";
+
+  return (
+    <article
+      className={`generation-preview-card ${shot.status}`}
+      aria-label={`${shot.angle.label}: ${
+        isReady ? "ready" : isError ? "failed" : "generating"
+      }`}
+    >
+      <div className="generation-preview-image">
+        {shot.imageUrl ? (
+          <Image
+            src={shot.imageUrl}
+            alt={`${shot.angle.label} generated product view`}
+            fill
+            sizes="(max-width: 759px) 44vw, 180px"
+            unoptimized
+          />
+        ) : (
+          <span className="generation-preview-placeholder">
+            {isError ? (
+              <WarningCircle size={24} weight="fill" />
+            ) : (
+              <SpinnerGap size={24} weight="bold" className="spin" />
+            )}
+          </span>
+        )}
+      </div>
+      <div className="generation-preview-meta">
+        <span>{String(index + 1).padStart(2, "0")}</span>
+        <strong>{shot.angle.label}</strong>
+        <GenerationStatus status={shot.status} />
+      </div>
+    </article>
   );
 }
 

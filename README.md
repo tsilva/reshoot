@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./logo.png" alt="Reshoot" width="320" />
+  <img src="./public/brand/web-seo/og-image-1200x630-ctr.png" alt="Reshoot turns one product photo into a consistent set of studio angles" width="640" />
 
   **📸 Every angle, one product. 📸**
 </div>

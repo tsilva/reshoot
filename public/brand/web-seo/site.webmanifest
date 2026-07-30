@@ -1,6 +1,9 @@
 {
-  "name": "Reshoot",
+  "name": "Reshoot — AI Product Photography",
   "short_name": "Reshoot",
+  "description": "Turn one product photo into a consistent set of studio-ready angles. Choose the perspectives you need, review every shot, and download the keepers.",
+  "id": "/",
+  "start_url": "/",
   "icons": [
     {
       "src": "android-chrome-192.png",

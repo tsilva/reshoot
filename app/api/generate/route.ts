@@ -144,6 +144,10 @@ export async function POST(request: Request) {
       .catch(() => null)) as OpenRouterImagesResponse | null;
 
     if (!upstream.ok) {
+      console.error("OpenRouter image generation failed", {
+        status: upstream.status,
+        message: errorMessage(result, "No error message returned."),
+      });
       return Response.json(
         {
           error: errorMessage(
@@ -177,6 +181,10 @@ export async function POST(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Image generation failed.";
+    console.error("Image generation route failed", {
+      name: error instanceof Error ? error.name : "UnknownError",
+      message,
+    });
     return Response.json({ error: message }, { status: 500 });
   }
 }
