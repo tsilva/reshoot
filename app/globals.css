@@ -811,88 +811,260 @@ h3 {
 }
 
 .orbit-composer {
+  display: grid;
+  gap: 14px;
   min-width: 0;
 }
 
-.orbit-stage {
-  position: relative;
-  display: grid;
-  width: 100%;
-  aspect-ratio: 1;
-  place-items: center;
-  overflow: hidden;
+.orbit-map-shell {
+  padding: 14px;
   border: 1px solid rgba(191, 197, 228, 0.22);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--ink);
-  box-shadow: var(--shadow-strong);
-  touch-action: none;
-  cursor: grab;
-  user-select: none;
-}
-
-.orbit-stage:active {
-  cursor: grabbing;
-}
-
-.orbit-stage canvas {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.orb-product {
-  position: absolute;
-  z-index: 3;
-  width: 29%;
-  aspect-ratio: 1;
-  overflow: hidden;
-  border: 3px solid rgba(255, 255, 255, 0.78);
-  border-radius: 999px;
-  background: var(--surface-lowest);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
-  pointer-events: none;
-}
-
-.orb-product img {
-  object-fit: cover;
-}
-
-.camera-pin {
-  position: absolute;
-  z-index: 5;
-  display: inline-flex;
-  width: 46px;
-  height: 46px;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 3px solid rgba(255, 255, 255, 0.9);
-  border-radius: 14px;
-  background: var(--coral);
   color: #fff;
-  box-shadow: 0 9px 24px rgba(0, 0, 0, 0.28);
-  pointer-events: none;
+  box-shadow: var(--shadow-strong);
 }
 
-.orbit-gesture {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  z-index: 6;
+.orbit-map-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.orbit-map-heading > span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--coral-pale);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.orbit-map-heading strong {
+  max-width: 50%;
+  font-size: 13px;
+  text-align: right;
+}
+
+.orbit-dial {
+  position: relative;
+  width: min(82%, 470px);
+  aspect-ratio: 1;
+  margin: 30px auto 22px;
+  border: 1px solid rgba(230, 233, 255, 0.32);
   border-radius: 999px;
-  background: rgba(10, 17, 40, 0.84);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 750;
-  transform: translateX(-50%);
+  background:
+    radial-gradient(
+      circle at 50% 46%,
+      rgba(255, 180, 165, 0.16),
+      rgba(16, 26, 56, 0.2) 38%,
+      rgba(16, 26, 56, 0.96) 72%
+    ),
+    var(--ink);
+  touch-action: none;
+  cursor: crosshair;
+  user-select: none;
+}
+
+.orbit-dial:active {
+  cursor: grabbing;
+}
+
+.orbit-dial:focus-visible {
+  outline: 3px solid var(--coral-pale);
+  outline-offset: 5px;
+}
+
+.orbit-axis {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  background: rgba(230, 233, 255, 0.2);
   pointer-events: none;
+}
+
+.orbit-axis-horizontal {
+  top: 50%;
+  right: 5%;
+  left: 5%;
+  height: 1px;
+}
+
+.orbit-axis-vertical {
+  top: 5%;
+  bottom: 5%;
+  left: 50%;
+  width: 1px;
+}
+
+.orbit-landmark {
+  position: absolute;
+  z-index: 2;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.orbit-landmark-0 {
+  top: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.orbit-landmark-90 {
+  top: 50%;
+  right: 3%;
+  transform: translateY(-50%);
+}
+
+.orbit-landmark-180 {
+  bottom: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.orbit-landmark-270 {
+  top: 50%;
+  left: 3%;
+  transform: translateY(-50%);
+}
+
+.orbit-product {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  width: 34%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.88);
+  border-radius: 999px;
+  background: var(--surface-lowest);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.orbit-product img {
+  object-fit: cover;
+}
+
+.orbit-angle-pin,
+.orbit-camera-handle {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.orbit-angle-pin {
+  z-index: 5;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: var(--lavender);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 850;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.orbit-angle-pin:hover,
+.orbit-angle-pin:focus-visible {
+  background: #fff;
+  outline: 3px solid rgba(255, 180, 165, 0.68);
+  outline-offset: 2px;
+}
+
+.orbit-camera-handle {
+  z-index: 6;
+  width: 50px;
+  height: 50px;
+  border: 3px solid #fff;
+  background: var(--coral);
+  color: #fff;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.34),
+    0 0 0 5px rgba(255, 113, 87, 0.2);
+  pointer-events: none;
+}
+
+.orbit-camera-handle.is-editing {
+  background: var(--sage);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.34),
+    0 0 0 5px rgba(103, 132, 103, 0.25);
+}
+
+.orbit-map-hint {
+  max-width: 380px;
+  margin: 0 auto;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.tilt-control {
+  padding: 13px 14px 11px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.tilt-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tilt-heading > span {
+  display: grid;
+  gap: 2px;
+  color: var(--text-soft);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.tilt-heading strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.tilt-heading output {
+  color: var(--coral-strong);
+  font-family: var(--font-display-stack);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tilt-control input[type="range"] {
+  width: 100%;
+  height: 28px;
+  margin: 8px 0 0;
+  accent-color: var(--coral);
+  cursor: pointer;
+}
+
+.tilt-labels {
+  display: flex;
+  justify-content: space-between;
+  color: #6f6562;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .orbit-readout {
@@ -900,26 +1072,45 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 2px 0;
+  padding: 0 2px;
   color: var(--text-soft);
   font-size: 12px;
 }
 
 .orbit-values {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
+  display: grid;
+  gap: 2px;
 }
 
 .orbit-values strong {
   color: var(--ink);
+  font-size: 14px;
+}
+
+.orbit-values span {
+  color: #6f6562;
+  font-size: 11px;
 }
 
 .orbit-keyboard-controls {
   display: flex;
   justify-content: center;
+  gap: 18px;
+}
+
+.orbit-keyboard-controls > div {
+  display: grid;
+  grid-template-columns: auto 42px 42px;
+  align-items: center;
   gap: 8px;
-  margin-top: 10px;
+}
+
+.orbit-keyboard-controls > div > span {
+  color: #6f6562;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .plan-panel {
@@ -946,6 +1137,10 @@ h3 {
   font-size: 21px;
 }
 
+.plan-new-angle {
+  white-space: nowrap;
+}
+
 .shot-plan-list {
   display: grid;
   gap: 0;
@@ -967,10 +1162,24 @@ h3 {
   font-weight: 800;
 }
 
-.shot-plan-item > span:nth-child(2) {
+.shot-plan-select {
   display: grid;
   gap: 2px;
   min-width: 0;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.shot-plan-select:hover {
+  background: var(--surface-low);
+}
+
+.shot-plan-item.is-editing .shot-plan-select {
+  background: var(--sage-pale);
 }
 
 .shot-plan-item strong {

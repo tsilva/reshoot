@@ -8,3 +8,6 @@ runs/
 *.log
 *.tsbuildinfo
 !.env.example
+
+# Local Stitch MCP project reference
+design/stitch-source/STITCH_PROJECT.local.md
