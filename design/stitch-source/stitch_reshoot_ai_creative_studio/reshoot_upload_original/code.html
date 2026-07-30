@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Reshoot - New Shoot</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Bricolage Grotesque & Hanken Grotesk -->
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:ital,opsz,wght@0,12..96,200..800;1,12..96,200..800&amp;family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-primary": "#ffb4a5",
+                    "on-background": "#1a1c1a",
+                    "on-primary-fixed": "#3e0400",
+                    "secondary-container": "#d8defe",
+                    "on-tertiary-fixed-variant": "#444655",
+                    "surface": "#faf9f6",
+                    "on-primary-container": "#680c00",
+                    "inverse-surface": "#2f312f",
+                    "tertiary-fixed-dim": "#c5c5d8",
+                    "tertiary": "#5c5d6e",
+                    "error-container": "#ffdad6",
+                    "on-surface-variant": "#59413c",
+                    "secondary-fixed": "#dce1ff",
+                    "on-tertiary-container": "#2f3140",
+                    "outline-variant": "#e1bfb8",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed": "#191b29",
+                    "secondary": "#575d78",
+                    "on-error-container": "#93000a",
+                    "surface-container-high": "#e9e8e5",
+                    "on-error": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#f2f1ee",
+                    "background": "#faf9f6",
+                    "primary-fixed": "#ffdad3",
+                    "surface-container": "#efeeeb",
+                    "tertiary-fixed": "#e1e1f5",
+                    "tertiary-container": "#9899ab",
+                    "on-secondary-container": "#5b617d",
+                    "primary-fixed-dim": "#ffb4a5",
+                    "on-secondary-fixed-variant": "#3f465f",
+                    "surface-bright": "#faf9f6",
+                    "on-surface": "#1a1c1a",
+                    "secondary-fixed-dim": "#bfc5e4",
+                    "surface-container-lowest": "#ffffff",
+                    "primary": "#ae311a",
+                    "outline": "#8d716b",
+                    "on-secondary-fixed": "#141a32",
+                    "on-primary-fixed-variant": "#8c1803",
+                    "surface-container-highest": "#e3e2e0",
+                    "surface-container-low": "#f4f3f1",
+                    "primary-container": "#ff6b4e",
+                    "surface-tint": "#ae311a",
+                    "on-secondary": "#ffffff",
+                    "surface-dim": "#dbdad7",
+                    "surface-variant": "#e3e2e0",
+                    "error": "#ba1a1a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-desktop": "40px",
+                    "container-max": "1440px",
+                    "unit": "8px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Bricolage Grotesque"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "display-lg": ["Bricolage Grotesque"],
+                    "display-lg-mobile": ["Bricolage Grotesque"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .editorial-border {
+            border: 1px solid #e1bfb8;
+        }
+        .drop-zone-active {
+            background-color: #f2f1ee;
+            border-color: #ae311a;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col selection:bg-primary-container selection:text-on-primary-container">
+<!-- Background Animation Shader -->
+<div class="fixed inset-0 z-[-1] opacity-30 pointer-events-none">
+<!-- STITCH_SHADER_START:ANIMATION_4 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_4" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_4');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+varying vec2 v_texCoord;
+
+// Simplex 2D noise
+vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+float snoise(vec2 v){
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+           -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy) );
+  vec2 x0 = v -   i + dot(i, C.xx);
+  vec2 i1;
+  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod(i, 289.0);
+  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+  + i.x + vec3(0.0, i1.x, 1.0 ));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+    dot(x12.zw,x12.zw)), 0.0);
+  m = m*m ;
+  m = m*m ;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+void main() {
+    vec2 uv = v_texCoord;
+    float n = snoise(uv * 2.0 + u_time * 0.1);
+
+    // Warm Ivory #FAF9F6 to slightly deeper cream
+    vec3 colorA = vec3(0.98, 0.976, 0.965);
+    vec3 colorB = vec3(0.96, 0.95, 0.93);
+
+    vec3 color = mix(colorA, colorB, n * 0.5 + 0.5);
+
+    // Add a very subtle lavender tint in the noise
+    color = mix(color, vec3(0.9, 0.9, 0.98), clamp(n * 0.2, 0.0, 0.1));
+
+    gl_FragColor = vec4(color, 1.0);
+}
+`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_4 -->
+</div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant px-margin-mobile md:px-margin-desktop py-4 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<img alt="Reshoot Logo" class="h-8 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClOm5iES7UuhUeBJRjTT2BTeU-fjhmmf05RhiFl69HzqXMbKj7Sfj_2_vBE0AWcrj-hcO16ntL6vMYFKEiGMoHZfIZPozunX6z4d5gTCYs7EA6YBwtYVsaGO20MHkf7RovOW4c4DKj6mK9XLvByzmD-aOsE6UAcN4BAb1faiPe6r0kdg0jMSxUQ_sTbSlkStdjPHAzs7FEwE851LTUW3K-vWL3RcPeQkh7kL-DAUL4msRlM5oxdQuN"/>
+<span class="font-headline-md text-headline-md-mobile tracking-tight text-on-surface">Reshoot</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden md:flex items-center gap-2 text-on-surface-variant font-label-sm uppercase tracking-widest hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">help_outline</span>
+                Technical Support
+            </button>
+<div class="h-8 w-[1px] bg-outline-variant hidden md:block"></div>
+<span class="text-primary font-bold text-label-sm bg-primary-fixed px-3 py-1 rounded-full">Session Active</span>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full">
+<!-- Hero Section -->
+<section class="mb-12">
+<div class="max-w-3xl">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background mb-4">
+                    Begin Your <span class="text-primary italic">Creative Session.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                    Capture or upload your subjects to the technical curator. Our AI engine transforms raw imagery into high-end editorial assets while maintaining absolute visual fidelity.
+                </p>
+</div>
+</section>
+<!-- Bento Grid Layout for Upload/Examples -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Upload Zone -->
+<div class="md:col-span-8 group relative overflow-hidden bg-white/40 backdrop-blur-sm editorial-border rounded-xl p-8 md:p-12 transition-all hover:border-primary cursor-pointer" id="drop-zone">
+<div class="flex flex-col items-center justify-center h-full text-center py-12">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-300">
+<span class="material-symbols-outlined text-primary text-3xl">camera</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Camera Roll</h3>
+<p class="font-body-md text-on-surface-variant mb-8 max-w-sm">
+                        Drag and drop your RAW or high-res images here, or browse your local file system.
+                    </p>
+<div class="flex flex-wrap justify-center gap-4">
+<button class="bg-primary text-on-primary px-8 py-3 rounded-full font-label-sm transition-all active:scale-95 flex items-center gap-2">
+<span class="material-symbols-outlined">upload_file</span>
+                            CHOOSE FILES
+                        </button>
+<button class="bg-transparent border border-outline text-on-surface px-8 py-3 rounded-full font-label-sm hover:bg-surface-container transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">photo_library</span>
+                            BROWSE GALLERY
+                        </button>
+</div>
+</div>
+<!-- Bottom Privacy Note -->
+<div class="absolute bottom-6 left-0 w-full px-8 flex items-center justify-center gap-4 text-label-sm text-on-surface-variant opacity-60">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+                        Encrypted
+                    </div>
+<div class="w-1 h-1 rounded-full bg-outline"></div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">save</span>
+                        Local Save Enabled
+                    </div>
+</div>
+</div>
+<!-- Example/Guidance Panel -->
+<div class="md:col-span-4 flex flex-col gap-gutter">
+<!-- Example Slide -->
+<div class="bg-surface-container-low editorial-border rounded-xl p-6 flex flex-col">
+<span class="font-label-sm text-on-tertiary-fixed-variant uppercase tracking-widest mb-4">Subject Example</span>
+<div class="relative aspect-square w-full bg-white editorial-border overflow-hidden rounded-lg mb-4">
+<img class="w-full h-full object-cover" data-alt="A beautifully crafted, handmade cream-colored cloth doll sitting elegantly on a minimalist marble surface. The doll features intricate stitching and soft, tactile fabric textures. The lighting is bright and high-key, casting soft, long-tail shadows that emphasize the doll's three-dimensional form. The background is a clean, Warm Ivory studio setting with a slight editorial blur, creating a premium product photography aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCf1qWrbJbcOCisV2QOfKMZK1N0EHuZCddGwMVHLSDSIxuSyXjdu1clmz1gdR8V9P2Bo5PiZx4xcE9ZCCMCEe_w9_UrvKiaT66c5G8eoA95gG2ArI2upMHGiBrSXMKCZ6bA6pnyS5qJTaK-mzUkjoIIdb4xZ1EZwnej-Cj589aJdrmarfvwVV_YQSpzd5pyNxQwDxELjGQXwIW7dKpVF2XheAoJHa4FinVhj_65-ODJc_og29dgFii"/>
+<div class="absolute top-3 right-3 bg-secondary-container/90 px-2 py-1 rounded text-[10px] font-bold text-on-secondary-container backdrop-blur">
+                            REFERENCE 01
+                        </div>
+</div>
+<p class="font-body-md text-on-surface-variant leading-snug">
+                        For best results, place your subject against a neutral background with diffused lighting.
+                    </p>
+</div>
+<!-- Privacy/Technical Card -->
+<div class="bg-on-background text-surface p-6 rounded-xl flex flex-col justify-between flex-grow">
+<div>
+<span class="material-symbols-outlined text-primary-container mb-4">security</span>
+<h4 class="font-headline-md text-headline-md mb-2">Privacy Focus</h4>
+<p class="font-body-md text-surface-dim opacity-80 leading-snug">
+                            All processing happens in an isolated container. Your original files are never stored on our servers permanently; they remain in your local session.
+                        </p>
+</div>
+<div class="mt-8 pt-4 border-t border-surface/10 flex justify-between items-center">
+<span class="text-label-sm opacity-50">TECHNICAL SPEC V2.4</span>
+<span class="material-symbols-outlined text-[16px] opacity-50">arrow_forward_ios</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Session Metadata / Status -->
+<div class="mt-12 flex flex-col md:flex-row items-start md:items-center justify-between border-t border-outline-variant pt-8 gap-6">
+<div class="flex gap-8">
+<div class="flex flex-col">
+<span class="font-label-sm text-on-surface-variant uppercase">Current Engine</span>
+<span class="font-body-md font-bold">Studio-Pro Neural v4</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-on-surface-variant uppercase">Available Credits</span>
+<span class="font-body-md font-bold">148 Sessions</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-on-surface-variant uppercase">Local Latency</span>
+<span class="font-body-md font-bold">12ms</span>
+</div>
+</div>
+<div class="flex items-center gap-3 bg-tertiary-fixed/30 px-4 py-2 rounded-full border border-outline-variant/30">
+<div class="w-2 h-2 rounded-full bg-muted-sage bg-[#8BA888] animate-pulse"></div>
+<span class="text-label-sm font-semibold text-on-tertiary-fixed-variant">SERVER CONNECTED: LONDON-01</span>
+</div>
+</div>
+</main>
+<!-- Sticky Bottom Bar -->
+<footer class="fixed bottom-0 w-full z-50 bg-surface/95 backdrop-blur-xl border-t border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop h-24 flex items-center justify-between">
+<div class="hidden md:flex items-center gap-6">
+<div class="flex -space-x-2">
+<div class="w-10 h-10 rounded-full border-2 border-surface bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up of high-quality textile textures, linen and cotton weaves in neutral tones, editorial lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSJSsc0E8KzvH4-2fF-BqTL9W0wXB8oytkACh-uE__N9TRmwkRPU0iw-YI2FwoGE0ZIJoFXCv2lTWcDfxvC5MwL5Frl_gzqQXoR9oYjYiOUNjbyWZLS29HgYt4EIdNuo9QG25C4LRvSUCz1Xv-VL7EXkniF1bx8dfxtjgbXjI2Hgqv1cSmQNupnbT7xY8oV7KkliKJiGkbM9PrkW9cZMpsXKVvX5058jIF8yHfJjX7ASx_du9yLAvP"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-surface bg-surface-container-high flex items-center justify-center">
+<span class="text-[10px] font-bold text-on-surface-variant">+3</span>
+</div>
+</div>
+<p class="text-label-sm text-on-surface-variant max-w-[200px]">
+<span class="font-bold text-on-surface">3 Files</span> selected for processing.
+                </p>
+</div>
+<div class="flex items-center gap-4 w-full md:w-auto">
+<button class="flex-grow md:flex-none px-8 py-4 bg-surface-container-highest text-on-surface font-label-sm rounded-xl transition-all hover:bg-outline-variant active:scale-95">
+                    SAVE DRAFT
+                </button>
+<button class="flex-[2] md:flex-none px-12 py-4 bg-primary-container text-on-primary-container font-headline-md text-[18px] rounded-xl shadow-lg transition-all hover:shadow-primary-container/20 active:scale-95 flex items-center justify-center gap-3">
+                    Continue to Studio
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</footer>
+<!-- Micro-interaction Script -->
+<script>
+        const dropZone = document.getElementById('drop-zone');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drop-zone-active');
+            dropZone.style.transform = 'scale(1.01)';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drop-zone-active');
+            dropZone.style.transform = 'scale(1)';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drop-zone-active');
+            dropZone.style.transform = 'scale(1)';
+            alert('Images accepted. Preparing editorial preview...');
+        });
+
+        // Simple button active state visual feedback
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.opacity = '0.8';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.opacity = '1';
+            });
+        });
+    </script>
+</body></html>

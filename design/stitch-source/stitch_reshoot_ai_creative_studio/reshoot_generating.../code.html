@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reshoot | Generating Consistency</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&amp;family=Hanken+Grotesk:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-primary": "#ffb4a5",
+                    "on-background": "#1a1c1a",
+                    "on-primary-fixed": "#3e0400",
+                    "secondary-container": "#d8defe",
+                    "on-tertiary-fixed-variant": "#444655",
+                    "surface": "#faf9f6",
+                    "on-primary-container": "#680c00",
+                    "inverse-surface": "#2f312f",
+                    "tertiary-fixed-dim": "#c5c5d8",
+                    "tertiary": "#5c5d6e",
+                    "error-container": "#ffdad6",
+                    "on-surface-variant": "#59413c",
+                    "secondary-fixed": "#dce1ff",
+                    "on-tertiary-container": "#2f3140",
+                    "outline-variant": "#e1bfb8",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed": "#191b29",
+                    "secondary": "#575d78",
+                    "on-error-container": "#93000a",
+                    "surface-container-high": "#e9e8e5",
+                    "on-error": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#f2f1ee",
+                    "background": "#faf9f6",
+                    "primary-fixed": "#ffdad3",
+                    "surface-container": "#efeeeb",
+                    "tertiary-fixed": "#e1e1f5",
+                    "tertiary-container": "#9899ab",
+                    "on-secondary-container": "#5b617d",
+                    "primary-fixed-dim": "#ffb4a5",
+                    "on-secondary-fixed-variant": "#3f465f",
+                    "surface-bright": "#faf9f6",
+                    "on-surface": "#1a1c1a",
+                    "secondary-fixed-dim": "#bfc5e4",
+                    "surface-container-lowest": "#ffffff",
+                    "primary": "#ae311a",
+                    "outline": "#8d716b",
+                    "on-secondary-fixed": "#141a32",
+                    "on-primary-fixed-variant": "#8c1803",
+                    "surface-container-highest": "#e3e2e0",
+                    "surface-container-low": "#f4f3f1",
+                    "primary-container": "#ff6b4e",
+                    "surface-tint": "#ae311a",
+                    "on-secondary": "#ffffff",
+                    "surface-dim": "#dbdad7",
+                    "surface-variant": "#e3e2e0",
+                    "error": "#ba1a1a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-desktop": "40px",
+                    "container-max": "1440px",
+                    "unit": "8px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Bricolage Grotesque"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "display-lg": ["Bricolage Grotesque"],
+                    "display-lg-mobile": ["Bricolage Grotesque"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .perspective-1000 { perspective: 1000px; }
+      .preserve-3d { transform-style: preserve-3d; }
+      .progress-bar-fill {
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+      .float-animation { animation: float 6s ease-in-out infinite; }
+      .glass-card {
+        background: rgba(250, 249, 246, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen overflow-x-hidden font-body-md text-body-md">
+<!-- Background Shader -->
+<!-- STITCH_SHADER_START:ANIMATION_4 class="fixed inset-0 w-full h-full -z-10 opacity-30" -->
+<div class="fixed inset-0 w-full h-full -z-10 opacity-30" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_4" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_4');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+varying vec2 v_texCoord;
+
+// Simplex 2D noise
+vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+float snoise(vec2 v){
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+           -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy) );
+  vec2 x0 = v -   i + dot(i, C.xx);
+  vec2 i1;
+  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod(i, 289.0);
+  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+  + i.x + vec3(0.0, i1.x, 1.0 ));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+    dot(x12.zw,x12.zw)), 0.0);
+  m = m*m ;
+  m = m*m ;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+void main() {
+    vec2 uv = v_texCoord;
+    float n = snoise(uv * 2.0 + u_time * 0.1);
+
+    // Warm Ivory #FAF9F6 to slightly deeper cream
+    vec3 colorA = vec3(0.98, 0.976, 0.965);
+    vec3 colorB = vec3(0.96, 0.95, 0.93);
+
+    vec3 color = mix(colorA, colorB, n * 0.5 + 0.5);
+
+    // Add a very subtle lavender tint in the noise
+    color = mix(color, vec3(0.9, 0.9, 0.98), clamp(n * 0.2, 0.0, 0.1));
+
+    gl_FragColor = vec4(color, 1.0);
+}
+`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_4 -->
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">camera</span>
+<span class="font-headline-md text-headline-md tracking-tight text-on-surface">Reshoot</span>
+</div>
+<div class="hidden md:flex gap-8">
+<a class="text-primary font-bold text-label-sm uppercase tracking-widest" href="#">Studio</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm uppercase tracking-widest" href="#">Gallery</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm uppercase tracking-widest" href="#">Lighting</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm uppercase tracking-widest" href="#">Settings</a>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-primary-container/10 px-3 py-1.5 rounded-full">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<span class="font-label-sm text-primary uppercase text-[10px]">Session Active</span>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-screen flex flex-col items-center justify-center">
+<div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-gutter items-center">
+<!-- Left Column: Consistency Anchor -->
+<div class="md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left gap-6">
+<div class="relative group">
+<div class="absolute -inset-4 bg-primary/5 rounded-2xl blur-2xl group-hover:bg-primary/10 transition-all duration-500"></div>
+<div class="relative border border-outline-variant p-2 bg-surface shadow-xl rotate-[-2deg] float-animation">
+<img alt="Consistency Anchor" class="w-64 h-64 object-cover grayscale-[0.2] contrast-[1.1]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKDCTO6mUvJiZuqAGoARTi2JXuAQmbR_5xS4jBn8OAMYQ9_DztFjUdAGnlmy3MLgKRg2RQxwQXH5_rI-ntFEpoiWfrUL1CiKUgclY38DpXx6uVG7p8-Dyqncw28DPGRIr-e1FVeQhGUdj8Hxt0CnmRX0qhFCGm8LG4F-nj2wYCPddDWLt75kHpf__TFvhOGzNMcTwo3kWMU1Ted0Pt4GHSgvvPmIKtD0_RM7AdrVTvPzCaM5uJohrZ"/>
+<div class="mt-3 flex justify-between items-center px-1">
+<span class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-widest">Original Reference</span>
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">anchor</span>
+</div>
+</div>
+</div>
+<div class="space-y-2">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg tracking-tight">
+                        Synthesizing <span class="text-primary italic">Geometry</span>
+</h1>
+<p class="text-on-surface-variant max-w-md">
+                        Maintaining structural integrity and texture consistency across 6 creative projections.
+                    </p>
+</div>
+</div>
+<!-- Right Column: Progress Grid -->
+<div class="md:col-span-7">
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4 perspective-1000">
+<!-- Angle Indicators (6 instances) -->
+<!-- Item 1 -->
+<div class="glass-card border border-outline-variant p-4 rounded-xl space-y-4 hover:translate-y-[-4px] transition-transform duration-300">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-primary uppercase text-[10px]">Macro 01</span>
+<span class="material-symbols-outlined text-on-surface-variant text-base">center_focus_strong</span>
+</div>
+<div class="h-32 bg-surface-container rounded-sm overflow-hidden relative group">
+<div class="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors"></div>
+<div class="absolute bottom-2 left-2 right-2 space-y-1">
+<div class="flex justify-between text-[10px] font-label-sm text-on-surface-variant">
+<span>Processing</span>
+<span>84%</span>
+</div>
+<div class="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden">
+<div class="bg-primary h-full progress-bar-fill" style="width: 84%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="glass-card border border-outline-variant p-4 rounded-xl space-y-4 hover:translate-y-[-4px] transition-transform duration-300">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-primary uppercase text-[10px]">Studio Low</span>
+<span class="material-symbols-outlined text-on-surface-variant text-base">camera_rear</span>
+</div>
+<div class="h-32 bg-surface-container rounded-sm overflow-hidden relative">
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary/40 animate-spin">refresh</span>
+</div>
+<div class="absolute bottom-2 left-2 right-2 space-y-1">
+<div class="flex justify-between text-[10px] font-label-sm text-on-surface-variant">
+<span>Refining</span>
+<span>42%</span>
+</div>
+<div class="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden">
+<div class="bg-primary h-full progress-bar-fill" style="width: 42%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="glass-card border border-outline-variant p-4 rounded-xl space-y-4 hover:translate-y-[-4px] transition-transform duration-300">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-primary uppercase text-[10px]">Aerial Soft</span>
+<span class="material-symbols-outlined text-on-surface-variant text-base">filter_tilt_shift</span>
+</div>
+<div class="h-32 bg-surface-container rounded-sm overflow-hidden relative">
+<div class="absolute inset-0 bg-secondary-container/10"></div>
+<div class="absolute bottom-2 left-2 right-2 space-y-1">
+<div class="flex justify-between text-[10px] font-label-sm text-on-surface-variant">
+<span>Ready</span>
+<span>100%</span>
+</div>
+<div class="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden">
+<div class="bg-primary h-full progress-bar-fill" style="width: 100%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="glass-card border border-outline-variant p-4 rounded-xl space-y-4 hover:translate-y-[-4px] transition-transform duration-300">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-primary uppercase text-[10px]">Profile L</span>
+<span class="material-symbols-outlined text-on-surface-variant text-base">side_navigation</span>
+</div>
+<div class="h-32 bg-surface-container rounded-sm overflow-hidden relative">
+<div class="absolute bottom-2 left-2 right-2 space-y-1">
+<div class="flex justify-between text-[10px] font-label-sm text-on-surface-variant">
+<span>Queued</span>
+<span>12%</span>
+</div>
+<div class="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden">
+<div class="bg-primary h-full progress-bar-fill" style="width: 12%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 5 -->
+<div class="glass-card border border-outline-variant p-4 rounded-xl space-y-4 hover:translate-y-[-4px] transition-transform duration-300">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-primary uppercase text-[10px]">Depth Blur</span>
+<span class="material-symbols-outlined text-on-surface-variant text-base">blur_on</span>
+</div>
+<div class="h-32 bg-surface-container rounded-sm overflow-hidden relative">
+<div class="absolute bottom-2 left-2 right-2 space-y-1">
+<div class="flex justify-between text-[10px] font-label-sm text-on-surface-variant">
+<span>Synthesis</span>
+<span>67%</span>
+</div>
+<div class="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden">
+<div class="bg-primary h-full progress-bar-fill" style="width: 67%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 6 -->
+<div class="glass-card border border-outline-variant p-4 rounded-xl space-y-4 hover:translate-y-[-4px] transition-transform duration-300">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-primary uppercase text-[10px]">Iso Orbit</span>
+<span class="material-symbols-outlined text-on-surface-variant text-base">360</span>
+</div>
+<div class="h-32 bg-surface-container rounded-sm overflow-hidden relative">
+<div class="absolute bottom-2 left-2 right-2 space-y-1">
+<div class="flex justify-between text-[10px] font-label-sm text-on-surface-variant">
+<span>Analyzing</span>
+<span>29%</span>
+</div>
+<div class="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden">
+<div class="bg-primary h-full progress-bar-fill" style="width: 29%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Global Progress Footer -->
+<div class="w-full max-w-xl mt-12 space-y-4">
+<div class="flex justify-between items-end font-label-sm uppercase tracking-widest text-on-surface">
+<span class="text-[10px]">Global Creative Engine</span>
+<span class="text-xl font-bold">56% <span class="text-on-surface-variant/40 font-normal">Complete</span></span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="bg-primary h-full transition-all duration-[3000ms] ease-out" id="global-progress" style="width: 56%"></div>
+</div>
+<p class="text-center text-[11px] text-on-surface-variant/60 font-label-sm uppercase tracking-[0.2em] animate-pulse">
+                Aligning material textures with light source vectors
+            </p>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface border-t border-outline-variant flex justify-around items-center h-20 px-2 pb-safe-bottom shadow-[0px_-12px_32px_rgba(10,17,40,0.04)]">
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl px-4 py-1 scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+<span class="font-label-sm text-[10px]">Studio</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-label-sm text-[10px]">Gallery</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined">wb_sunny</span>
+<span class="font-label-sm text-[10px]">Lighting</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-[10px]">Settings</span>
+</button>
+</nav>
+<script>
+        // Micro-interactions for progress simulation
+        document.addEventListener('DOMContentLoaded', () => {
+            const bars = document.querySelectorAll('.progress-bar-fill');
+            const globalBar = document.getElementById('global-progress');
+
+            // Slowly increment bars for a "live" feel
+            setInterval(() => {
+                bars.forEach(bar => {
+                    let currentWidth = parseFloat(bar.style.width);
+                    if (currentWidth < 100) {
+                        let newWidth = currentWidth + (Math.random() * 0.5);
+                        bar.style.width = Math.min(newWidth, 100) + '%';
+
+                        // Update text label next to it if we were doing dynamic text
+                    }
+                });
+
+                // Update global bar
+                let currentGlobal = parseFloat(globalBar.style.width);
+                if (currentGlobal < 98) {
+                    globalBar.style.width = (currentGlobal + 0.1) + '%';
+                }
+            }, 1500);
+        });
+    </script>
+</body></html>
