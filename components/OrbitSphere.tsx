@@ -1,7 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { Camera, HandGrabbing, Plus } from "@phosphor-icons/react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Camera,
+  HandGrabbing,
+  Plus,
+} from "@phosphor-icons/react";
 import * as THREE from "three";
 import {
   useEffect,
@@ -196,6 +204,13 @@ export function OrbitSphere({
     }
   }
 
+  function nudgeOrientation(yawDelta: number, pitchDelta: number) {
+    onOrientationChange({
+      yaw: normalizeDegrees(orientation.yaw + yawDelta),
+      pitch: Math.max(-40, Math.min(40, orientation.pitch + pitchDelta)),
+    });
+  }
+
   return (
     <div className="orbit-composer">
       <div
@@ -205,8 +220,8 @@ export function OrbitSphere({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        role="application"
-        aria-label="Rotatable perspective sphere"
+        role="img"
+        aria-label={`Custom camera preview at ${Math.round(normalizeDegrees(orientation.yaw))} degrees orbit and ${Math.round(orientation.pitch)} degrees tilt`}
       >
         <div className="orb-product" aria-hidden="true">
           <Image
@@ -219,7 +234,7 @@ export function OrbitSphere({
         </div>
 
         {pins.map((pin) => (
-          <button
+          <span
             key={pin.id}
             className="camera-pin"
             style={{
@@ -229,11 +244,10 @@ export function OrbitSphere({
               transform: `translate(-50%, -50%) scale(${0.82 + Math.max(pin.depth, 0) * 0.18})`,
               zIndex: pin.depth < 0 ? 1 : 5,
             }}
-            type="button"
-            aria-label={`${pin.label} locked perspective`}
+            aria-hidden="true"
           >
             <Camera size={19} weight="bold" />
-          </button>
+          </span>
         ))}
 
         <div className="orbit-gesture">
@@ -243,20 +257,57 @@ export function OrbitSphere({
       </div>
 
       <div className="orbit-readout">
-        <span>
-          <strong>{Math.round(normalizeDegrees(orientation.yaw))}°</strong>{" "}
-          orbit
-        </span>
-        <span>
-          <strong>{Math.round(orientation.pitch)}°</strong> tilt
-        </span>
+        <div className="orbit-values" aria-live="polite">
+          <span>
+            <strong>{Math.round(normalizeDegrees(orientation.yaw))}°</strong>{" "}
+            orbit
+          </span>
+          <span>
+            <strong>{Math.round(orientation.pitch)}°</strong> tilt
+          </span>
+        </div>
         <button
           className="button button-secondary button-compact"
           type="button"
           onClick={() => onLock(orientation)}
         >
           <Plus size={17} weight="bold" />
-          Lock this view
+          Add this angle
+        </button>
+      </div>
+
+      <div className="orbit-keyboard-controls" aria-label="Adjust custom camera">
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => nudgeOrientation(-15, 0)}
+          aria-label="Rotate camera left 15 degrees"
+        >
+          <ArrowLeft size={18} weight="bold" />
+        </button>
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => nudgeOrientation(15, 0)}
+          aria-label="Rotate camera right 15 degrees"
+        >
+          <ArrowRight size={18} weight="bold" />
+        </button>
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => nudgeOrientation(0, 8)}
+          aria-label="Tilt camera up 8 degrees"
+        >
+          <ArrowUp size={18} weight="bold" />
+        </button>
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => nudgeOrientation(0, -8)}
+          aria-label="Tilt camera down 8 degrees"
+        >
+          <ArrowDown size={18} weight="bold" />
         </button>
       </div>
     </div>

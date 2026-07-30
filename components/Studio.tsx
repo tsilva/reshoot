@@ -3,15 +3,15 @@
 import Image from "next/image";
 import {
   ArrowCounterClockwise,
+  ArrowLeft,
   ArrowRight,
   Camera,
+  CaretDown,
   Check,
   CheckCircle,
   DownloadSimple,
   FloppyDisk,
   ImageSquare,
-  LockKey,
-  MagicWand,
   Plus,
   Sparkle,
   SpinnerGap,
@@ -32,6 +32,7 @@ import {
 import { OrbitSphere } from "@/components/OrbitSphere";
 import { clearShoot, loadShoot, saveShoot } from "@/lib/storage";
 import {
+  DEFAULT_ANGLES,
   createInitialState,
   type Angle,
   type Shot,
@@ -46,6 +47,21 @@ const REJECTION_REASONS = [
   "Lighting mismatch",
   "Missing detail",
 ];
+
+const STEP_ITEMS: Array<{ label: string; step: StudioStep }> = [
+  { label: "Original", step: "upload" },
+  { label: "Perspectives", step: "angles" },
+  { label: "Review", step: "review" },
+];
+
+const PRESET_GUIDES: Record<string, string> = {
+  front: "/assets/angle-guides/front.jpg",
+  "front-three-quarter": "/assets/angle-guides/front-three-quarter.jpg",
+  "right-profile": "/assets/angle-guides/right-profile.jpg",
+  back: "/assets/angle-guides/back.jpg",
+};
+
+const DEFAULT_ANGLE_IDS = new Set(DEFAULT_ANGLES.map((angle) => angle.id));
 
 type Orientation = {
   yaw: number;
@@ -167,6 +183,8 @@ export function Studio() {
   const [toast, setToast] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const previousStepRef = useRef<StudioStep | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -206,6 +224,24 @@ export function Studio() {
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    if (previousStepRef.current === null) {
+      previousStepRef.current = state.step;
+      return;
+    }
+    if (previousStepRef.current === state.step) return;
+
+    previousStepRef.current = state.step;
+    window.scrollTo({ top: 0, behavior: "auto" });
+    const frame = window.requestAnimationFrame(() => {
+      mainRef.current
+        ?.querySelector<HTMLElement>("[data-step-heading]")
+        ?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [hydrated, state.step]);
+
   const original = state.original;
   const activeShot = useMemo(
     () => state.shots.find((shot) => shot.id === activeShotId) ?? null,
@@ -221,6 +257,10 @@ export function Studio() {
   const unresolvedShots = useMemo(
     () => state.shots.filter((shot) => shot.status !== "approved"),
     [state.shots],
+  );
+  const customAngles = useMemo(
+    () => state.angles.filter((angle) => !DEFAULT_ANGLE_IDS.has(angle.id)),
+    [state.angles],
   );
 
   function updateState(patch: Partial<StudioState>) {
@@ -312,6 +352,16 @@ export function Studio() {
 
   function removeAngle(id: string) {
     updateState({ angles: state.angles.filter((angle) => angle.id !== id) });
+  }
+
+  function togglePreset(preset: Angle) {
+    const selected = state.angles.some((angle) => angle.id === preset.id);
+    updateState({
+      angles: selected
+        ? state.angles.filter((angle) => angle.id !== preset.id)
+        : [...state.angles, { ...preset }],
+    });
+    setToast(`${preset.label} ${selected ? "removed" : "selected"}.`);
   }
 
   async function requestGeneration(
@@ -516,9 +566,7 @@ export function Studio() {
           <button
             className="wordmark"
             type="button"
-            onClick={() =>
-              updateState({ step: state.original ? "angles" : "upload" })
-            }
+            onClick={() => updateState({ step: "upload" })}
             aria-label="Reshoot studio"
           >
             <Image
@@ -550,43 +598,47 @@ export function Studio() {
       </header>
 
       <nav className="step-rail" aria-label="Shoot progress">
-        {["Original", "Perspectives", "Review"].map((label, index) => (
-          <div
-            key={label}
-            className={`step-item ${currentStep === index ? "is-current" : ""} ${currentStep > index ? "is-complete" : ""}`}
-          >
-            <span>{currentStep > index ? <Check size={13} /> : index + 1}</span>
-            {label}
-          </div>
-        ))}
+        {STEP_ITEMS.map((item, index) => {
+          const canNavigate = Boolean(original) && index < currentStep;
+          return (
+            <button
+              key={item.label}
+              type="button"
+              className={`step-item ${currentStep === index ? "is-current" : ""} ${currentStep > index ? "is-complete" : ""}`}
+              disabled={!canNavigate}
+              aria-current={currentStep === index ? "step" : undefined}
+              onClick={() => updateState({ step: item.step })}
+            >
+              <span>
+                {currentStep > index ? <Check size={13} /> : index + 1}
+              </span>
+              {item.label}
+            </button>
+          );
+        })}
       </nav>
 
-      <main className="studio-main">
+      <main className="studio-main" ref={mainRef}>
         {state.step === "upload" && (
           <section className="upload-layout">
             <div className="intro-copy">
               <span className="eyebrow">
-                <Sparkle size={15} weight="fill" />
-                AI product photography
+                <ImageSquare size={15} weight="bold" />
+                Original photo
               </span>
-              <h1>
-                Every angle.
-                <br />
-                <em>One product.</em>
-              </h1>
+              <h1 data-step-heading tabIndex={-1}>Upload original</h1>
               <p>
-                Upload a single identity anchor, choose the perspectives you
-                need, and build a consistent studio set without another shoot.
+                Add one clear product photo to guide every generated view.
               </p>
 
               <div className="trust-row">
                 <span>
-                  <LockKey size={17} weight="bold" />
-                  Images stay in this browser
+                  <FloppyDisk size={17} weight="bold" />
+                  Saved here. Sent only when you generate.
                 </span>
                 <span>
-                  <MagicWand size={17} weight="bold" />
-                  Original always stays authoritative
+                  <CheckCircle size={17} weight="bold" />
+                  Original remains the identity reference.
                 </span>
               </div>
             </div>
@@ -602,7 +654,7 @@ export function Studio() {
                     unoptimized
                     priority
                   />
-                  <span className="source-badge">Original · identity anchor</span>
+                  <span className="source-badge">Original reference</span>
                   <button
                     className="image-replace"
                     type="button"
@@ -627,8 +679,8 @@ export function Studio() {
                   <span className="upload-icon">
                     <UploadSimple size={30} weight="bold" />
                   </span>
-                  <strong>Drop your product photo</strong>
-                  <span>or tap to choose from your camera roll</span>
+                  <strong>Choose your product photo</strong>
+                  <span>or drop it here</span>
                   <small>JPG, PNG, or WebP · up to 20 MB</small>
                 </label>
               )}
@@ -658,7 +710,7 @@ export function Studio() {
                   disabled={!original}
                   onClick={() => updateState({ step: "angles" })}
                 >
-                  Choose perspectives
+                  Continue to perspectives
                   <ArrowRight size={19} weight="bold" />
                 </button>
               </div>
@@ -668,106 +720,181 @@ export function Studio() {
 
         {state.step === "angles" && original && (
           <section className="angle-section">
+            <button
+              type="button"
+              className="back-link"
+              onClick={() => updateState({ step: "upload" })}
+            >
+              <ArrowLeft size={17} weight="bold" />
+              Back to original
+            </button>
+
             <div className="section-heading">
               <div>
                 <span className="eyebrow">
                   <Camera size={15} weight="bold" />
                   Camera planning
                 </span>
-                <h1>Choose perspectives</h1>
+                <h1 data-step-heading tabIndex={-1}>Choose perspectives</h1>
               </div>
               <p>
-                Drag the orb to position the camera, then lock the views your
-                final contact sheet needs.
+                Start with these four recommended angles, or choose the views
+                you need.
               </p>
             </div>
 
-            <div className="angle-workspace">
-              <aside className="identity-panel">
-                <div className="panel-label">Original</div>
-                <div className="identity-image">
-                  <Image
-                    src={original}
-                    alt="Original identity anchor"
-                    fill
-                    sizes="260px"
-                    unoptimized
-                  />
-                </div>
-                <div className="identity-note">
-                  <LockKey size={17} weight="bold" />
-                  <span>
-                    <strong>Identity anchor</strong>
-                    Every generated view is checked against this image.
-                  </span>
-                </div>
-              </aside>
+            <div className="original-reference-strip">
+              <div className="original-reference-thumb">
+                <Image
+                  src={original}
+                  alt="Original product reference"
+                  fill
+                  sizes="72px"
+                  unoptimized
+                />
+              </div>
+              <div>
+                <span className="panel-label">Original reference</span>
+                <strong>Your product stays the identity reference</strong>
+              </div>
+            </div>
 
-              <OrbitSphere
-                original={original}
-                orientation={orientation}
-                lockedAngles={state.angles}
-                onOrientationChange={setOrientation}
-                onLock={addAngle}
-              />
-
-              <aside className="plan-panel">
-                <div className="panel-title-row">
-                  <div>
-                    <span className="panel-label">Shot plan</span>
-                    <strong>
-                      {state.angles.length}{" "}
-                      {state.angles.length === 1 ? "view" : "views"} locked
-                    </strong>
-                  </div>
-                  <button
-                    className="icon-button"
-                    type="button"
-                    onClick={() => {
-                      setOrientation({ yaw: 0, pitch: 0 });
-                      setToast("Camera returned to front.");
-                    }}
-                    aria-label="Reset camera"
-                  >
-                    <ArrowCounterClockwise size={18} weight="bold" />
-                  </button>
+            <section className="preset-planner" aria-labelledby="preset-title">
+              <div className="preset-heading">
+                <div>
+                  <span className="panel-label">Recommended starter set</span>
+                  <h2 id="preset-title">Choose the views you need</h2>
                 </div>
+                <strong>{state.angles.length} selected</strong>
+              </div>
 
-                <div className="shot-plan-list">
-                  {state.angles.map((angle, index) => (
-                    <div className="shot-plan-item" key={angle.id}>
-                      <span className="plan-index">
-                        {String(index + 1).padStart(2, "0")}
+              <div className="preset-grid">
+                {DEFAULT_ANGLES.map((preset) => {
+                  const selected = state.angles.some(
+                    (angle) => angle.id === preset.id,
+                  );
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      className={`preset-card ${selected ? "is-selected" : ""}`}
+                      aria-pressed={selected}
+                      onClick={() => togglePreset(preset)}
+                    >
+                      <span className="preset-card-image" aria-hidden="true">
+                        <Image
+                          src={PRESET_GUIDES[preset.id]}
+                          alt=""
+                          fill
+                          sizes="(max-width: 720px) 45vw, 220px"
+                        />
+                        <span className="preset-check">
+                          <Check size={15} weight="bold" />
+                        </span>
                       </span>
                       <span>
-                        <strong>{angle.label}</strong>
+                        <strong>{preset.label}</strong>
                         <small>
-                          {angle.azimuth}° orbit · {angle.elevation}° tilt
+                          {preset.azimuth}° orbit · {preset.elevation}° tilt
                         </small>
                       </span>
-                      <button
-                        className="icon-button icon-button-small"
-                        type="button"
-                        onClick={() => removeAngle(angle.id)}
-                        aria-label={`Remove ${angle.label}`}
-                      >
-                        <X size={15} weight="bold" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
 
-                <button
-                  className="button button-primary generate-button"
-                  type="button"
-                  disabled={state.angles.length === 0}
-                  onClick={() => void generateAll()}
-                >
-                  <Sparkle size={20} weight="fill" />
-                  Generate {state.angles.length}{" "}
-                  {state.angles.length === 1 ? "shot" : "shots"}
-                </button>
-              </aside>
+            <details className="custom-angle-panel">
+              <summary>
+                <span>
+                  <strong>Add a custom angle</strong>
+                  <small>Optional precision control</small>
+                </span>
+                <CaretDown size={18} weight="bold" />
+              </summary>
+
+              <div className="custom-angle-content">
+                <OrbitSphere
+                  original={original}
+                  orientation={orientation}
+                  lockedAngles={customAngles}
+                  onOrientationChange={setOrientation}
+                  onLock={addAngle}
+                />
+
+                <aside className="custom-angle-plan">
+                  <div className="panel-title-row">
+                    <div>
+                      <span className="panel-label">Custom views</span>
+                      <strong>
+                        {customAngles.length}{" "}
+                        {customAngles.length === 1 ? "angle" : "angles"} added
+                      </strong>
+                    </div>
+                    <button
+                      className="icon-button"
+                      type="button"
+                      onClick={() => {
+                        setOrientation({ yaw: 0, pitch: 0 });
+                        setToast("Camera returned to front.");
+                      }}
+                      aria-label="Reset custom camera"
+                    >
+                      <ArrowCounterClockwise size={18} weight="bold" />
+                    </button>
+                  </div>
+
+                  {customAngles.length ? (
+                    <div className="shot-plan-list">
+                      {customAngles.map((angle, index) => (
+                        <div className="shot-plan-item" key={angle.id}>
+                          <span className="plan-index">
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+                          <span>
+                            <strong>{angle.label}</strong>
+                            <small>
+                              {angle.azimuth}° orbit · {angle.elevation}° tilt
+                            </small>
+                          </span>
+                          <button
+                            className="icon-button icon-button-small"
+                            type="button"
+                            onClick={() => removeAngle(angle.id)}
+                            aria-label={`Remove ${angle.label}`}
+                          >
+                            <X size={15} weight="bold" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="custom-angle-empty">
+                      Use the controls to add a view outside the starter set.
+                    </p>
+                  )}
+                </aside>
+              </div>
+            </details>
+
+            <div className="selection-action-bar">
+              <div>
+                <span className="panel-label">Selection</span>
+                <strong>
+                  {state.angles.length}{" "}
+                  {state.angles.length === 1 ? "view" : "views"} selected
+                </strong>
+              </div>
+              <button
+                className="button button-primary"
+                type="button"
+                disabled={state.angles.length === 0}
+                onClick={() => void generateAll()}
+              >
+                <Sparkle size={20} weight="fill" />
+                Generate {state.angles.length}{" "}
+                {state.angles.length === 1 ? "shot" : "shots"}
+              </button>
             </div>
           </section>
         )}
@@ -784,7 +911,9 @@ export function Studio() {
                   <CheckCircle size={15} weight="fill" />
                   Human review
                 </span>
-                <h1>Curate the contact sheet</h1>
+                <h1 data-step-heading tabIndex={-1}>
+                  Curate the contact sheet
+                </h1>
               </div>
               <div className="review-summary">
                 <span>
@@ -859,7 +988,9 @@ export function Studio() {
                 <Check size={34} weight="bold" />
               </span>
               <span className="eyebrow">Shoot complete</span>
-              <h1>Your contact sheet is ready.</h1>
+              <h1 data-step-heading tabIndex={-1}>
+                Your contact sheet is ready.
+              </h1>
               <p>
                 Download every approved perspective in one archive. Your local
                 studio stays intact until you start a new shoot.
@@ -1081,7 +1212,9 @@ function GeneratingView({
           <SpinnerGap size={15} weight="bold" className="spin" />
           Building your contact sheet
         </span>
-        <h1>Keeping every view in character.</h1>
+        <h1 data-step-heading tabIndex={-1}>
+          Keeping every view in character.
+        </h1>
         <p>
           The original remains the identity anchor. Each finished AI view is
           clearly labelled and used only as an additional spatial reference for
