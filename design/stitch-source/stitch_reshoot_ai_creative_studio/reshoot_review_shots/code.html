@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reshoot | Review Session</title>
+<!-- Font Links -->
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&amp;family=Hanken+Grotesk:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#ffb4a5",
+                        "on-background": "#1a1c1a",
+                        "on-primary-fixed": "#3e0400",
+                        "secondary-container": "#d8defe",
+                        "on-tertiary-fixed-variant": "#444655",
+                        "surface": "#faf9f6",
+                        "on-primary-container": "#680c00",
+                        "inverse-surface": "#2f312f",
+                        "tertiary-fixed-dim": "#c5c5d8",
+                        "tertiary": "#5c5d6e",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#59413c",
+                        "secondary-fixed": "#dce1ff",
+                        "on-tertiary-container": "#2f3140",
+                        "outline-variant": "#e1bfb8",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#191b29",
+                        "secondary": "#575d78",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e9e8e5",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#f2f1ee",
+                        "background": "#faf9f6",
+                        "primary-fixed": "#ffdad3",
+                        "surface-container": "#efeeeb",
+                        "tertiary-fixed": "#e1e1f5",
+                        "tertiary-container": "#9899ab",
+                        "on-secondary-container": "#5b617d",
+                        "primary-fixed-dim": "#ffb4a5",
+                        "on-secondary-fixed-variant": "#3f465f",
+                        "surface-bright": "#faf9f6",
+                        "on-surface": "#1a1c1a",
+                        "secondary-fixed-dim": "#bfc5e4",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#ae311a",
+                        "outline": "#8d716b",
+                        "on-secondary-fixed": "#141a32",
+                        "on-primary-fixed-variant": "#8c1803",
+                        "surface-container-highest": "#e3e2e0",
+                        "surface-container-low": "#f4f3f1",
+                        "primary-container": "#ff6b4e",
+                        "surface-tint": "#ae311a",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dbdad7",
+                        "surface-variant": "#e3e2e0",
+                        "error": "#ba1a1a",
+                        "muted-sage": "#8ba888"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "container-max": "1440px",
+                        "unit": "8px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Bricolage Grotesque"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "display-lg": ["Bricolage Grotesque"],
+                        "display-lg-mobile": ["Bricolage Grotesque"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-shadow {
+            box-shadow: 0px 12px 32px rgba(10, 17, 40, 0.08);
+        }
+        .slide-up {
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.4;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d1d1;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-background font-body-md min-h-screen overflow-x-hidden">
+<!-- Background Shader -->
+<!-- STITCH_SHADER_START:ANIMATION_4 class="mesh-bg" -->
+<div class="mesh-bg" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_4" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_4');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+varying vec2 v_texCoord;
+
+// Simplex 2D noise
+vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+float snoise(vec2 v){
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+           -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy) );
+  vec2 x0 = v -   i + dot(i, C.xx);
+  vec2 i1;
+  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod(i, 289.0);
+  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+  + i.x + vec3(0.0, i1.x, 1.0 ));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+    dot(x12.zw,x12.zw)), 0.0);
+  m = m*m ;
+  m = m*m ;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+void main() {
+    vec2 uv = v_texCoord;
+    float n = snoise(uv * 2.0 + u_time * 0.1);
+
+    // Warm Ivory #FAF9F6 to slightly deeper cream
+    vec3 colorA = vec3(0.98, 0.976, 0.965);
+    vec3 colorB = vec3(0.96, 0.95, 0.93);
+
+    vec3 color = mix(colorA, colorB, n * 0.5 + 0.5);
+
+    // Add a very subtle lavender tint in the noise
+    color = mix(color, vec3(0.9, 0.9, 0.98), clamp(n * 0.2, 0.0, 0.1));
+
+    gl_FragColor = vec4(color, 1.0);
+}
+`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_4 -->
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-on-background border-b border-outline-variant dark:border-on-surface-variant flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary" data-icon="camera">camera</span>
+<h1 class="font-headline-md text-headline-md-mobile md:text-headline-md tracking-tight text-on-surface">Reshoot</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center px-3 py-1 bg-primary-container text-on-primary-container rounded-full text-label-sm font-label-sm">
+                Session Active
+            </div>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full" data-icon="help_outline">help_outline</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Editorial Header Section -->
+<div class="mb-10 max-w-2xl">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg mb-2 text-on-surface">Review Variations</h2>
+<p class="text-body-lg text-on-surface-variant">Session ID: #RT-9821. Comparing 8 generative variations of the Porcelain Doll series. Focus on lighting consistency and facial symmetry.</p>
+</div>
+<!-- Two-column grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Card 1 -->
+<div class="group relative bg-white border border-outline-variant rounded-lg overflow-hidden editorial-shadow transition-all hover:scale-[1.01]">
+<div class="aspect-[4/5] bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A high-end editorial product photograph of a modern porcelain doll with minimalist features. The doll is wearing a silk lavender dress, standing against a crisp, high-contrast white studio background. Soft, diffused lighting creates gentle highlights on the smooth porcelain skin. The overall aesthetic is professional, clean, and sophisticated, typical of a luxury fashion catalog." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUpc1WiRbQ-QPXwF_MHdrfbx0xSK-N5P2NWhjK3hqdLkMORlsHH28naxlDrtL_iN2Fzz1iIZy1NcuN2v0UoH8yFFsZqlLnnPVQeYyChFjMDbJ2_HQN1qHdCz0AxZtfXJmp_IV_Ci-icuDclHLqB-JwjhQDR_uoqdZLMkYJO7rZPcj5nusJl7BF0Ge_PrgnloYq_XbOwN3pMSWjLpvYa8DMlPUEesX9pJqZOpCX6gFB5qD6Hv4Un6R2"/>
+</div>
+<div class="p-4 flex items-center justify-between bg-white">
+<span class="text-label-sm font-label-sm text-tertiary uppercase tracking-widest">Variation 01</span>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-[#8ba888] text-white rounded font-label-sm hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Approve
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 border border-outline text-on-surface-variant rounded font-label-sm hover:bg-surface-container transition-all" onclick="openBottomSheet()">
+<span class="material-symbols-outlined text-[18px]" data-icon="close">close</span>
+                            Needs Work
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 2 (Active/Selected State Simulation) -->
+<div class="group relative bg-white border-2 border-primary rounded-lg overflow-hidden editorial-shadow transition-all">
+<div class="aspect-[4/5] bg-surface-container overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="An artistic generative product shot of a porcelain collector doll with intricate golden embroidery on a deep ink blue dress. The lighting is dramatic, with a strong rim light defining the silhouette against a dark, moody studio environment. High-gloss finish on the doll's surface reflects the studio lights. Sophisticated, cinematic, and professional quality for a premium art toy marketplace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT_ud0svbi5mrvvjJA7-TqO_M43PIlBK7PotyXxiYPDo6dhSCTVK_lpacIYfX2QWJdSBxOYO3zxAXOaQyrLf6p3XhP0otOcIurTbEfIFbau_uLrkS1nLHn483XOPwf52jbva1x4sRMmjmpUxqrtN2gI8at2i8SacSYOXaCRS2CL4lPitCXn1H5vRp6FJwlfOFWCyxO92O0g6EYWliq-auOMaAij5UEcFFI1Tq6d0UObUplULCPmPhI"/>
+<!-- Overlay indicator -->
+<div class="absolute inset-0 bg-on-background/20 flex items-center justify-center opacity-100">
+<div class="bg-white/90 backdrop-blur px-4 py-2 rounded shadow-lg">
+<span class="text-on-surface font-label-sm">Reviewing Rejection...</span>
+</div>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between bg-white">
+<span class="text-label-sm font-label-sm text-tertiary uppercase tracking-widest">Variation 02</span>
+<div class="flex gap-2">
+<div class="flex items-center gap-2 px-4 py-2 bg-error text-white rounded font-label-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="error_outline">error_outline</span>
+                            Rejected
+                        </div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group relative bg-white border border-outline-variant rounded-lg overflow-hidden editorial-shadow transition-all hover:scale-[1.01]">
+<div class="aspect-[4/5] bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A minimalist product display of a stylized doll made of matte ceramic material. The color palette is composed of muted sage and lavender tones. Top-down lighting creates soft shadows on a warm ivory surface. The composition is asymmetrical and modern, following high-end editorial standards for interior design or lifestyle magazines. Crisp, clear, and high-fidelity textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYCXngqGe3HkPnTdzbAiJPiOfEJI4BH5zHSVI6ZAQS91gHWUdOlKYW4pj5K_fhPSSjgkxvC_7-lozrfbtVLTjZyiXw-ZID5eDCgfhgCai7bVJjqLpM5N6BzHvO_WyRNCi5_VRPJCVc1So-7SF0eGxbkTU7yM9XRNtY_Xadnctlp91aFGJWLVSn7LfOinJN6PjN-p0rMCxKkOODFRWWcVJGc98DkOSfjyhthwJW1jVxhxwhGUGRLmb0"/>
+</div>
+<div class="p-4 flex items-center justify-between bg-white">
+<span class="text-label-sm font-label-sm text-tertiary uppercase tracking-widest">Variation 03</span>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 border border-[#8ba888] text-[#8ba888] rounded font-label-sm hover:bg-muted-sage/5 transition-all">
+                            Approve
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 border border-outline text-on-surface-variant rounded font-label-sm hover:bg-surface-container transition-all">
+                            Needs Work
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group relative bg-white border border-outline-variant rounded-lg overflow-hidden editorial-shadow transition-all hover:scale-[1.01]">
+<div class="aspect-[4/5] bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Detailed macro shot of a porcelain doll's face with exquisite paintwork and realistic glass eyes. The photography style is high-key with soft pink and warm ivory tones. Minimalist background to keep focus entirely on the craftsmanship. Elegant, premium feel with balanced lighting and professional-grade sharpness. Cohesive color palette of vivid coral accents and deep ink shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKDm4tlLTy93nK_z4bA1kitYfNerpnwavz5GNMU8Lezc6Z48CTBRERaGa0Nee6AE1TF5iHxawKO9jWcr_hSrT8gPh39AMJsdedM9MsbYNISfBc6RuZiOfonuQfVg6xt4o9_y4EtWsAKNH_DgU8x89b_JPk5ZOjnv0pzVU_kYmIJTyV_PamDPsn6P2lgnVpy1NDeYif7hwg_YBA9kZ4gflJuwJTrn5QnJRC_a0a85NsGHW8UIAlesBs"/>
+</div>
+<div class="p-4 flex items-center justify-between bg-white">
+<span class="text-label-sm font-label-sm text-tertiary uppercase tracking-widest">Variation 04</span>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 border border-[#8ba888] text-[#8ba888] rounded font-label-sm hover:bg-muted-sage/5 transition-all">
+                            Approve
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 border border-outline text-on-surface-variant rounded font-label-sm hover:bg-surface-container transition-all">
+                            Needs Work
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Shared Component) -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface dark:bg-on-background border-t border-outline-variant dark:border-on-surface-variant flex justify-around items-center h-20 px-2 pb-safe-bottom editorial-shadow">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-tertiary-container px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="photo_camera">photo_camera</span>
+<span class="font-label-sm text-label-sm">Studio</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-fixed text-on-primary-container dark:text-on-primary-fixed rounded-xl px-4 py-1 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="font-label-sm text-label-sm">Gallery</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-tertiary-container px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="wb_sunny">wb_sunny</span>
+<span class="font-label-sm text-label-sm">Lighting</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-tertiary-container px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</nav>
+<!-- Rejection Reasons Bottom Sheet Overlay -->
+<div class="fixed inset-0 z-[100] bg-on-background/40 backdrop-blur-sm hidden transition-opacity flex items-end" id="rejectionSheet">
+<div class="bg-surface w-full max-w-2xl mx-auto rounded-t-full editorial-shadow p-margin-mobile md:p-margin-desktop slide-up overflow-y-auto max-h-[751px]">
+<div class="w-12 h-1.5 bg-outline-variant rounded-full mx-auto mb-8"></div>
+<header class="flex justify-between items-start mb-8">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Rejection Reasons</h3>
+<p class="text-on-surface-variant text-body-md">Variation 02: Specify what technical improvements are needed.</p>
+</div>
+<button class="material-symbols-outlined p-2 hover:bg-surface-container rounded-full" data-icon="close" onclick="closeBottomSheet()">close</button>
+</header>
+<div class="space-y-8">
+<!-- Chips Section -->
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-tertiary block mb-4">Select Discrepancies</span>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 border-2 border-primary bg-secondary-container text-on-secondary-container rounded font-label-sm flex items-center gap-2">
+                            Wrong angle
+                            <span class="material-symbols-outlined text-[16px]" data-icon="check">check</span>
+</button>
+<button class="px-4 py-2 border border-outline text-on-surface-variant hover:bg-surface-container transition-colors rounded font-label-sm">Product changed</button>
+<button class="px-4 py-2 border-2 border-primary bg-secondary-container text-on-secondary-container rounded font-label-sm flex items-center gap-2">
+                            Lighting mismatch
+                            <span class="material-symbols-outlined text-[16px]" data-icon="check">check</span>
+</button>
+<button class="px-4 py-2 border border-outline text-on-surface-variant hover:bg-surface-container transition-colors rounded font-label-sm">Missing detail</button>
+</div>
+</div>
+<!-- Text Field -->
+<div>
+<label class="font-label-sm text-label-sm uppercase tracking-widest text-tertiary block mb-4" for="feedback">What should change?</label>
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-4 focus:ring-1 focus:ring-tertiary-container focus:outline-none min-h-[120px] font-body-md text-on-surface-variant" id="feedback" placeholder="E.g., Move camera 15 degrees right and reduce key light intensity by 20%..."></textarea>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-primary py-4 rounded text-white font-headline-md flex items-center justify-center gap-3 active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined" data-icon="autorenew">autorenew</span>
+                    Regenerate shot
+                </button>
+</div>
+</div>
+</div>
+<script>
+        function openBottomSheet() {
+            const sheet = document.getElementById('rejectionSheet');
+            sheet.classList.remove('hidden');
+            sheet.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBottomSheet() {
+            const sheet = document.getElementById('rejectionSheet');
+            sheet.classList.add('hidden');
+            sheet.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeBottomSheet();
+        });
+
+        // Close on background click
+        document.getElementById('rejectionSheet').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('rejectionSheet')) {
+                closeBottomSheet();
+            }
+        });
+
+        // Initial state logic for demo
+        window.addEventListener('DOMContentLoaded', () => {
+           // We keep the sheet open initially to match the request "Show a bottom sheet"
+           setTimeout(openBottomSheet, 800);
+        });
+    </script>
+</body></html>

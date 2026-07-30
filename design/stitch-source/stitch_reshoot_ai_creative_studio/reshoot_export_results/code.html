@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reshoot | Finish &amp; Export</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&amp;family=Hanken+Grotesk:wght@300;400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-shadow {
+            box-shadow: 0px 12px 32px rgba(10, 17, 40, 0.08);
+        }
+        .slide-up {
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#ffb4a5",
+                        "on-background": "#1a1c1a",
+                        "on-primary-fixed": "#3e0400",
+                        "secondary-container": "#d8defe",
+                        "on-tertiary-fixed-variant": "#444655",
+                        "surface": "#faf9f6",
+                        "on-primary-container": "#680c00",
+                        "inverse-surface": "#2f312f",
+                        "tertiary-fixed-dim": "#c5c5d8",
+                        "tertiary": "#5c5d6e",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#59413c",
+                        "secondary-fixed": "#dce1ff",
+                        "on-tertiary-container": "#2f3140",
+                        "outline-variant": "#e1bfb8",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#191b29",
+                        "secondary": "#575d78",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e9e8e5",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#f2f1ee",
+                        "background": "#faf9f6",
+                        "primary-fixed": "#ffdad3",
+                        "surface-container": "#efeeeb",
+                        "tertiary-fixed": "#e1e1f5",
+                        "tertiary-container": "#9899ab",
+                        "on-secondary-container": "#5b617d",
+                        "primary-fixed-dim": "#ffb4a5",
+                        "on-secondary-fixed-variant": "#3f465f",
+                        "surface-bright": "#faf9f6",
+                        "on-surface": "#1a1c1a",
+                        "secondary-fixed-dim": "#bfc5e4",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#ae311a",
+                        "outline": "#8d716b",
+                        "on-secondary-fixed": "#141a32",
+                        "on-primary-fixed-variant": "#8c1803",
+                        "surface-container-highest": "#e3e2e0",
+                        "surface-container-low": "#f4f3f1",
+                        "primary-container": "#ff6b4e",
+                        "surface-tint": "#ae311a",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dbdad7",
+                        "surface-variant": "#e3e2e0",
+                        "error": "#ba1a1a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "container-max": "1440px",
+                        "unit": "8px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Bricolage Grotesque"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "display-lg": ["Bricolage Grotesque"],
+                        "display-lg-mobile": ["Bricolage Grotesque"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col overflow-x-hidden">
+<!-- TopAppBar (Based on Shared Components JSON) -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant flex justify-between items-center px-4 md:px-margin-desktop py-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">camera</span>
+<span class="font-headline-md text-headline-md tracking-tight text-on-surface">Reshoot</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center bg-surface-container-high px-3 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-primary-container mr-2 animate-pulse"></span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest text-on-surface-variant">Session Active</span>
+</div>
+<button class="material-symbols-outlined p-2 hover:bg-surface-container rounded-full transition-colors">more_vert</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 mt-20 pb-24 md:pb-0 md:pt-12 relative">
+<!-- Background Animation Overlay (Shader) -->
+<div class="fixed inset-0 pointer-events-none opacity-40">
+<!-- STITCH_SHADER_START:ANIMATION_4 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_4" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_4');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+varying vec2 v_texCoord;
+
+// Simplex 2D noise
+vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+float snoise(vec2 v){
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+           -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy) );
+  vec2 x0 = v -   i + dot(i, C.xx);
+  vec2 i1;
+  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod(i, 289.0);
+  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+  + i.x + vec3(0.0, i1.x, 1.0 ));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+    dot(x12.zw,x12.zw)), 0.0);
+  m = m*m ;
+  m = m*m ;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+void main() {
+    vec2 uv = v_texCoord;
+    float n = snoise(uv * 2.0 + u_time * 0.1);
+
+    // Warm Ivory #FAF9F6 to slightly deeper cream
+    vec3 colorA = vec3(0.98, 0.976, 0.965);
+    vec3 colorB = vec3(0.96, 0.95, 0.93);
+
+    vec3 color = mix(colorA, colorB, n * 0.5 + 0.5);
+
+    // Add a very subtle lavender tint in the noise
+    color = mix(color, vec3(0.9, 0.9, 0.98), clamp(n * 0.2, 0.0, 0.1));
+
+    gl_FragColor = vec4(color, 1.0);
+}
+`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_4 -->
+</div>
+<div class="relative z-10 max-w-screen-xl mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Side: Editorial Summary -->
+<div class="lg:col-span-5 flex flex-col justify-center py-12 slide-up">
+<div class="space-y-6">
+<span class="inline-block px-4 py-1 bg-secondary-container text-on-secondary-container text-label-sm font-label-sm rounded-full">Session Complete</span>
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface max-w-md">The shoot is ready for curation.</h1>
+<div class="flex items-baseline gap-4 py-4 border-y border-outline-variant/30">
+<div class="flex flex-col">
+<span class="text-display-lg font-display-lg text-primary">18</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Approved Assets</span>
+</div>
+<div class="w-px h-12 bg-outline-variant self-center"></div>
+<div class="flex flex-col">
+<span class="text-display-lg font-display-lg text-tertiary-container">02</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Unresolved</span>
+</div>
+</div>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-sm">
+                        Your technical edits have been applied to 18 select frames. The unresolved items require manual review in the Studio module.
+                    </p>
+<div class="pt-8 space-y-4">
+<button class="group w-full md:w-auto px-10 py-5 bg-primary-container text-on-primary font-headline-md rounded-xl editorial-shadow hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+<span>Download 18 approved</span>
+<span class="material-symbols-outlined transition-transform group-hover:translate-y-1">download</span>
+</button>
+<button class="w-full md:w-auto px-10 py-5 bg-transparent border border-on-surface text-on-surface font-headline-md rounded-xl hover:bg-surface-container-high transition-all flex items-center justify-center gap-3">
+<span class="material-symbols-outlined">refresh</span>
+<span>Start new shoot</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Side: Contact Sheet / Select-All Bento -->
+<div class="lg:col-span-7 py-8 md:py-12">
+<div class="bg-surface/80 backdrop-blur-md rounded-2xl border border-outline-variant p-6 editorial-shadow slide-up" style="animation-delay: 0.2s">
+<div class="flex justify-between items-center mb-8 pb-4 border-b border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-sm border-2 border-primary bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[16px] font-bold">check</span>
+</div>
+<span class="font-headline-md text-headline-md">Select All Approved</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">18 SELECTED</span>
+</div>
+<!-- Visual Contact Sheet (Bento-ish Grid) -->
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+<!-- Card 1 -->
+<div class="group relative aspect-[3/4] bg-surface-container overflow-hidden rounded-lg border border-outline-variant">
+<div class="absolute top-3 right-3 z-20 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-[14px]">check</span>
+</div>
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A high-end editorial fashion photograph of a model in a minimalist architectural space. The lighting is harsh and dramatic, creating deep shadows and bright highlights typical of professional studio lighting. The color palette is neutral with Warm Ivory and Deep Ink tones, matching the Reshoot brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDslh6hxFPRDVuQHfG2JdsCZTd-O7N2ATDJPOm8H_KBgnYtFhZrr27ZgqTqQOyx0egbXIktoXnWQJgvc1Ewq_P0yRuljIjnIlhbPNQRb9jMaSfPBTcz7vlcASfXaXy7iZe2XH_7Qe79uyqSr74VljUsLyHsxmRTQuV5dmBZUibIIadWjVtFEiU5_UO4CWcG5L4pxUkqe6nFPX1HwN3paFB4x7hKdhbq5Pi9gzQzfzkvuyJi5rAtu7jh"/>
+<div class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
+<span class="text-[10px] text-white font-label-sm tracking-widest opacity-80 uppercase">RS_0482_EDIT</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group relative aspect-[3/4] bg-surface-container overflow-hidden rounded-lg border border-outline-variant">
+<div class="absolute top-3 right-3 z-20 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-[14px]">check</span>
+</div>
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Close-up detail of a professional camera lens reflecting a studio lighting setup. The image is crisp and technical, highlighting the glass textures and mechanical precision. The aesthetic is clean and modern, following the Technical Curator personality with a focus on editorial minimalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4SH-74P7vdYh8SbJldmOrkDAM0hpHhmM0b4kVQG8HjQ5O2u9AdDCSX0kqbR1sjlEU0kv3gjA6ekke4TIWwBJXj4JxEV3BSS6DVCzWCqbPWgCGBRCgq2AugONtujscDozBlHun9kuDRz64bzSUdrwvmTJrj0yUqgBHZBPHMjXuRK8qUPBtNu-ed9YfySbldI_bvMgb7MXs7_4l5JWHUv8wFqScTXldMQWaNUUAE49j1z9AKddCDvBF"/>
+<div class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
+<span class="text-[10px] text-white font-label-sm tracking-widest opacity-80 uppercase">RS_0485_EDIT</span>
+</div>
+</div>
+<!-- Card 3 (Tall/Double) -->
+<div class="group relative md:row-span-2 aspect-[3/4] md:aspect-auto bg-surface-container overflow-hidden rounded-lg border border-outline-variant">
+<div class="absolute top-3 right-3 z-20 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-[14px]">check</span>
+</div>
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A wide-angle landscape shot of a modern photography studio during a sunset session. Soft Lavender and Vivid Coral light streams through large windows, casting long artistic shadows across the floor. The scene is tranquil and sophisticated, embodying the premium AI studio brand aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJJlJTclPygFVy_zw_E1IC6DVezfwq69kpMr6PCdY9dlVErT0O39mJczyVzlYvGPIVGUY_HY67etwU8kNqVIMg1eQUdh_CGKEddbIG8Sw9sT3QI57QVdKczg-4YR4ptiFx4fsectfB21EycAkCWPRr6sWF6acAZpzscVtkf0ihXrChwdy8hmc80FRGrsr35cS0eoB06b0YVb70gPzHUYRn9FtC-jlvLaIWA5tVMgH7akXRt4Fjpag4"/>
+<div class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
+<span class="text-[10px] text-white font-label-sm tracking-widest opacity-80 uppercase">RS_0491_EDIT</span>
+</div>
+</div>
+<!-- Card 4 (Unresolved State) -->
+<div class="group relative aspect-[3/4] bg-surface-container-high overflow-hidden rounded-lg border-2 border-dashed border-outline">
+<div class="absolute inset-0 bg-black/40 backdrop-grayscale flex flex-col items-center justify-center text-white p-4 text-center">
+<span class="material-symbols-outlined text-3xl mb-2">pending</span>
+<span class="text-label-sm font-label-sm uppercase tracking-tighter">Needs Resolution</span>
+</div>
+<img class="w-full h-full object-cover" data-alt="A blurry, abstract motion shot of a city at night with vibrant light trails in coral and blue. The image represents a pending or unresolved creative asset in the photography workflow, needing technical correction within the AI studio software platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6vnpT2vJRQUCeLhiHVbJkBkdw7ub64XEZLHIP90ErS1KoVVqy-ogtRGswSs_inrn5C-YnUde6s13V0edchDOhhCzgI60fvculvu5Ogs8nTJJe1QIttPD5m24rAdoimcGxh1XSYTqi3zsjvGHAP47h7gS3yWDG-QwxvtSToQdoVXyCPnCdJGFBh7Cuf2j4PnHZVjelWY1XDUeTf3BkZpG10JWc373Tx-UNWGJ_OwGaDS8plY24i2n_"/>
+</div>
+<!-- Card 5 -->
+<div class="group relative aspect-[3/4] bg-surface-container overflow-hidden rounded-lg border border-outline-variant">
+<div class="absolute top-3 right-3 z-20 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-[14px]">check</span>
+</div>
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A macro photograph of minimalist product packaging for high-end cosmetics. The lighting is soft and even, highlighting the Muted Sage and Lavender color palette of the branding. The composition is structured and editorial, reflecting professional photography standards." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs_BMgsx-3Bd8UgABj0tq-0-rSaDTHudOf9ZdFDy4BVVmsUufx4WZUf7lNn_VIkfG0Oj4TkxJvgV3aEWv4w87tyumKM2_kGLbnSbw73NeSB4bUFqDlWf8Ds7ks8mhsRQmIidBeqhKhuLaDh9vV92eJ1uKXPJkPZSWVwEN_wBElS1zGi4GvjdBYH7rDhWq_mG7G_K7cS2emSzaPUKXgeE17hWYLEalQdWLXYm4HgxxWldyPGHXdFfHe"/>
+<div class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
+<span class="text-[10px] text-white font-label-sm tracking-widest opacity-80 uppercase">RS_0502_EDIT</span>
+</div>
+</div>
+</div>
+<!-- Pagination / Counter -->
+<div class="mt-8 flex justify-center">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 group">
+<span class="text-label-sm font-label-sm">VIEW ALL 18 ASSETS</span>
+<span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Based on Shared Components JSON) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface border-t border-outline-variant flex justify-around items-center h-20 px-2 pb-safe-bottom editorial-shadow">
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1" href="#">
+<span class="material-symbols-outlined">photo_camera</span>
+<span class="font-label-sm text-label-sm">Studio</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl px-4 py-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="font-label-sm text-label-sm">Gallery</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1" href="#">
+<span class="material-symbols-outlined">wb_sunny</span>
+<span class="font-label-sm text-label-sm">Lighting</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</nav>
+<!-- Desktop Sidebar Mini Toggle (Simulated NavDrawer) -->
+<aside class="hidden md:flex fixed left-0 top-0 h-full w-20 flex-col items-center py-8 bg-surface border-r border-outline-variant z-40">
+<div class="mb-12">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">camera</span>
+</div>
+<div class="flex flex-col gap-8">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">grid_view</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">history</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">settings_input_component</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">person</button>
+</div>
+<div class="mt-auto">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">help_outline</button>
+</div>
+</aside>
+<script>
+        // Simple Micro-interaction for buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95');
+            });
+        });
+
+        // Simulating completion confetti or subtle atmospheric shift
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log("Reshoot Session Finalized.");
+        });
+    </script>
+</body></html>
