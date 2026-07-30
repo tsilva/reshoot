@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
 import "@/app/globals.css";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+  SOCIAL_IMAGE_ALT,
+  SOCIAL_IMAGE_PATH,
+} from "@/lib/site";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -15,11 +23,14 @@ const body = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://reshoot.tsilva.eu"),
-  title: "Reshoot — Every angle, one product",
-  description:
-    "Create a consistent studio set of product perspectives from one original image.",
-  applicationName: "Reshoot",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: {
+    canonical: "/",
+  },
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [
       {
@@ -49,27 +60,35 @@ export const metadata: Metadata = {
       type: "image/png",
     },
   },
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
-    title: "Reshoot — Every angle, one product",
-    description:
-      "Create a consistent studio set of product perspectives from one original image.",
-    siteName: "Reshoot",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: "/",
+    siteName: SITE_NAME,
     type: "website",
     images: [
       {
-        url: "/brand/web-seo/og-image-1200x630.png",
+        url: SOCIAL_IMAGE_PATH,
         width: 1200,
         height: 630,
-        alt: "Reshoot product photography studio",
+        alt: SOCIAL_IMAGE_ALT,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Reshoot — Every angle, one product",
-    description:
-      "Create a consistent studio set of product perspectives from one original image.",
-    images: ["/brand/web-seo/og-image-1200x630.png"],
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: SOCIAL_IMAGE_PATH,
+        alt: SOCIAL_IMAGE_ALT,
+      },
+    ],
   },
 };
 

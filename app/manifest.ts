@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Reshoot",
-    short_name: "Reshoot",
-    description:
-      "Create consistent AI product photography from every perspective.",
+    name: `${SITE_NAME} — AI Product Photography`,
+    short_name: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    id: "/",
     start_url: "/",
     display: "standalone",
     background_color: "#faf9f6",
