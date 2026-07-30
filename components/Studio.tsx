@@ -179,6 +179,7 @@ export function Studio() {
     yaw: 18,
     pitch: 2,
   });
+  const [editingAngleId, setEditingAngleId] = useState<string | null>(null);
   const [activeShotId, setActiveShotId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<number | null>(null);
@@ -258,11 +259,6 @@ export function Studio() {
     () => state.shots.filter((shot) => shot.status !== "approved"),
     [state.shots],
   );
-  const customAngles = useMemo(
-    () => state.angles.filter((angle) => !DEFAULT_ANGLE_IDS.has(angle.id)),
-    [state.angles],
-  );
-
   function updateState(patch: Partial<StudioState>) {
     setState((current) => ({ ...current, ...patch }));
   }
@@ -324,9 +320,13 @@ export function Studio() {
     if (file) void acceptFile(file);
   }
 
-  function addAngle(next: Orientation) {
+  function saveAngle(next: Orientation) {
+    const editingAngle = editingAngleId
+      ? state.angles.find((angle) => angle.id === editingAngleId)
+      : undefined;
     const duplicate = state.angles.some(
       (angle) =>
+        angle.id !== editingAngleId &&
         shortestAngle(angle.azimuth, next.yaw) < 12 &&
         Math.abs(angle.elevation - next.pitch) < 10,
     );
@@ -335,27 +335,64 @@ export function Studio() {
       setToast("That perspective is already locked.");
       return;
     }
-    if (state.angles.length >= 8) {
+    if (!editingAngle && state.angles.length >= 8) {
       setToast("A shoot can contain up to 8 perspectives.");
       return;
     }
 
     const angle: Angle = {
-      id: crypto.randomUUID(),
+      id:
+        editingAngle && !DEFAULT_ANGLE_IDS.has(editingAngle.id)
+          ? editingAngle.id
+          : crypto.randomUUID(),
       label: labelForOrientation(next),
       azimuth: Math.round(normalizeDegrees(next.yaw)),
       elevation: Math.round(next.pitch),
     };
+
+    if (editingAngle) {
+      updateState({
+        angles: state.angles.map((current) =>
+          current.id === editingAngle.id ? angle : current,
+        ),
+      });
+      setEditingAngleId(angle.id);
+      setToast(`${angle.label} updated.`);
+      return;
+    }
+
     updateState({ angles: [...state.angles, angle] });
+    setEditingAngleId(angle.id);
     setToast(`${angle.label} locked.`);
   }
 
   function removeAngle(id: string) {
     updateState({ angles: state.angles.filter((angle) => angle.id !== id) });
+    if (editingAngleId === id) setEditingAngleId(null);
+  }
+
+  function selectAngle(angle: Angle) {
+    setOrientation({
+      yaw: angle.azimuth,
+      pitch: angle.elevation,
+    });
+    setEditingAngleId(angle.id);
+  }
+
+  function startNewAngle() {
+    const candidateYaw =
+      [315, 225, 135, 270, 45, 90, 180, 0].find((yaw) =>
+        state.angles.every((angle) => shortestAngle(angle.azimuth, yaw) >= 12),
+      ) ?? normalizeDegrees(orientation.yaw + 22);
+
+    setEditingAngleId(null);
+    setOrientation({ yaw: candidateYaw, pitch: 0 });
+    setToast("Drag the camera to place a new angle.");
   }
 
   function togglePreset(preset: Angle) {
     const selected = state.angles.some((angle) => angle.id === preset.id);
+    if (selected && editingAngleId === preset.id) setEditingAngleId(null);
     updateState({
       angles: selected
         ? state.angles.filter((angle) => angle.id !== preset.id)
@@ -807,8 +844,8 @@ export function Studio() {
             <details className="custom-angle-panel">
               <summary>
                 <span>
-                  <strong>Add a custom angle</strong>
-                  <small>Optional precision control</small>
+                  <strong>Fine-tune camera angles</strong>
+                  <small>Drag the camera or edit any selected view</small>
                 </span>
                 <CaretDown size={18} weight="bold" />
               </summary>
@@ -817,46 +854,56 @@ export function Studio() {
                 <OrbitSphere
                   original={original}
                   orientation={orientation}
-                  lockedAngles={customAngles}
+                  orientationLabel={labelForOrientation(orientation)}
+                  lockedAngles={state.angles}
+                  editingAngleId={editingAngleId}
                   onOrientationChange={setOrientation}
-                  onLock={addAngle}
+                  onSelectAngle={selectAngle}
+                  onSave={saveAngle}
                 />
 
                 <aside className="custom-angle-plan">
                   <div className="panel-title-row">
                     <div>
-                      <span className="panel-label">Custom views</span>
+                      <span className="panel-label">Camera map</span>
                       <strong>
-                        {customAngles.length}{" "}
-                        {customAngles.length === 1 ? "angle" : "angles"} added
+                        {state.angles.length}{" "}
+                        {state.angles.length === 1 ? "view" : "views"} selected
                       </strong>
                     </div>
                     <button
-                      className="icon-button"
+                      className="button button-secondary button-compact plan-new-angle"
                       type="button"
-                      onClick={() => {
-                        setOrientation({ yaw: 0, pitch: 0 });
-                        setToast("Camera returned to front.");
-                      }}
-                      aria-label="Reset custom camera"
+                      onClick={startNewAngle}
                     >
-                      <ArrowCounterClockwise size={18} weight="bold" />
+                      <Plus size={16} weight="bold" />
+                      New angle
                     </button>
                   </div>
 
-                  {customAngles.length ? (
+                  {state.angles.length ? (
                     <div className="shot-plan-list">
-                      {customAngles.map((angle, index) => (
-                        <div className="shot-plan-item" key={angle.id}>
+                      {state.angles.map((angle, index) => (
+                        <div
+                          className={`shot-plan-item ${
+                            editingAngleId === angle.id ? "is-editing" : ""
+                          }`}
+                          key={angle.id}
+                        >
                           <span className="plan-index">
                             {String(index + 1).padStart(2, "0")}
                           </span>
-                          <span>
+                          <button
+                            className="shot-plan-select"
+                            type="button"
+                            onClick={() => selectAngle(angle)}
+                            aria-pressed={editingAngleId === angle.id}
+                          >
                             <strong>{angle.label}</strong>
                             <small>
                               {angle.azimuth}° orbit · {angle.elevation}° tilt
                             </small>
-                          </span>
+                          </button>
                           <button
                             className="icon-button icon-button-small"
                             type="button"
@@ -870,7 +917,7 @@ export function Studio() {
                     </div>
                   ) : (
                     <p className="custom-angle-empty">
-                      Use the controls to add a view outside the starter set.
+                      Drag the camera around the product to add your first view.
                     </p>
                   )}
                 </aside>
