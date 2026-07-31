@@ -24,6 +24,7 @@ type OpenRouterImagesResponse = {
 const MODEL = "openai/gpt-image-2";
 const OPENROUTER_IMAGES_URL = "https://openrouter.ai/api/v1/images";
 const MAX_IMAGE_LENGTH = 30_000_000;
+const STREAM_HEARTBEAT_MS = 15_000;
 
 function isImageDataUrl(value: unknown): value is string {
   return (
@@ -39,6 +40,133 @@ function errorMessage(
 ) {
   const message = payload?.error?.message;
   return typeof message === "string" && message.trim() ? message : fallback;
+}
+
+function streamedGenerationResponse(
+  request: Request,
+  apiKey: string,
+  payload: Record<string, unknown>,
+  targetLabel: string,
+) {
+  const encoder = new TextEncoder();
+  const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
+  let heartbeat: ReturnType<typeof setInterval> | undefined;
+  let cancelled = false;
+
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const finish = (result: Record<string, unknown>) => {
+        if (heartbeat) clearInterval(heartbeat);
+        if (cancelled) return;
+        controller.enqueue(encoder.encode(JSON.stringify(result)));
+        controller.close();
+      };
+
+      // Send a byte before the image provider finishes, then keep the proxied
+      // connection active while the long-running generation is in flight.
+      controller.enqueue(encoder.encode("\n"));
+      heartbeat = setInterval(() => {
+        if (!cancelled) controller.enqueue(encoder.encode("\n"));
+      }, STREAM_HEARTBEAT_MS);
+
+      console.info("Image generation started", {
+        requestId,
+        target: targetLabel,
+        model: MODEL,
+      });
+
+      void (async () => {
+        try {
+          const upstream = await fetch(OPENROUTER_IMAGES_URL, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "https://reshoot.tsilva.eu",
+              "X-OpenRouter-Title": "Reshoot",
+            },
+            body: JSON.stringify(payload),
+            signal: request.signal,
+          });
+
+          const result = (await upstream
+            .json()
+            .catch(() => null)) as OpenRouterImagesResponse | null;
+
+          if (!upstream.ok) {
+            const message = errorMessage(
+              result,
+              `OpenRouter image generation failed (${upstream.status}).`,
+            );
+            console.error("OpenRouter image generation failed", {
+              requestId,
+              target: targetLabel,
+              status: upstream.status,
+              durationMs: Date.now() - startedAt,
+              message,
+            });
+            finish({ error: message, upstreamStatus: upstream.status });
+            return;
+          }
+
+          const image = result?.data?.[0];
+          const mediaType = image?.media_type;
+
+          if (
+            typeof image?.b64_json !== "string" ||
+            typeof mediaType !== "string" ||
+            !mediaType.startsWith("image/")
+          ) {
+            console.error("OpenRouter returned no usable image", {
+              requestId,
+              target: targetLabel,
+              durationMs: Date.now() - startedAt,
+            });
+            finish({
+              error: "The model did not return an image. Please try again.",
+            });
+            return;
+          }
+
+          console.info("Image generation completed", {
+            requestId,
+            target: targetLabel,
+            model: MODEL,
+            durationMs: Date.now() - startedAt,
+          });
+          finish({
+            image: `data:${mediaType};base64,${image.b64_json}`,
+            mediaType,
+            model: MODEL,
+          });
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : "Image generation failed.";
+          console.error("Image generation route failed", {
+            requestId,
+            target: targetLabel,
+            name: error instanceof Error ? error.name : "UnknownError",
+            durationMs: Date.now() - startedAt,
+            message,
+          });
+          finish({ error: message });
+        }
+      })();
+    },
+    cancel() {
+      cancelled = true;
+      if (heartbeat) clearInterval(heartbeat);
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Cache-Control": "no-cache, no-transform",
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }
 
 export async function POST(request: Request) {
@@ -110,15 +238,10 @@ export async function POST(request: Request) {
       "Return only one image at the requested perspective.",
     ].join("\n");
 
-    const upstream = await fetch(OPENROUTER_IMAGES_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://reshoot.tsilva.eu",
-        "X-OpenRouter-Title": "Reshoot",
-      },
-      body: JSON.stringify({
+    return streamedGenerationResponse(
+      request,
+      apiKey,
+      {
         model: MODEL,
         prompt,
         n: 1,
@@ -135,49 +258,9 @@ export async function POST(request: Request) {
             image_url: { url: reference.image },
           })),
         ],
-      }),
-      signal: request.signal,
-    });
-
-    const result = (await upstream
-      .json()
-      .catch(() => null)) as OpenRouterImagesResponse | null;
-
-    if (!upstream.ok) {
-      console.error("OpenRouter image generation failed", {
-        status: upstream.status,
-        message: errorMessage(result, "No error message returned."),
-      });
-      return Response.json(
-        {
-          error: errorMessage(
-            result,
-            `OpenRouter image generation failed (${upstream.status}).`,
-          ),
-        },
-        { status: upstream.status },
-      );
-    }
-
-    const image = result?.data?.[0];
-    const mediaType = image?.media_type;
-
-    if (
-      typeof image?.b64_json !== "string" ||
-      typeof mediaType !== "string" ||
-      !mediaType.startsWith("image/")
-    ) {
-      return Response.json(
-        { error: "The model did not return an image. Please try again." },
-        { status: 502 },
-      );
-    }
-
-    return Response.json({
-      image: `data:${mediaType};base64,${image.b64_json}`,
-      mediaType,
-      model: MODEL,
-    });
+      },
+      target.label,
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Image generation failed.";

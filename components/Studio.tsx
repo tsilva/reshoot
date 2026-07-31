@@ -215,10 +215,20 @@ async function readGenerationResponse(response: Response) {
       );
     }
 
+    if (response.status === 524) {
+      throw new Error(
+        "Generation took longer than the web gateway allows. Retry this shot; it may still have completed on the image service.",
+      );
+    }
+
     throw new Error(
       result?.error ??
         `The generation service returned an unexpected response (${response.status}). Retry this shot.`,
     );
+  }
+
+  if (result?.error) {
+    throw new Error(result.error);
   }
 
   if (!result?.image) {
