@@ -13,7 +13,14 @@ export default async function AccountPage() {
   ]);
 
   return (
-    <AppShell>
+    <AppShell
+      currentUser={{
+        displayName: user.displayName,
+        email: user.email,
+        isDemo: user.isDemo,
+        availableCredits: credits.availableCredits,
+      }}
+    >
       <AccountClient
         initialCredits={credits}
         initialActivity={activity}
