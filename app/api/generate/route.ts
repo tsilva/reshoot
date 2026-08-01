@@ -230,7 +230,9 @@ export async function POST(request: Request) {
       `TARGET VIEW: ${target.label}; camera azimuth ${Math.round(target.azimuth)} degrees; elevation ${Math.round(target.elevation)} degrees.`,
       ...referenceLabels,
       "Identity consistency is the highest priority. Preserve the exact product shape, proportions, materials, colors, construction details, face, seams, accessories, imperfections, and wear shown in the original.",
-      "Infer only the unseen geometry needed for the requested camera angle. Keep the original lighting character and a clean neutral editorial background.",
+      "Infer only the unseen geometry needed for the requested camera angle. Keep the original lighting character.",
+      "BACKGROUND REQUIREMENT: Replace the background from every input reference. The output must have a seamless, evenly lit, solid pure white background (#FFFFFF; RGB 255, 255, 255) extending edge-to-edge through all four corners.",
+      "Do not produce an off-white, gray, colored, transparent, textured, gradient, environmental, or horizon-line background. A small natural contact shadow may touch the product, but every other background area must remain pure white.",
       "Do not add text, props, hands, people, logos, packaging, extra objects, alternate products, or a contact sheet.",
       body.feedback
         ? `REGENERATION FEEDBACK FROM THE HUMAN REVIEWER: ${body.feedback}`
