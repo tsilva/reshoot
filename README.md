@@ -4,9 +4,9 @@
   **📸 Every angle, one product. 📸**
 </div>
 
-Reshoot is a mobile-first web app for small brands, studios, and product teams that need a consistent set of product photos without arranging another shoot. Upload one authoritative product image, choose up to eight camera perspectives, review or regenerate the AI-created views, and download the approved shots as a ZIP.
+Reshoot is a persistent product-photography workspace for small brands, studios, and product teams. Create a project for each product, upload every original photo you have, choose the views you need, and keep every generated version and approval together.
 
-The original image remains the identity anchor throughout the workflow. Generated views can improve spatial consistency, but they never replace the original as the source of truth.
+One selected original remains the primary identity anchor. Up to four additional originals can support each generation, and Reshoot shows the exact credit quote before a batch begins.
 
 ## Install
 
@@ -21,7 +21,7 @@ vercel env pull .env.local --yes
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). You can upload a product image or use the included sample doll.
+The development server prints the local URL. The seeded demo user is always signed in.
 
 ## Commands
 
@@ -31,20 +31,21 @@ pnpm build      # create a production build
 pnpm start      # serve the production build
 pnpm lint       # run ESLint
 pnpm typecheck  # check TypeScript
+pnpm test       # run unit and integration tests
+pnpm db:migrate # apply forward database migrations
 ```
 
 ## Notes
 
-- Uploads accept JPG, PNG, and WebP images up to 20 MB.
-- The active shoot and generated images are saved in browser IndexedDB. Starting a new shoot clears that local data.
-- Generation runs through Vercel AI Gateway using `google/gemini-3.1-flash-image`. AI Gateway billing must be enabled.
-- Local AI requests use the Vercel OIDC token pulled into `.env.local`; deployments receive Vercel OIDC automatically.
-- The deployment target is the Vercel project `tsilvas-projects/reshoot`. The intended Cloudflare record is an A record named `reshoot` pointing to `76.76.21.21`.
+- Neon stores users, projects, immutable generation history, pricing, and credit accounting.
+- A private Cloudflare R2 bucket stores originals, normalized references, previews, and generated outputs. Browser uploads use short-lived signed URLs.
+- Vercel Workflow runs durable generation jobs. Jobs continue when a browser closes and are protected against duplicate paid attempts.
+- Uploads accept up to 25 JPG, PNG, or WebP originals per project, 20 MB each and 500 MB total.
+- Credits are purchase value at 100 credits per $1. Local and preview deployments include a clearly labeled no-charge test checkout. Production credit minting is disabled until real billing exists.
+- The image service and model are private server configuration and are intentionally absent from public APIs, browser bundles, filenames, and customer-facing diagnostics.
+- A previous browser-saved shoot is imported once into the persistent project library, then the legacy browser database is retired.
+- The deployment target is the Vercel project `tsilvas-projects/reshoot` at `reshoot.tsilva.eu`.
 - The preserved Stitch export and visual verification notes are in [`design/stitch-source`](./design/stitch-source) and [`design-qa.md`](./design-qa.md).
-
-## Architecture
-
-![Reshoot architecture diagram](./architecture.png)
 
 ## License
 
