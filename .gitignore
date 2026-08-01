@@ -11,3 +11,7 @@ runs/
 
 # Local Stitch MCP project reference
 design/stitch-source/STITCH_PROJECT.local.md
+
+# Sentry Config File
+.env.sentry-build-plugin
+/.swc

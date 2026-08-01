@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "@/app/globals.css";
 import {
   SITE_DESCRIPTION,
@@ -21,6 +22,8 @@ const body = Hanken_Grotesk({
   variable: "--font-body",
   display: "swap",
 });
+
+const googleAnalyticsId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -106,7 +109,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        {googleAnalyticsId ? (
+          <GoogleAnalytics gaId={googleAnalyticsId} />
+        ) : null}
+      </body>
     </html>
   );
 }
