@@ -1,0 +1,23 @@
+# Credential references only. Store values with `keyenv set ENV_NAME`.
+[keyenv]
+version = 1
+
+[secrets.DATABASE_URL]
+account = "reshoot/DATABASE_URL"
+required = true
+
+[secrets.OPENROUTER_API_KEY]
+account = "reshoot/OPENROUTER_API_KEY"
+required = true
+
+[secrets.R2_ACCESS_KEY_ID]
+account = "reshoot/R2_ACCESS_KEY_ID"
+required = true
+
+[secrets.R2_SECRET_ACCESS_KEY]
+account = "reshoot/R2_SECRET_ACCESS_KEY"
+required = true
+
+[secrets.SENTRY_AUTH_TOKEN]
+account = "reshoot/SENTRY_AUTH_TOKEN"
+required = true
