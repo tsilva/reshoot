@@ -17,11 +17,14 @@ git clone https://github.com/tsilva/reshoot.git
 cd reshoot
 pnpm install
 vercel link
-vercel env pull .env.local --yes
-pnpm dev
+keyenv doctor
+vercel env run -e development -- keyenv run -- pnpm dev
 ```
 
-The development server prints the local URL. The seeded demo user is always signed in.
+Private local values declared in `.keyenv.toml` live in macOS Keychain. Vercel
+development values are injected without writing a plaintext `.env.local` file;
+Node continues to read both sources normally from `process.env`. The development
+server prints the local URL. The seeded demo user is always signed in.
 
 ## Commands
 
