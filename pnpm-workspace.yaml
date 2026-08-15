@@ -3,3 +3,9 @@ packages:
 
 minimumReleaseAge: 10080
 blockExoticSubdeps: true
+
+overrides:
+  '@esbuild-kit/core-utils>esbuild': 0.25.12
+  '@workflow/core>nanoid': 5.1.16
+  '@workflow/world-local>undici': 7.29.0
+  '@workflow/world-vercel>undici': 7.29.0
