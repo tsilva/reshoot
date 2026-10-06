@@ -10,21 +10,13 @@ One selected original remains the primary identity anchor. Up to four additional
 
 ## Install
 
-Requirements: Node.js 24+, pnpm 10, and an authenticated Vercel CLI.
-
 ```bash
 git clone https://github.com/tsilva/reshoot.git
 cd reshoot
 pnpm install
-vercel link
-keyenv doctor
-vercel env run -e development -- keyenv run -- pnpm dev
+pnpm secrets:check
+pnpm dev --port auto
 ```
-
-Private local values declared in `.keyenv.toml` live in macOS Keychain. Vercel
-development values are injected without writing a plaintext `.env.local` file;
-Node continues to read both sources normally from `process.env`. The development
-server prints the local URL. The seeded demo user is always signed in.
 
 ## Commands
 
