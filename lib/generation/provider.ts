@@ -9,7 +9,7 @@ export const imageProviderConfig = {
 
 export function requireImageProviderKey() {
   const key =
-    process.env.IMAGE_GENERATION_API_KEY ?? process.env.OPENROUTER_API_KEY;
+    process.env.OPENROUTER_API_KEY ?? process.env.IMAGE_GENERATION_API_KEY;
   if (!key) throw new Error("Image provider credentials are not configured.");
   return key;
 }

@@ -16,5 +16,10 @@ design/stitch-source/STITCH_PROJECT.local.md
 .env.sentry-build-plugin
 /.swc
 
-.next-dev-*/
-__pycache__/
+.git
+**/.env*
+!.env.example
+!**/.env.example
+.codex
+.runs
+.next-dev-*

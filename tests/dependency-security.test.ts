@@ -3,21 +3,22 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const lockfile = readFileSync("pnpm-lock.yaml", "utf8");
+const resolvedPackages = lockfile.slice(lockfile.indexOf("\npackages:"));
 
 function lockedVersions(packageName: string): string[] {
   const escaped = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const pattern = new RegExp(`^  ${escaped}@([^:\\s(]+)(?:\\([^)]*\\))?:`, "gm");
-  return [...new Set([...lockfile.matchAll(pattern)].map((match) => match[1]))].sort();
+  return [...new Set([...resolvedPackages.matchAll(pattern)].map((match) => match[1]))].sort();
 }
 
 describe("dependency security boundaries", () => {
   it("keeps every formerly vulnerable package on a remediated version", () => {
-    expect(lockedVersions("brace-expansion")).toEqual(["1.1.18", "2.1.4", "5.0.9"]);
+    expect(lockedVersions("brace-expansion")).toEqual(["1.1.21", "2.1.7", "5.0.12"]);
     expect(lockedVersions("esbuild")).toEqual(["0.25.12", "0.28.1"]);
-    expect(lockedVersions("fast-uri")).toEqual(["3.1.5"]);
-    expect(lockedVersions("js-yaml")).toEqual(["4.3.1"]);
+    expect(lockedVersions("fast-uri")).toEqual(["3.1.8"]);
+    expect(lockedVersions("js-yaml")).toEqual(["4.3.2"]);
     expect(lockedVersions("nanoid")).toEqual(["3.3.18", "5.1.16"]);
-    expect(lockedVersions("undici")).toEqual(["7.29.0"]);
+    expect(lockedVersions("undici")).toEqual(["7.29.1"]);
   });
 
   it("has no known vulnerabilities in the complete dependency graph", () => {
