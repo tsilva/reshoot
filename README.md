@@ -35,6 +35,7 @@ pnpm db:migrate # apply forward database migrations
 - Neon stores users, projects, immutable generation history, pricing, and credit accounting.
 - A private Cloudflare R2 bucket stores originals, normalized references, previews, and generated outputs. Browser uploads use short-lived signed URLs.
 - Vercel Workflow runs durable generation jobs. Jobs continue when a browser closes and are protected against duplicate paid attempts.
+- Scheduled reconciliation is disabled. Users request another attempt with Regenerate after a failed generation; automatic pricing reconciliation and expired-object cleanup are also paused.
 - Uploads accept up to 25 JPG, PNG, or WebP originals per project, 20 MB each and 500 MB total.
 - Credits are purchase value at 100 credits per $1. Local and preview deployments include a clearly labeled no-charge test checkout. Production credit minting is disabled until real billing exists.
 - The image service and model are private server configuration and are intentionally absent from public APIs, browser bundles, filenames, and customer-facing diagnostics.
