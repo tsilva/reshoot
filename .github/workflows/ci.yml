@@ -46,6 +46,7 @@ jobs:
       - name: Build
         run: pnpm build
         env:
+          # Dummy loopback URL for build validation; never a deployed credential.
           DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/reshoot
           R2_BUCKET_NAME: reshoot-ci
           R2_ENDPOINT: https://r2.invalid
