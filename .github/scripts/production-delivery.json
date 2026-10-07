@@ -1,0 +1,25 @@
+{
+  "repository": "tsilva/reshoot",
+  "githubRepositoryId": 1317499522,
+  "identityId": "672c01c3-c025-40f9-b89b-5abcc03e8261",
+  "infisicalProjectId": "05231e99-a5e4-4d81-bbae-ea17a054ae54",
+  "secretNames": [
+    "CRON_SECRET",
+    "DATABASE_URL",
+    "NEXT_PUBLIC_SENTRY_DSN",
+    "OPENROUTER_API_KEY",
+    "R2_ACCESS_KEY_ID",
+    "R2_ACCOUNT_ID",
+    "R2_BUCKET_NAME",
+    "R2_ENDPOINT",
+    "R2_SECRET_ACCESS_KEY",
+    "SENTRY_AUTH_TOKEN",
+    "SENTRY_DSN",
+    "SENTRY_ORG",
+    "SENTRY_PROJECT"
+  ],
+  "destination": "vercel",
+  "vercelProjectId": "prj_L1D4dlxsUv8zZORHmxEmDZnE3lCV",
+  "vercelProjectName": "reshoot",
+  "vercelTeamId": "team_eE2Iv7IMqPOx8ZVN2xNfR2f0"
+}
