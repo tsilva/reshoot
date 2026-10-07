@@ -1,8 +1,10 @@
-<div align="center">
+<p align="center">
   <img src="./public/brand/web-seo/og-image-1200x630-ctr.png" alt="Reshoot turns one product photo into a consistent set of studio angles" width="640" />
-
-  **📸 Every angle, one product. 📸**
-</div>
+  <br />
+  <!-- repo-tagline:start -->
+  <strong>📸 Every angle, one product 📸</strong>
+  <!-- repo-tagline:end -->
+</p>
 
 Reshoot is a persistent product-photography workspace for small brands, studios, and product teams. Create a project for each product, upload every original photo you have, choose the views you need, and keep every generated version and approval together.
 
