@@ -109,7 +109,15 @@ export async function captureGeneration(input: {
       .where(eq(generationOutputs.jobId, job.id))
       .limit(1);
     if (existing) return existing.id;
+    if (job.status === "failed") {
+      throw new Error("Generation job has already failed and its credits were released.");
+    }
 
+    // Jobs have separate locks, but every job in this batch shares this hold.
+    // Lock it before reading totals so concurrent settlements cannot overwrite them.
+    await tx.execute(
+      sql`select id from ${creditHolds} where ${creditHolds.batchId} = ${job.batchId}::uuid for update`,
+    );
     const [hold] = await tx
       .select()
       .from(creditHolds)
@@ -223,6 +231,9 @@ export async function releaseGeneration(input: {
       .where(eq(generationJobs.id, input.jobId))
       .limit(1);
     if (!job || job.status === "failed" || job.status === "succeeded") return;
+    await tx.execute(
+      sql`select id from ${creditHolds} where ${creditHolds.batchId} = ${job.batchId}::uuid for update`,
+    );
     const [hold] = await tx
       .select()
       .from(creditHolds)

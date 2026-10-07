@@ -10,13 +10,14 @@ import {
   shots,
 } from "@/lib/db/schema";
 import { captureGeneration, releaseGeneration } from "@/lib/generation/accounting";
+import { actualImageMime, recoverGenerationOutput } from "@/lib/generation/recovery";
+import { buildImageRequest } from "@/lib/generation/request";
 import {
   imageProviderConfig,
   requireImageProviderKey,
 } from "@/lib/generation/provider";
 import {
   getObjectBuffer,
-  headObject,
   putObject,
   sha256Hex,
 } from "@/lib/storage/r2";
@@ -112,70 +113,6 @@ export async function claimGenerationJob(jobId: string): Promise<ClaimResult> {
 }
 claimGenerationJob.maxRetries = 60;
 
-function actualImageMime(format: string | undefined) {
-  if (format === "jpeg") return "image/jpeg";
-  if (format === "png") return "image/png";
-  if (format === "webp") return "image/webp";
-  return null;
-}
-
-async function objectExists(key: string) {
-  try {
-    await headObject(key);
-    return true;
-  } catch (error) {
-    const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata
-      ?.httpStatusCode;
-    if (status === 404) return false;
-    throw error;
-  }
-}
-
-async function persistExistingOutput(input: {
-  job: typeof generationJobs.$inferSelect;
-  attempt: typeof generationAttempts.$inferSelect;
-  shot: typeof shots.$inferSelect;
-}) {
-  if (!(await objectExists(input.attempt.outputR2Key))) return false;
-  const output = await getObjectBuffer(input.attempt.outputR2Key);
-  const image = sharp(output, { failOn: "error", animated: false });
-  const metadata = await image.metadata();
-  const mimeType = actualImageMime(metadata.format);
-  if (!mimeType || !metadata.width || !metadata.height) return false;
-  if (!(await objectExists(input.attempt.previewR2Key))) {
-    const preview = await image
-      .clone()
-      .resize({ width: 768, height: 768, fit: "inside", withoutEnlargement: true })
-      .webp({ quality: 84 })
-      .toBuffer();
-    await putObject({
-      key: input.attempt.previewR2Key,
-      body: preview,
-      mimeType: "image/webp",
-    });
-  }
-  await captureGeneration({
-    jobId: input.job.id,
-    attemptId: input.attempt.id,
-    output: {
-      projectId: input.shot.projectId,
-      ownerId: input.job.ownerId,
-      shotId: input.shot.id,
-      version: input.job.version,
-      r2Key: input.attempt.outputR2Key,
-      previewR2Key: input.attempt.previewR2Key,
-      mimeType,
-      sizeBytes: output.byteLength,
-      checksumSha256: sha256Hex(output),
-      width: metadata.width,
-      height: metadata.height,
-    },
-    providerRequestId: input.attempt.providerRequestId ?? undefined,
-    usageCostMicros: input.attempt.usageCostMicros ?? undefined,
-  });
-  return true;
-}
-
 export async function executeGenerationJob(
   jobId: string,
   attemptId: string,
@@ -210,7 +147,7 @@ export async function executeGenerationJob(
   if (job.status === "succeeded" || job.status === "failed") {
     return { status: "terminal" as const };
   }
-  if (await persistExistingOutput({ job, attempt, shot })) {
+  if (await recoverGenerationOutput({ job, attempt, shot })) {
     return { status: "recovered" as const };
   }
   if (attempt.state === "started" || attempt.state === "ambiguous") {
@@ -232,7 +169,14 @@ export async function executeGenerationJob(
     const referenceBuffers = await Promise.all(
       inputs.map((input) => getObjectBuffer(input.frozenR2Key)),
     );
-    if (!referenceBuffers.length) throw new Error("Generation inputs are missing.");
+    const request = buildImageRequest({
+      model: attempt.providerModel ?? imageProviderConfig.model,
+      shot,
+      referenceImages: referenceBuffers.map(
+        (buffer) => `data:image/webp;base64,${buffer.toString("base64")}`,
+      ),
+    });
+    const providerKey = requireImageProviderKey();
 
     await db
       .update(generationAttempts)
@@ -245,45 +189,15 @@ export async function executeGenerationJob(
       );
     providerStarted = true;
 
-    const referenceInstructions = inputs.map((input, index) =>
-      index === 0
-        ? "REFERENCE 1 is the primary original and authoritative identity anchor."
-        : `REFERENCE ${index + 1} is an additional original view of the same product.`,
-    );
-    const prompt = [
-      "Create exactly one premium studio product photograph.",
-      `SHOT: ${shot.label}.`,
-      shot.azimuth === null ? null : `CAMERA AZIMUTH: ${shot.azimuth} degrees.`,
-      shot.elevation === null ? null : `CAMERA ELEVATION: ${shot.elevation} degrees.`,
-      ...referenceInstructions,
-      "Preserve exact product identity, materials, construction, colors, proportions, details, imperfections and wear.",
-      "Use a seamless, evenly lit, pure white background extending edge-to-edge, with only a small natural contact shadow.",
-      "Do not add text, props, hands, people, packaging, duplicate products or a contact sheet.",
-      shot.prompt ? `CREATIVE DIRECTION: ${shot.prompt}` : null,
-      "Return only one image.",
-    ]
-      .filter(Boolean)
-      .join("\n");
-    const response = await fetch(imageProviderConfig.endpoint, {
+    const response = await fetch(attempt.providerEndpoint ?? imageProviderConfig.endpoint, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${requireImageProviderKey()}`,
+        Authorization: `Bearer ${providerKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": imageProviderConfig.referer,
         "X-OpenRouter-Title": imageProviderConfig.title,
       },
-      body: JSON.stringify({
-        model: imageProviderConfig.model,
-        prompt,
-        n: 1,
-        aspect_ratio: "1:1",
-        quality: "high",
-        background: "opaque",
-        input_references: referenceBuffers.map((buffer) => ({
-          type: "image_url",
-          image_url: { url: `data:image/webp;base64,${buffer.toString("base64")}` },
-        })),
-      }),
+      body: JSON.stringify(request),
       signal: AbortSignal.timeout(280_000),
     });
     const requestId = response.headers.get("x-request-id") ?? undefined;
@@ -322,6 +236,11 @@ export async function executeGenerationJob(
     if (!mimeType || !metadata.width || !metadata.height) {
       throw new Error("The paid response contained an unsupported raster output.");
     }
+    await db.update(generationAttempts).set({
+      providerRequestId,
+      usageCostMicros,
+      updatedAt: new Date(),
+    }).where(eq(generationAttempts.id, attemptId));
     const preview = await image
       .clone()
       .resize({ width: 768, height: 768, fit: "inside", withoutEnlargement: true })

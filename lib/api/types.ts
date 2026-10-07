@@ -26,6 +26,7 @@ export type ProjectSummary = {
 export type ShotVersion = {
   outputId: string;
   version: number;
+  mimeType: string;
   previewUrl: string;
   downloadUrl: string;
   approvedAt: string | null;

@@ -21,6 +21,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
 import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
+import { Dialog } from "@/components/Dialog";
 
 type PendingUpload = {
   file: File;
@@ -77,6 +78,7 @@ export function ProjectsClient({
   const [title, setTitle] = useState("");
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [createdProject, setCreatedProject] = useState<ProjectSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
   const [importNotice, setImportNotice] = useState<string | null>(null);
@@ -135,10 +137,13 @@ export function ProjectsClient({
   }, [projects, search]);
 
   function resetModal() {
+    if (submitting) return;
     setModalOpen(false);
     setTitle("");
     setUploads([]);
     setError(null);
+    setCreatedProject(null);
+    setOffline(false);
   }
 
   function selectFiles(event: ChangeEvent<HTMLInputElement>) {
@@ -185,22 +190,28 @@ export function ProjectsClient({
     setError(null);
     setOffline(false);
     try {
-      const created = await apiRequest<{ project: ProjectSummary }>("/api/projects", {
+      const created = createdProject ?? (await apiRequest<{ project: ProjectSummary }>("/api/projects", {
         method: "POST",
         body: JSON.stringify({ title }),
-      });
-      setProjects((current) => [created.project, ...current]);
+      })).project;
+      if (!createdProject) {
+        setCreatedProject(created);
+        setProjects((current) => [created, ...current]);
+      }
+      let failures = 0;
       for (let index = 0; index < uploads.length; index += 1) {
         const upload = uploads[index];
+        if (upload.status === "ready") continue;
         updateUpload(index, { status: "uploading", error: undefined });
         try {
           await uploadProjectFile({
-            projectId: created.project.id,
+            projectId: created.id,
             file: upload.file,
             onProgress: (progress) => updateUpload(index, { progress }),
           });
           updateUpload(index, { status: "ready", progress: 1 });
         } catch (uploadError) {
+          failures += 1;
           updateUpload(index, {
             status: "failed",
             error:
@@ -208,7 +219,19 @@ export function ProjectsClient({
           });
         }
       }
-      router.push(`/projects/${created.project.id}`);
+      if (failures) {
+        // Refresh the saved project's counts while retaining failed files for retry.
+        try {
+          const latest = await apiRequest<{ projects: ProjectSummary[] }>("/api/projects");
+          setProjects(latest.projects);
+        } catch {
+          // An offline library refresh must not hide the upload recovery controls.
+        }
+        setError(`${failures} photo${failures === 1 ? "" : "s"} could not be uploaded. Your project and successful uploads are saved. Retry the failed photos or continue to the project.`);
+        setOffline(!navigator.onLine);
+        return;
+      }
+      router.push(`/projects/${created.id}`);
       router.refresh();
     } catch (requestError) {
       if (!navigator.onLine) setOffline(true);
@@ -217,6 +240,7 @@ export function ProjectsClient({
           ? requestError.message
           : "The project could not be created.",
       );
+    } finally {
       setSubmitting(false);
     }
   }
@@ -347,14 +371,14 @@ export function ProjectsClient({
       ) : null}
 
       {modalOpen ? (
-        <div className="modal-backdrop" role="presentation">
-          <section className="project-modal" role="dialog" aria-modal="true" aria-labelledby="new-project-title">
+        <Dialog labelledBy="new-project-title" busy={submitting} onClose={resetModal}>
+          <section className="project-modal">
             <header className="modal-header">
               <div>
                 <div className="page-kicker">New product project</div>
                 <h2 id="new-project-title">Start with every photo you have</h2>
               </div>
-              <button className="icon-button" onClick={resetModal} aria-label="Close">
+              <button className="icon-button" onClick={resetModal} aria-label="Close" disabled={submitting}>
                 <X size={20} />
               </button>
             </header>
@@ -362,7 +386,8 @@ export function ProjectsClient({
               <label className="field-label">
                 Project name
                 <input
-                  autoFocus
+                  data-autofocus
+                  disabled={submitting || Boolean(createdProject)}
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="e.g. Handmade cream doll"
@@ -421,13 +446,22 @@ export function ProjectsClient({
             </div>
             <footer className="modal-footer">
               <span>{uploads.length}/25 photos · max 500 MB</span>
+              {createdProject ? (
+                <button className="button secondary-button" disabled={submitting} onClick={() => {
+                  router.push(`/projects/${createdProject.id}`);
+                  router.refresh();
+                  resetModal();
+                }}>
+                  Continue to project
+                </button>
+              ) : null}
               <button className="button primary-button" onClick={() => void createProject()} disabled={submitting}>
                 {submitting ? <SpinnerGap className="spin" size={18} /> : null}
-                {submitting ? "Creating project…" : "Create project"}
+                {submitting ? "Saving photos…" : createdProject ? "Retry failed uploads" : "Create project"}
               </button>
             </footer>
           </section>
-        </div>
+        </Dialog>
       ) : null}
     </main>
   );

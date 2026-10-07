@@ -2945,7 +2945,7 @@ h3 {
 
 .studio-tabs {
   position: sticky;
-  top: 66px;
+  top: var(--product-header-height, 112px);
   z-index: 25;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3820,7 +3820,7 @@ h3 {
     min-height: 540px;
   }
 
-  .modal-backdrop {
+.modal-backdrop {
     align-items: center;
     padding: 24px;
   }
@@ -3918,6 +3918,26 @@ h3 {
   .activity-row > span:last-child {
     justify-self: end;
   }
+}
+
+dialog.native-modal {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+dialog.native-modal:not([open]) {
+  display: none;
+}
+
+dialog.native-modal::backdrop {
+  background: rgba(10, 17, 40, 0.54);
+  backdrop-filter: blur(6px);
 }
 
 @media (min-width: 1120px) {
@@ -4415,6 +4435,7 @@ h3 {
 
 .login-continue-button {
   display: flex;
+  width: 100%;
   min-height: 52px;
   align-items: center;
   justify-content: center;
