@@ -126,6 +126,19 @@ class SecretTests(unittest.TestCase):
             client.assert_not_called()
             execute.assert_not_called()
 
+    def test_local_workflow_state_survives_build_output_cleanup(self):
+        for mode in ("dev", "start", "build"):
+            with patch("run.sys.argv", ["run.py", mode]), \
+                    patch("run.Infisical") as client, \
+                    patch("run.os.chdir"), patch("run.os.execvpe") as execute:
+                client.return_value.read.return_value = {}
+                launcher.main()
+                environment = execute.call_args.args[2]
+                self.assertEqual(environment["WORKFLOW_TARGET_WORLD"], "local")
+                directory = Path(environment["WORKFLOW_LOCAL_DATA_DIR"])
+                self.assertEqual(directory.parent, launcher.ROOT / ".workflow-local")
+                self.assertNotIn(".next", directory.parts)
+
     def test_failed_infisical_fetch_never_launches_the_application(self):
         with patch("run.sys.argv", ["run.py", "dev", "--port", "auto"]), \
                 patch("run.Infisical") as client, patch("run.os.execvpe") as execute:

@@ -25,6 +25,12 @@ def selected_command(arguments):
 def main():
     command = selected_command(sys.argv[1:])
     environment = application_environment(Infisical().read())
+    # Next's default .next/workflow-data is cleared by every production build.
+    # Keep local durable state outside build output and separate server instances.
+    if sys.argv[1] in ("dev", "start", "build"):
+        environment["WORKFLOW_TARGET_WORLD"] = "local"
+        instance = f"dev-{os.getpid()}" if sys.argv[1] == "dev" else sys.argv[1]
+        environment["WORKFLOW_LOCAL_DATA_DIR"] = str(ROOT / ".workflow-local" / instance)
     if sys.argv[1] == "dev":
         environment["NEXT_DEV_OUTPUT_DIR"] = f".next-dev-{os.getpid()}"
     os.chdir(ROOT)

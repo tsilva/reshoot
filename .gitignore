@@ -18,3 +18,6 @@ design/stitch-source/STITCH_PROJECT.local.md
 
 .next-dev-*/
 __pycache__/
+
+# Durable local Workflow state lives outside disposable build output.
+.workflow-local/

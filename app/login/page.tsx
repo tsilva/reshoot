@@ -9,7 +9,8 @@ import {
   ShieldCheck,
   UserCircle,
 } from "@phosphor-icons/react/dist/ssr";
-import { resolveCurrentUser } from "@/lib/auth/current-user";
+import { findCurrentUser } from "@/lib/auth/current-user";
+import { DEMO_STARTING_CREDITS } from "@/lib/auth/demo-session";
 import { getCreditSummary } from "@/lib/credits/service";
 
 export const dynamic = "force-dynamic";
@@ -20,8 +21,8 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage() {
-  const user = await resolveCurrentUser();
-  const credits = await getCreditSummary(user.id, user.isDemo);
+  const user = await findCurrentUser();
+  const credits = user ? await getCreditSummary(user.id, user.isDemo) : null;
 
   return (
     <main className="login-page">
@@ -81,37 +82,40 @@ export default async function LoginPage() {
           <div className="login-access-label">Demo access</div>
           <h2 id="login-title">Welcome to Reshoot</h2>
           <p className="login-card-lede">
-            Continue with the preconfigured account to inspect the complete product flow.
+            {user ? "Return to your private testing workspace with your saved projects and remaining fake credits." : "Try your own private testing workspace with 1,000 fake credits. No payment is required."}
           </p>
 
           <div className="login-demo-identity">
             <UserCircle size={44} weight="duotone" />
             <div>
-              <strong>{user.displayName}</strong>
-              <span>{user.email}</span>
+              <strong>{user?.displayName ?? "Reshoot Demo"}</strong>
+              <span>{user?.email ?? "Private browser workspace"}</span>
             </div>
             <span className="demo-pill">Demo</span>
           </div>
 
           <div className="login-credit-row">
             <Coins size={20} weight="duotone" />
-            <span>Available credits</span>
-            <strong>{credits.availableCredits.toLocaleString()}</strong>
+            <span>{user ? "Available test credits" : "Starting test credits"}</span>
+            <strong>{(credits?.availableCredits ?? DEMO_STARTING_CREDITS).toLocaleString()}</strong>
           </div>
 
-          <Link href="/projects" className="login-continue-button">
-            Continue to demo workspace <ArrowRight size={19} weight="bold" />
-          </Link>
-          <Link href="/account" className="login-account-link">
-            Review account and credit packs
-          </Link>
+          <form action="/api/demo-session" method="post">
+            <button type="submit" className="login-continue-button">
+              {user ? "Continue to testing workspace" : "Start testing workspace"} <ArrowRight size={19} weight="bold" />
+            </button>
+          </form>
+          {user ? (
+            <Link href="/account" className="login-account-link">Review account and test credits</Link>
+          ) : null}
 
           <div className="login-demo-note">
             <ShieldCheck size={18} weight="duotone" />
             <p>
               <strong>No password or payment is required.</strong>
-              This testing build always resolves the same demo user. Real authentication
-              and production billing are not enabled yet.
+              Your photos are separate from other visitors’ workspaces. Keep this browser’s
+              cookies to return to your projects. Clearing cookies or using another browser
+              starts a different workspace. Real authentication and billing are not enabled yet.
             </p>
           </div>
         </section>

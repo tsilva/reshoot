@@ -18,6 +18,8 @@ pnpm secrets:check
 pnpm dev --port auto
 ```
 
+For browser uploads and ZIP exports, the private R2 bucket's CORS policy must allow the server's printed origin, including its automatically assigned port, with `GET`, `PUT`, `HEAD`, and the `Content-Type` header. Configure this with a bucket administrator using [Cloudflare's CORS guide](https://developers.cloudflare.com/r2/buckets/cors/); application credentials only have object access. Signed URLs still control access to private files.
+
 ## Commands
 
 ```bash
@@ -34,15 +36,18 @@ pnpm db:migrate # apply forward database migrations
 
 - Neon stores users, projects, immutable generation history, pricing, and credit accounting.
 - A private Cloudflare R2 bucket stores originals, normalized references, previews, and generated outputs. Browser uploads use short-lived signed URLs.
-- Vercel Workflow runs durable generation jobs. Jobs continue when a browser closes and are protected against duplicate paid attempts.
 - Scheduled reconciliation is disabled. Users request another attempt with Regenerate after a failed generation; automatic pricing reconciliation and expired-object cleanup are also paused.
 - Dependency overrides exclude Workflow's unused NestJS adapter and use tinyglobby for Next.js lint root discovery, removing two unpatched dependency chains while retaining Next.js Workflow support and lint rules.
 - Uploads accept up to 25 JPG, PNG, or WebP originals per project, 20 MB each and 500 MB total.
-- Credits are purchase value at 100 credits per $1. Local and preview deployments include a clearly labeled no-charge test checkout. Production credit minting is disabled until real billing exists.
+- Testing workspaces start with 1,000 fake credits without payment. Local and preview deployments also include a clearly labeled no-charge test checkout. Production checkout remains disabled until real billing exists. Fake credits still authorize real image-service requests; generation consumes provider resources.
 - The image service and model are private server configuration and are intentionally absent from public APIs, browser bundles, filenames, and customer-facing diagnostics.
 - A previous browser-saved shoot is imported once into the persistent project library, then the legacy browser database is retired.
 - The deployment target is the Vercel project `tsilvas-projects/reshoot` at `reshoot.tsilva.eu`.
 - The preserved Stitch export and visual verification notes are in [`design/stitch-source`](./design/stitch-source) and [`design-qa.md`](./design-qa.md).
+
+## Image generation evaluation
+
+The current catalog-photo prompt defines camera movement, preserves product packaging and markings, and keeps lighting and framing consistent across views. Flare is the selected default; Sunburst remains a server-configured alternative. See the [model comparison and reproduction procedure](./docs/image-generation-evaluation.md). Hidden surfaces are estimates unless supporting originals show them.
 
 ## License
 

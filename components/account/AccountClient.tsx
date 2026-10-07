@@ -15,6 +15,7 @@ import {
 import { useMemo, useState } from "react";
 import type { CreditLedgerEntry, CreditSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
+import { Dialog } from "@/components/Dialog";
 
 type CheckoutStep = "confirm" | "success";
 
@@ -40,11 +41,13 @@ export function AccountClient({
   initialActivity,
   displayName,
   email,
+  isDemo,
 }: {
   initialCredits: CreditSummary;
   initialActivity: CreditLedgerEntry[];
   displayName: string;
   email: string;
+  isDemo: boolean;
 }) {
   const [credits, setCredits] = useState(initialCredits);
   const [activity, setActivity] = useState(initialActivity);
@@ -108,7 +111,7 @@ export function AccountClient({
         <div>
           <div className="page-kicker">Account & credits</div>
           <h1>Your account</h1>
-          <p className="page-lede">Manage purchase credits and review every balance change.</p>
+          <p className="page-lede">{isDemo ? "Review your fake testing credits and every balance change." : "Manage purchase credits and review every balance change."}</p>
         </div>
         <div className="account-identity">
           <strong>{displayName}</strong>
@@ -121,7 +124,7 @@ export function AccountClient({
           <Coins size={24} weight="duotone" />
           <span>Available credits</span>
           <strong>{credits.availableCredits.toLocaleString()}</strong>
-          <small>${credits.purchaseValueUsd.toFixed(2)} purchase value</small>
+          <small>{isDemo ? "Fake credits for this testing workspace" : `$${credits.purchaseValueUsd.toFixed(2)} purchase value`}</small>
         </article>
         <article className="metric-card">
           <LockKey size={24} weight="duotone" />
@@ -144,8 +147,8 @@ export function AccountClient({
       <div className="credit-value-note">
         <Info size={19} />
         <p>
-          Credits are non-redeemable purchase value: {credits.creditsPerUsd} credits = $1.
-          They do not expire. A shot uses 40–70 credits depending on its references.
+          {isDemo ? "This private testing workspace starts with 1,000 fake credits. No payment was made. " : `Credits are non-redeemable purchase value: ${credits.creditsPerUsd} credits = $1. They do not expire. `}
+          A shot uses 40–70 credits depending on its references.
         </p>
       </div>
 
@@ -184,7 +187,7 @@ export function AccountClient({
         </div>
         {!credits.demoCheckoutAvailable ? (
           <div className="inline-notice warning-notice">
-            <WarningCircle size={19} /> Production credit purchasing is not available yet.
+            <WarningCircle size={19} /> Credit purchasing is not available in this testing build. Your starting fake credits are already in your balance.
           </div>
         ) : null}
       </section>
@@ -223,9 +226,9 @@ export function AccountClient({
       </section>
 
       {selectedPack ? (
-        <div className="modal-backdrop" role="presentation">
-          <section className="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
-            <button className="icon-button checkout-close" onClick={closeCheckout} aria-label="Close checkout">
+        <Dialog labelledBy="checkout-title" busy={checkingOut} onClose={closeCheckout}>
+          <section className="checkout-modal">
+            <button className="icon-button checkout-close" onClick={closeCheckout} aria-label="Close checkout" disabled={checkingOut}>
               <X size={20} />
             </button>
             {checkoutStep === "confirm" ? (
@@ -234,8 +237,8 @@ export function AccountClient({
                 <div className="page-kicker">No-charge test checkout</div>
                 <h2 id="checkout-title">Confirm {selectedPack.name}</h2>
                 <p>
-                  This test flow does not charge a card. It immediately adds credits to the
-                  seeded demo account.
+                  This test flow does not charge a card. It adds fake credits to your
+                  private testing workspace.
                 </p>
                 <div className="checkout-total">
                   <div><span>Credits</span><strong>{selectedPack.credits.toLocaleString()}</strong></div>
@@ -259,7 +262,7 @@ export function AccountClient({
               </div>
             )}
           </section>
-        </div>
+        </Dialog>
       ) : null}
     </main>
   );
