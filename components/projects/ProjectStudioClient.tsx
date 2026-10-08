@@ -18,7 +18,6 @@ import {
   WarningCircle,
   X,
 } from "@phosphor-icons/react";
-import { zipSync } from "fflate";
 import {
   useCallback,
   useEffect,
@@ -35,6 +34,7 @@ import type {
 } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
 import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
+import { exportApprovedShots } from "@/lib/client/export";
 
 type StudioTab = "photos" | "create" | "review";
 type ShotRequest = {
@@ -75,7 +75,7 @@ function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-export function ProjectStudioClient({ initialProject }: { initialProject: ProjectDetail }) {
+export function ProjectStudioClient({ initialProject, checkoutAvailable }: { initialProject: ProjectDetail; checkoutAvailable: boolean }) {
   const router = useRouter();
   const [project, setProject] = useState(initialProject);
   const [tab, setTab] = useState<StudioTab>("photos");
@@ -85,11 +85,19 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
   const [quotedRequests, setQuotedRequests] = useState<ShotRequest[]>([]);
   const [quoting, setQuoting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [batch, setBatch] = useState<GenerationBatchStatus | null>(null);
   const [uploading, setUploading] = useState<Array<{ name: string; progress: number }>>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollingRef = useRef<number | null>(null);
+  const quoteRevision = useRef(0);
+
+  function invalidateQuote() {
+    quoteRevision.current += 1;
+    setQuote(null);
+    setQuoting(false);
+  }
 
   const primary = project.assets.find((asset) => asset.isPrimary && asset.status === "ready");
   const readyOriginals = project.assets.filter(
@@ -195,6 +203,7 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
   }
 
   async function choosePrimary(assetId: string) {
+    invalidateQuote();
     try {
       const response = await apiRequest<{ project: ProjectDetail }>(
         `/api/projects/${project.id}`,
@@ -202,7 +211,7 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
       );
       setProject(response.project);
       setAdditionalReferences((current) => current.filter((id) => id !== assetId));
-      setQuote(null);
+      invalidateQuote();
       setNotice("Primary photo updated.");
     } catch (updateError) {
       setError(updateError instanceof Error ? updateError.message : "Could not update the primary photo.");
@@ -210,7 +219,7 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
   }
 
   function toggleReference(assetId: string) {
-    setQuote(null);
+    invalidateQuote();
     setAdditionalReferences((current) => {
       if (current.includes(assetId)) return current.filter((id) => id !== assetId);
       if (current.length >= 4) {
@@ -244,17 +253,19 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
     }
     setQuoting(true);
     setError(null);
+    const revision = ++quoteRevision.current;
     try {
       const response = await apiRequest<{ quote: GenerationQuote }>(
         `/api/projects/${project.id}/generation-quotes`,
         { method: "POST", body: JSON.stringify({ shots: requests }) },
       );
+      if (revision !== quoteRevision.current) return;
       setQuotedRequests(requests);
       setQuote(response.quote);
     } catch (quoteError) {
-      setError(quoteError instanceof Error ? quoteError.message : "Could not create a quote.");
+      if (revision === quoteRevision.current) setError(quoteError instanceof Error ? quoteError.message : "Could not create a quote.");
     } finally {
-      setQuoting(false);
+      if (revision === quoteRevision.current) setQuoting(false);
     }
   }
 
@@ -276,6 +287,7 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
       setBatch(response.batch);
       setQuote(null);
       setTab("review");
+      router.refresh();
       setNotice("Generation is running. You can close this page and come back later.");
     } catch (batchError) {
       setError(batchError instanceof Error ? batchError.message : "Could not start generation.");
@@ -315,27 +327,25 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
   }
 
   async function exportApproved() {
-    const files: Record<string, Uint8Array> = {};
-    for (const shot of project.shots) {
-      for (const version of shot.versions.filter((item) => item.approvedAt || item.selectedAt)) {
-        const response = await fetch(version.downloadUrl);
-        if (!response.ok) continue;
-        files[`${slugify(shot.label)}-v${version.version}.png`] = new Uint8Array(
-          await response.arrayBuffer(),
-        );
+    setExporting(true);
+    setError(null);
+    try {
+      const archive = await exportApprovedShots(project.shots);
+      if (!archive) {
+        setNotice("Approve or select at least one result before exporting.");
+        return;
       }
+      const url = URL.createObjectURL(new Blob([new Uint8Array(archive)], { type: "application/zip" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${slugify(project.title) || "project"}-reshoot.zip`;
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    } catch (exportError) {
+      setError(exportError instanceof Error ? exportError.message : "Export failed. Please retry.");
+    } finally {
+      setExporting(false);
     }
-    if (!Object.keys(files).length) {
-      setNotice("Approve or select at least one result before exporting.");
-      return;
-    }
-    const archive = zipSync(files, { level: 6 });
-    const url = URL.createObjectURL(new Blob([new Uint8Array(archive)], { type: "application/zip" }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${slugify(project.title)}-reshoot.zip`;
-    anchor.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
   }
 
   const versionCount = useMemo(
@@ -444,9 +454,11 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
                       <span>{asset.filename}</span>
                       {!asset.isPrimary ? (
                         <div>
-                          <button className="text-button" onClick={() => void choosePrimary(asset.id)}>Make primary</button>
+                          <button className="text-button" onClick={() => void choosePrimary(asset.id)} disabled={submitting}>Make primary</button>
                           <button
                             className={`reference-toggle${selected ? " is-active" : ""}`}
+                            aria-pressed={selected}
+                            disabled={submitting}
                             onClick={() => toggleReference(asset.id)}
                           >
                             {selected ? <Check size={14} weight="bold" /> : <Plus size={14} />}
@@ -520,9 +532,11 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
                 return (
                   <button
                     className={`preset-card${selected ? " is-selected" : ""}`}
+                    aria-pressed={selected}
+                    disabled={submitting}
                     key={preset.id}
                     onClick={() => {
-                      setQuote(null);
+                      invalidateQuote();
                       setSelectedPresets((current) =>
                         current.includes(preset.id)
                           ? current.filter((id) => id !== preset.id)
@@ -568,21 +582,24 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
                 </div>
                 <footer>
                   <div>
-                    <span>Available after hold</span>
-                    <strong>{quote.availableCredits - quote.totalCredits} credits</strong>
+                    <span>{quote.affordable ? "Available after hold" : "Additional credits needed"}</span>
+                    <strong>{Math.abs(quote.availableCredits - quote.totalCredits)} credits</strong>
                   </div>
                   {quote.affordable ? (
                     <button className="button primary-button" onClick={() => void confirmBatch()} disabled={submitting}>
                       {submitting ? <SpinnerGap className="spin" /> : null}
                       Confirm generation
                     </button>
-                  ) : (
+                  ) : checkoutAvailable ? (
                     <Link href="/account" className="button primary-button">Add credits</Link>
+                  ) : (
+                    <button className="button secondary-button" onClick={() => setTab("review")}>Review saved results</button>
                   )}
                 </footer>
                 {!quote.affordable ? (
                   <div className="inline-notice warning-notice">
                     <WarningCircle size={18} /> You need {quote.totalCredits - quote.availableCredits} more credits.
+                    {!checkoutAvailable ? " This testing workspace cannot purchase more credits yet. Your saved results remain available." : ""}
                   </div>
                 ) : null}
               </div>
@@ -597,10 +614,10 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
             <div>
               <div className="page-kicker">Immutable versions</div>
               <h2>Review & history</h2>
-              <p>Regeneration creates a new paid version and never overwrites the old one.</p>
+              <p>Regeneration uses credits to create a new version and preserves every earlier result.</p>
             </div>
-            <button className="button secondary-button" onClick={() => void exportApproved()}>
-              <DownloadSimple size={18} /> Export approved ZIP
+            <button className="button secondary-button" onClick={() => void exportApproved()} disabled={exporting}>
+              {exporting ? <SpinnerGap className="spin" size={18} /> : <DownloadSimple size={18} />} {exporting ? "Exporting…" : "Export approved ZIP"}
             </button>
           </div>
 
@@ -616,7 +633,9 @@ export function ProjectStudioClient({ initialProject }: { initialProject: Projec
               <div className="progress-track">
                 <span style={{ width: `${((batch.completedJobs + batch.failedJobs) / batch.jobs.length) * 100}%` }} />
               </div>
-              <p>You can safely navigate away. This batch continues in the background.</p>
+              <p>{batchIsTerminal(batch.status)
+                ? "This batch has finished. Review the results or regenerate any failed shots."
+                : "You can safely navigate away. This batch continues in the background."}</p>
             </div>
           ) : null}
 

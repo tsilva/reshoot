@@ -1,9 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "crons": [
-    {
-      "path": "/api/internal/reconcile",
-      "schedule": "17 * * * *"
-    }
-  ]
+  "git": {
+    "deploymentEnabled": false
+  }
 }

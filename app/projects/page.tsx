@@ -1,13 +1,13 @@
 import { AppShell } from "@/components/AppShell";
 import { ProjectsClient } from "@/components/projects/ProjectsClient";
-import { resolveCurrentUser } from "@/lib/auth/current-user";
+import { requirePageUser } from "@/lib/auth/current-user";
 import { getCreditSummary } from "@/lib/credits/service";
 import { listProjects } from "@/lib/projects/service";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const user = await resolveCurrentUser();
+  const user = await requirePageUser();
   const [projects, credits] = await Promise.all([
     listProjects(user.id),
     getCreditSummary(user.id, user.isDemo),

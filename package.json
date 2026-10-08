@@ -7,15 +7,21 @@
   },
   "packageManager": "pnpm@10.17.1",
   "scripts": {
-    "dev": "next dev",
+    "dev": "python3 scripts/infisical/run.py dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/dev-server.mjs next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "dev:app": "node scripts/dev-server.mjs next dev",
+    "build:secrets": "python3 scripts/infisical/run.py build",
+    "start:secrets": "python3 scripts/infisical/run.py start",
+    "secrets:check": "python3 scripts/infisical/run.py check",
+    "secrets:migrate:keyenv": "python3 scripts/infisical/migrate_keyenv.py",
+    "test:secrets": "python3 -m unittest discover -s scripts/infisical -p test_secrets.py"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",
@@ -27,7 +33,7 @@
     "@vercel/analytics": "1.6.1",
     "drizzle-orm": "^0.45.2",
     "fflate": "^0.8.3",
-    "next": "^16.3.0",
+    "next": "16.3.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "sharp": "^0.35.3",
@@ -43,6 +49,6 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }

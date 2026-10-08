@@ -15,3 +15,9 @@ design/stitch-source/STITCH_PROJECT.local.md
 # Sentry Config File
 .env.sentry-build-plugin
 /.swc
+
+.next-dev-*/
+__pycache__/
+
+# Durable local Workflow state lives outside disposable build output.
+.workflow-local/

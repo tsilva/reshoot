@@ -18,6 +18,7 @@ import type {
   ProjectSummary,
 } from "@/lib/api/types";
 import { signRead } from "@/lib/storage/r2";
+import { outputDownloadUrl } from "@/lib/projects/downloads";
 
 export async function requireOwnedProject(userId: string, projectId: string) {
   const [project] = await db
@@ -202,8 +203,9 @@ export async function getProjectDetail(
         (outputsByShot.get(shot.id) ?? []).map(async (output) => ({
           outputId: output.id,
           version: output.version,
+          mimeType: output.mimeType,
           previewUrl: await signRead(output.previewR2Key),
-          downloadUrl: await signRead(output.r2Key),
+          downloadUrl: outputDownloadUrl(projectId, output.id),
           approvedAt: output.approvedAt?.toISOString() ?? null,
           selectedAt: output.selectedAt?.toISOString() ?? null,
           createdAt: output.createdAt.toISOString(),
