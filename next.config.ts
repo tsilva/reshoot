@@ -8,6 +8,7 @@ const storageHostname = process.env.R2_ENDPOINT
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  distDir: process.env.NEXT_DEV_OUTPUT_DIR || ".next",
   reactStrictMode: true,
   images: storageHostname
     ? {
@@ -23,6 +24,8 @@ const nextConfig: NextConfig = {
 };
 
 const sentryConfig = withSentryConfig(nextConfig, {
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 

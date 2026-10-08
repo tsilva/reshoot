@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { ProjectStudioClient } from "@/components/projects/ProjectStudioClient";
 import { ApiError } from "@/lib/api/errors";
 import type { CreditSummary } from "@/lib/api/types";
-import { resolveCurrentUser } from "@/lib/auth/current-user";
+import { requirePageUser } from "@/lib/auth/current-user";
 import { getCreditSummary } from "@/lib/credits/service";
 import { getProjectDetail } from "@/lib/projects/service";
 
@@ -14,7 +14,7 @@ export default async function ProjectPage({
 }: {
   params: Promise<{ projectId: string }>;
 }) {
-  const user = await resolveCurrentUser();
+  const user = await requirePageUser();
   const { projectId } = await params;
   let project;
   let credits: CreditSummary;
@@ -36,7 +36,7 @@ export default async function ProjectPage({
         availableCredits: credits.availableCredits,
       }}
     >
-      <ProjectStudioClient initialProject={project} />
+      <ProjectStudioClient initialProject={project} checkoutAvailable={credits.demoCheckoutAvailable} />
     </AppShell>
   );
 }

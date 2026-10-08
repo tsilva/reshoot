@@ -73,6 +73,18 @@ export async function signRead(key: string, expiresIn = 600) {
   );
 }
 
+export async function signDownload(key: string, filename: string) {
+  return getSignedUrl(
+    r2,
+    new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ResponseContentDisposition: `attachment; filename="${filename}"`,
+    }),
+    { expiresIn: 600 },
+  );
+}
+
 export async function headObject(key: string) {
   return r2.send(
     new HeadObjectCommand({ Bucket: bucket, Key: key, ChecksumMode: "ENABLED" }),

@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   UserCircle,
 } from "@phosphor-icons/react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 const navigation = [
   { href: "/projects", label: "Projects", icon: FolderSimple },
@@ -39,9 +39,21 @@ export function AppShell({
   currentUser?: AppShellUser;
 }) {
   const pathname = usePathname();
+  const shellRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const header = headerRef.current;
+    const shell = shellRef.current;
+    if (!header || !shell) return;
+    const updateHeight = () => shell.style.setProperty("--product-header-height", `${header.getBoundingClientRect().height}px`);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
   return (
-    <div className="product-shell">
-      <header className="product-header">
+    <div className="product-shell" ref={shellRef}>
+      <header className="product-header" ref={headerRef}>
         <Link href="/projects" className="brand-link" aria-label="Reshoot projects">
           <Image
             src="/brand/logo/wordmark.png"
@@ -111,11 +123,11 @@ export function AppShell({
                 <FolderSimple size={18} /> Product projects
               </Link>
               <Link href="/login" className="exit-demo-link">
-                <DoorOpen size={18} /> Exit demo workspace
+                <DoorOpen size={18} /> Back to welcome
               </Link>
             </nav>
             {currentUser.isDemo ? (
-              <p>No password is used in this testing build.</p>
+              <p>Private to this browser. Keep its cookies to return to your projects.</p>
             ) : null}
           </section>
         </details>

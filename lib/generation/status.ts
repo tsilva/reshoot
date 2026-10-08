@@ -13,6 +13,7 @@ import {
 import { dispatchBatchOutbox } from "@/lib/generation/batches";
 import { releaseGeneration } from "@/lib/generation/accounting";
 import { signRead } from "@/lib/storage/r2";
+import { outputDownloadUrl } from "@/lib/projects/downloads";
 
 export async function getGenerationBatchStatus(
   userId: string,
@@ -103,8 +104,9 @@ export async function getGenerationBatchStatus(
             ? {
                 outputId: output.id,
                 version: output.version,
+                mimeType: output.mimeType,
                 previewUrl: await signRead(output.previewR2Key),
-                downloadUrl: await signRead(output.r2Key),
+                downloadUrl: outputDownloadUrl(batch.projectId, output.id),
                 approvedAt: output.approvedAt?.toISOString() ?? null,
                 selectedAt: output.selectedAt?.toISOString() ?? null,
                 createdAt: output.createdAt.toISOString(),

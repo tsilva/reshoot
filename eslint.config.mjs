@@ -7,6 +7,8 @@ export default defineConfig([
   ...nextTypeScript,
   globalIgnores([
     ".next/**",
+    ".next-dev-*/**",
+    ".workflow-local/**",
     "app/.well-known/workflow/**",
     "design/stitch-source/**",
     "next-env.d.ts"

@@ -5,7 +5,29 @@ minimumReleaseAge: 10080
 blockExoticSubdeps: true
 
 overrides:
+  # This Next.js app never uses the Nest adapter, whose compiler downloads pull
+  # in unpatched http-cache-semantics. Keep the Next.js adapter and core intact.
+  'workflow>@workflow/nest': '-'
+  # Next's only fast-glob call uses globSync with onlyDirectories, supported by
+  # tinyglobby. Avoid the unpatched braces chain without disabling lint rules.
+  '@next/eslint-plugin-next>fast-glob': npm:tinyglobby@0.2.15
   '@esbuild-kit/core-utils>esbuild': 0.25.12
   '@workflow/core>nanoid': 5.1.16
-  '@workflow/world-local>undici': 7.29.0
-  '@workflow/world-vercel>undici': 7.29.0
+  '@workflow/world-local>undici': 7.29.1
+  '@workflow/world-vercel>undici': 7.29.1
+  qs: 6.16.0
+  fast-uri: 3.1.8
+  sharp: 0.35.5
+  js-yaml: 4.3.2
+  devalue: 5.9.3
+  undici: 7.29.1
+  piscina: 4.9.4
+  proxy-addr: 2.0.8
+  'brace-expansion@<2': 1.1.21
+  'brace-expansion@>=2 <3': 2.1.7
+  'brace-expansion@>=4': 5.0.12
+  source-map-js: 1.2.2
+
+# Approved security-patch exception; all other packages retain the seven-day hold.
+minimumReleaseAgeExclude:
+  - source-map-js@1.2.2
