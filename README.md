@@ -36,6 +36,8 @@ pnpm db:migrate # apply forward database migrations
 
 ## Notes
 
+Dependency regression tests accept newer patched versions within reviewed release branches, reject vulnerable downgrades and unknown branches, and audit the complete locked graph.
+
 - Neon stores users, projects, immutable generation history, pricing, and credit accounting.
 - A private Cloudflare R2 bucket stores originals, normalized references, previews, and generated outputs. Browser uploads use short-lived signed URLs.
 - Scheduled reconciliation is disabled. Users request another attempt with Regenerate after a failed generation; automatic pricing reconciliation and expired-object cleanup are also paused.
