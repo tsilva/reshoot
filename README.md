@@ -36,6 +36,8 @@ pnpm db:migrate # apply forward database migrations
 
 ## Notes
 
+Sentry 11 uses the `@sentry/nextjs/config` build entry point and enables logs by default. Client and server integrations retain their configured log levels and explicitly disable personal, request, queue, and content data collection.
+
 - Neon stores users, projects, immutable generation history, pricing, and credit accounting.
 - A private Cloudflare R2 bucket stores originals, normalized references, previews, and generated outputs. Browser uploads use short-lived signed URLs.
 - Scheduled reconciliation is disabled. Users request another attempt with Regenerate after a failed generation; automatic pricing reconciliation and expired-object cleanup are also paused.
