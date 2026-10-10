@@ -15,6 +15,25 @@ function lockedVersions(packageName: string): string[] {
   return [...new Set([...resolvedPackages.matchAll(pattern)].map((match) => match[1]))].sort();
 }
 
+function assertPatchedVersions(
+  packageName: string,
+  versions: string[],
+  floors: Record<string, string>,
+): void {
+  if (!versions.length) throw new Error(`missing dependency ${packageName}`);
+  for (const version of versions) {
+    if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error(`unexpected version ${version}`);
+    const actual = version.split(".").map(Number);
+    const floor = floors[String(actual[0])];
+    if (!floor) throw new Error(`unreviewed release branch ${packageName}@${version}`);
+    const minimum = floor.split(".").map(Number);
+    const difference = actual.findIndex((part, index) => part !== minimum[index]);
+    if (difference !== -1 && actual[difference] < minimum[difference]) {
+      throw new Error(`${packageName}@${version} is below ${floor}`);
+    }
+  }
+}
+
 describe("dependency security boundaries", () => {
   it("excludes the unused Nest compiler and both unpatched dependency chains", () => {
     for (const name of ["@workflow/nest", "@swc/cli", "http-cache-semantics", "braces"]) {
@@ -59,12 +78,27 @@ describe("dependency security boundaries", () => {
   });
 
   it("keeps every formerly vulnerable package on a remediated version", () => {
-    expect(lockedVersions("brace-expansion")).toEqual(["1.1.21", "2.1.7", "5.0.12"]);
-    expect(lockedVersions("esbuild")).toEqual(["0.25.12", "0.28.1"]);
-    expect(lockedVersions("fast-uri")).toEqual(["3.1.8"]);
-    expect(lockedVersions("js-yaml")).toEqual(["4.3.2"]);
-    expect(lockedVersions("nanoid")).toEqual(["3.3.18", "5.1.16"]);
-    expect(lockedVersions("undici")).toEqual(["7.29.1"]);
+    const patchedBranches: Record<string, Record<string, string>> = {
+      "brace-expansion": { "1": "1.1.21", "2": "2.1.7", "5": "5.0.12" },
+      "esbuild": { "0": "0.25.12" },
+      "fast-uri": { "3": "3.1.8" },
+      "js-yaml": { "4": "4.3.2" },
+      "nanoid": { "3": "3.3.18", "5": "5.1.16" },
+      "undici": { "7": "7.29.1" },
+    };
+    for (const [name, floors] of Object.entries(patchedBranches)) {
+      assertPatchedVersions(name, lockedVersions(name), floors);
+    }
+  });
+
+  it("accepts patched upgrades while rejecting downgrades and unreviewed branches", () => {
+    const floors = { "3": "3.3.18", "5": "5.1.16" };
+    expect(() => assertPatchedVersions("nanoid", ["3.3.19", "5.1.17"], floors)).not.toThrow();
+    expect(() => assertPatchedVersions("nanoid", ["3.3.17", "5.1.16"], floors)).toThrow();
+    expect(() => assertPatchedVersions("nanoid", ["3.3.18", "5.1.15"], floors)).toThrow();
+    expect(() => assertPatchedVersions("nanoid", ["4.0.0"], floors)).toThrow();
+    expect(() => assertPatchedVersions("nanoid", ["5.1.16-rc.1"], floors)).toThrow();
+    expect(() => assertPatchedVersions("nanoid", [], floors)).toThrow();
   });
 
   it("has no known vulnerabilities in the complete dependency graph", () => {
