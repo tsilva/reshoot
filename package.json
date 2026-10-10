@@ -24,8 +24,8 @@
     "test:secrets": "python3 -m unittest discover -s scripts/infisical -p test_secrets.py"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1109.0",
-    "@aws-sdk/s3-request-presigner": "3.1109.0",
+    "@aws-sdk/client-s3": "3.1144.0",
+    "@aws-sdk/s3-request-presigner": "3.1144.0",
     "@neondatabase/serverless": "^1.1.0",
     "@next/third-parties": "^16.3.0",
     "@phosphor-icons/react": "^2.1.10",
