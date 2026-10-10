@@ -37,6 +37,7 @@ pnpm db:migrate # apply forward database migrations
 ## Notes
 
 Sentry 11 uses the `@sentry/nextjs/config` build entry point and enables logs by default. Client and server integrations retain their configured log levels and explicitly disable personal, request, queue, and content data collection.
+Dependency regression tests accept newer patched versions within reviewed release branches, reject vulnerable downgrades and unknown branches, and audit the complete locked graph.
 
 - Neon stores users, projects, immutable generation history, pricing, and credit accounting.
 - A private Cloudflare R2 bucket stores originals, normalized references, previews, and generated outputs. Browser uploads use short-lived signed URLs.
