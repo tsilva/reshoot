@@ -27,9 +27,9 @@
     "@aws-sdk/client-s3": "3.1144.0",
     "@aws-sdk/s3-request-presigner": "3.1144.0",
     "@neondatabase/serverless": "^1.1.0",
-    "@next/third-parties": "^16.3.0",
+    "@next/third-parties": "^16.3.8",
     "@phosphor-icons/react": "^2.1.10",
-    "@sentry/nextjs": "^10.69.0",
+    "@sentry/nextjs": "^11.2.0",
     "@vercel/analytics": "2.0.1",
     "drizzle-orm": "^0.45.2",
     "fflate": "^0.8.3",
@@ -37,17 +37,17 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "sharp": "^0.35.3",
-    "workflow": "4.8.2",
+    "workflow": "5.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^24.13.3",
+    "@types/node": "^26.6.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "@workflow/vitest": "4.0.18",
+    "@workflow/vitest": "5.0.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.0",
+    "eslint-config-next": "^16.3.8",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11"
   }

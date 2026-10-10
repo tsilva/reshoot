@@ -8,7 +8,6 @@ Sentry.init({
   dsn: "https://1c9e7c4cf99e6c377d95b633b8b2ab0b@o4511061698478080.ingest.de.sentry.io/4511836479488080",
 
   tracesSampleRate: 0.1,
-  enableLogs: true,
   integrations: [
     Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] }),
   ],
@@ -22,6 +21,7 @@ Sentry.init({
     graphQL: { document: false, variables: false },
     genAI: { inputs: false, outputs: false },
     databaseQueryData: false,
+    queues: false,
     stackFrameVariables: false,
   },
 });
