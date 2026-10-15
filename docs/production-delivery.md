@@ -41,3 +41,5 @@ application commit with current environment values before rolling back.
 Production and Preview call OpenRouter directly with their own server-only `OPENROUTER_API_KEY`. Production delivery reads this key only from this app’s isolated production Infisical project; it never copies a development key. Missing production keys fail closed. AgentBridge is used only for development. Image generation retains the supported image models; DeepSeek is not an image generator.
 
 Secret synchronization updates an existing Production variable by its exact Vercel ID, preserving separately configured Preview rows. New variables are created only when Production has no matching row; duplicate or combined targets still stop delivery.
+
+Production values must differ from Preview and Development under the Vercel isolation policy. Delivery reports `production-secret-reused` without printing the provider response. Reshoot uses the separate `reshoot-production-build` Sentry organization token with `org:ci` scope for source-map uploads and releases; keep it only in the production vault. Rotate the source token rather than weakening isolation or editing Preview.

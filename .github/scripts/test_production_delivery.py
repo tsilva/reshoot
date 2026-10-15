@@ -57,6 +57,18 @@ class DeliveryTests(unittest.TestCase):
                     d.context(self.config)
                 request.assert_not_called()
 
+    def test_reused_production_secret_is_classified_without_exposing_response(self):
+        error = d.urllib.error.HTTPError(
+            "https://api.vercel.com/example", 400, "Bad Request", {},
+            io.BytesIO(json.dumps({"error": {"message": "Production secrets must use a different value than Preview; fake-private-value"}}).encode()),
+        )
+        with patch.object(d.urllib.request, "build_opener") as opener:
+            opener.return_value.open.side_effect = error
+            with self.assertRaises(d.DeliveryError) as result:
+                d.request("PATCH", "https://api.vercel.com/example", payload={"value": "fake-private-value"})
+        self.assertIn("production-secret-reused", str(result.exception))
+        self.assertNotIn("fake-private-value", str(result.exception))
+
     def test_old_commit_cannot_mutate(self):
         with (
             patch.dict(os.environ, self.env, clear=True),

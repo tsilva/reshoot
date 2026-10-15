@@ -47,6 +47,7 @@ def request(method, url, token=None, payload=None):
         try:
             detail = json.load(error).get("error", {}).get("message", "").lower()
             for phrase, label in (
+                ("production secrets must use a different value", "production-secret-reused"),
                 ("cannot change the key", "sensitive-key-rename"),
                 ("cannot change the type", "sensitive-type-change"),
                 ("already exists", "duplicate-variable"),
