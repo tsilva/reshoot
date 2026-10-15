@@ -32,15 +32,15 @@ describe("durable generation dispatch", () => {
     vi.stubGlobal("fetch", state.fetch);
   });
 
-  it("uses the recorded model and endpoint after config changes, persists an image, then captures credits", async () => {
+  it("retains the recorded model while sending old queued attempts through the current gateway, persists an image, then captures credits", async () => {
     const png = await sharp({ create: { width: 16, height: 16, channels: 3, background: "white" } }).png().toBuffer();
     state.fetch.mockResolvedValue(new Response(JSON.stringify({ data: [{ b64_json: png.toString("base64") }], usage: { cost: 0.07 } }), { headers: { "x-request-id": "request" } }));
     expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "succeeded" });
     expect(state.fetch).toHaveBeenCalledTimes(1);
     const [endpoint, options] = state.fetch.mock.calls[0];
-    expect(endpoint).toBe("https://pinned.example/images");
+    expect(endpoint).toBe("https://new.example/images");
     const body = JSON.parse(options.body);
-    expect(body.model).toBe("openai/gpt-image-2.5-sunburst");
+    expect(body.model).toBe("openrouter/openai/gpt-image-2.5-sunburst");
     expect(body.prompt).toContain("RIGHT PROFILE view");
     expect(body.input_references.map((item: { image_url: { url: string } }) => item.image_url.url)).toEqual(["primary", "supporting"].map((key) => `data:image/webp;base64,${Buffer.from(key).toString("base64")}`));
     expect(state.updates).toContainEqual(expect.objectContaining({ providerRequestId: "request", usageCostMicros: 70000 }));

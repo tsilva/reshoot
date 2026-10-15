@@ -1,3 +1,4 @@
+import { providerBaseUrl, providerApiKey } from "./agentbridge";
 import "server-only";
 
 export const supportedImageModels = [
@@ -14,15 +15,12 @@ export function selectImageModel(override = process.env.RESHOOT_IMAGE_MODEL) {
 }
 
 export const imageProviderConfig = {
-  endpoint: "https://openrouter.ai/api/v1/images",
+  endpoint: `${providerBaseUrl()}/images`,
   model: selectImageModel(),
   referer: "https://reshoot.tsilva.eu",
   title: "Reshoot",
 } as const;
 
 export function requireImageProviderKey() {
-  const key =
-    process.env.OPENROUTER_API_KEY ?? process.env.IMAGE_GENERATION_API_KEY;
-  if (!key) throw new Error("Image provider credentials are not configured.");
-  return key;
+  return providerApiKey();
 }

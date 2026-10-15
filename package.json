@@ -12,7 +12,7 @@
     "start": "node scripts/dev-server.mjs next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "node scripts/verify-provider-routing.mjs && vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
@@ -20,8 +20,8 @@
     "build:secrets": "python3 scripts/infisical/run.py build",
     "start:secrets": "python3 scripts/infisical/run.py start",
     "secrets:check": "python3 scripts/infisical/run.py check",
-    "secrets:migrate:keyenv": "python3 scripts/infisical/migrate_keyenv.py",
-    "test:secrets": "python3 -m unittest discover -s scripts/infisical -p test_secrets.py"
+    "test:secrets": "python3 -m unittest discover -s scripts/infisical -p test_secrets.py",
+    "test:provider": "node scripts/verify-provider-routing.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1144.0",

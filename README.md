@@ -22,6 +22,14 @@ pnpm dev --port auto
 
 For browser uploads and ZIP exports, the private R2 bucket's CORS policy must allow the server's printed origin, including its automatically assigned port, with `GET`, `PUT`, `HEAD`, and the `Content-Type` header. Configure this with a bucket administrator using [Cloudflare's CORS guide](https://developers.cloudflare.com/r2/buckets/cors/); application credentials only have object access. Signed URLs still control access to private files.
 
+Development and Vercel Preview use the private `reshoot-development` bucket and
+the Development database. Production keeps the private `reshoot` bucket and its
+Production database. Each bucket has its own Object Read & Write token, with no
+access to the other bucket. Fetch local credentials from the pinned Development
+Infisical project; never copy Production credentials into local or Preview
+configuration. See [R2 environment isolation](docs/production-delivery.md#r2-environments)
+for the source vaults, rotation procedure, and rollback boundary.
+
 ## Commands
 
 ```bash
@@ -57,3 +65,13 @@ The current catalog-photo prompt defines camera movement, preserves product pack
 ## License
 
 No license file is currently included.
+
+
+## Model routing
+
+Development uses AgentBridge (`AGENTBRIDGE_BASE_URL`, default
+`http://127.0.0.1:8082/api/v1`, and optional `AGENTBRIDGE_API_KEY`).
+Production and Preview call OpenRouter directly using their own server-only
+`OPENROUTER_API_KEY`; a missing production key disables model requests.
+Production credentials come from this app’s isolated Infisical project.
+Image generation keeps the supported image models.
