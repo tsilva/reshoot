@@ -217,10 +217,15 @@ def sync_vercel(config, values):
             if not isinstance(env_id, str) or not env_id:
                 raise DeliveryError("Existing production variable has no identifier; no write.")
             # Address the production row explicitly when the same key also has Preview rows.
+            # Vercel treats a supplied key as a rename, even when unchanged;
+            # sensitive rows cannot be renamed. Preserve their target and type.
+            patch_payload = {"value": value, "comment": payload["comment"]}
+            if existing[0].get("type") != "sensitive":
+                patch_payload["type"] = "sensitive"
             updated = vercel_request(
                 config, "PATCH",
                 "/v9/projects/" + config["vercelProjectId"] + "/env/" + urllib.parse.quote(env_id, safe=""),
-                payload,
+                patch_payload,
             )
             result = {"created": updated}
         else:

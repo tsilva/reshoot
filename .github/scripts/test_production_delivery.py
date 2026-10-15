@@ -213,8 +213,10 @@ class DeliveryTests(unittest.TestCase):
             d.sync_vercel(self.config, {"K": "fake-secret"})
         write = request.call_args_list[1]
         self.assertEqual(write.args[1:3], ("PATCH", "/v9/projects/prj_example/env/production-id"))
-        self.assertEqual(write.args[3]["target"], ["production"])
-        self.assertEqual(write.args[3]["type"], "sensitive")
+        self.assertEqual(write.args[3]["value"], "fake-secret")
+        self.assertNotIn("key", write.args[3])
+        self.assertNotIn("target", write.args[3])
+        self.assertNotIn("type", write.args[3])
 
     def test_missing_production_row_is_created_without_upsert(self):
         production = {"id": "new-id", "key": "K", "target": ["production"], "type": "sensitive"}
