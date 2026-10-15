@@ -239,9 +239,7 @@ def sync_vercel(config, values):
             # Address the production row explicitly when the same key also has Preview rows.
             # Vercel treats a supplied key as a rename, even when unchanged;
             # sensitive rows cannot be renamed. Preserve their target and type.
-            patch_payload = {"value": value, "comment": payload["comment"]}
-            if existing[0].get("type") != "sensitive":
-                patch_payload["type"] = "sensitive"
+            patch_payload = {"value": value, "type": "sensitive", "comment": payload["comment"]}
             print(f"Updating Vercel Production key {key}.", flush=True)
             updated = vercel_request(
                 config, "PATCH",
