@@ -42,8 +42,28 @@ def request(method, url, token=None, payload=None):
         ) as response:
             return json.load(response)
     except urllib.error.HTTPError as error:
+        # Classify only fixed validation reasons. Never emit a provider message/body.
+        reason = "unclassified"
+        try:
+            detail = json.load(error).get("error", {}).get("message", "").lower()
+            for phrase, label in (
+                ("cannot change the key", "sensitive-key-rename"),
+                ("cannot change the type", "sensitive-type-change"),
+                ("already exists", "duplicate-variable"),
+                ("too large", "value-too-large"),
+                ("too long", "value-too-long"),
+                ("value is required", "value-required"),
+                ("target", "target-validation"),
+                ("decrypt", "decryption-validation"),
+                ("sensitive", "sensitive-variable-validation"),
+            ):
+                if phrase in detail:
+                    reason = label
+                    break
+        except Exception:
+            pass
         raise DeliveryError(
-            f"Provider request failed (HTTP {error.code}); response suppressed."
+            f"Provider request failed (HTTP {error.code}, reason: {reason}); response suppressed."
         ) from None
     except DeliveryError:
         raise
@@ -222,6 +242,7 @@ def sync_vercel(config, values):
             patch_payload = {"value": value, "comment": payload["comment"]}
             if existing[0].get("type") != "sensitive":
                 patch_payload["type"] = "sensitive"
+            print(f"Updating Vercel Production key {key}.", flush=True)
             updated = vercel_request(
                 config, "PATCH",
                 "/v9/projects/" + config["vercelProjectId"] + "/env/" + urllib.parse.quote(env_id, safe=""),
