@@ -1,6 +1,8 @@
 """Fail-closed delivery tests; all external requests are mocked."""
 
 import importlib.util
+import io
+import json
 import os
 import unittest
 from pathlib import Path
@@ -185,6 +187,19 @@ class DeliveryTests(unittest.TestCase):
         with patch.object(d, "request") as req:
             self.assertEqual(d.infisical_secrets({"secretNames": []}), {})
             req.assert_not_called()
+
+    def test_http_validation_classification_never_exposes_response(self):
+        for message, expected in [
+            ("You cannot change the key of a Sensitive Environment Variable. fake-secret", "sensitive-key-rename"),
+            ("fake-secret", "unclassified"),
+        ]:
+            error = d.urllib.error.HTTPError("https://example.test", 400, "bad", {}, io.BytesIO(json.dumps({"error": {"message": message}}).encode()))
+            with patch.object(d.urllib.request, "build_opener") as opener:
+                opener.return_value.open.side_effect = error
+                with self.assertRaises(d.DeliveryError) as raised:
+                    d.request("PATCH", "https://example.test")
+            self.assertIn(expected, str(raised.exception))
+            self.assertNotIn("fake-secret", str(raised.exception))
 
     def test_vercel_rejection_reports_only_key_and_error_code(self):
         with (
