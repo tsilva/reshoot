@@ -1,3 +1,4 @@
+import { providerModel } from "../../lib/generation/agentbridge";
 import { and, count, desc, eq, gt, ne, sql } from "drizzle-orm";
 import sharp from "sharp";
 import { RetryableError } from "workflow";
@@ -189,7 +190,7 @@ export async function executeGenerationJob(
       );
     providerStarted = true;
 
-    const response = await fetch(attempt.providerEndpoint ?? imageProviderConfig.endpoint, {
+    const response = await fetch(imageProviderConfig.endpoint, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${providerKey}`,
@@ -197,7 +198,7 @@ export async function executeGenerationJob(
         "HTTP-Referer": imageProviderConfig.referer,
         "X-OpenRouter-Title": imageProviderConfig.title,
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify({ ...request, model: providerModel(request.model) }),
       signal: AbortSignal.timeout(280_000),
     });
     const requestId = response.headers.get("x-request-id") ?? undefined;

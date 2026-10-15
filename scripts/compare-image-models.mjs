@@ -15,7 +15,7 @@ if (!["baseline", "candidate"].includes(values.phase) || !isAbsolute(values["out
 }
 const models = ["openai/gpt-image-2.5-sunburst", "openai/gpt-image-2.5-flare"];
 if (values.model && !models.includes(values.model)) throw new Error("Choose one of the two comparison models.");
-const key = process.env.OPENROUTER_API_KEY;
+const key = (process.env.AGENTBRIDGE_API_KEY ?? "not-needed");
 if (!key) throw new Error("Managed image-provider credentials are required.");
 const directory = resolve(values["output-dir"]);
 await mkdir(directory, { recursive: true });
@@ -71,9 +71,9 @@ async function run() {
     await writeFile(recordPath, JSON.stringify(record, null, 2), { flag: "wx" });
     console.log(`Started ${name}`);
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/images", {
+      const response = await fetch(`${(process.env.AGENTBRIDGE_BASE_URL ?? "http://127.0.0.1:8082/api/v1").replace(/\/+$/, "")}/images`, {
         method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "HTTP-Referer": "https://reshoot.tsilva.eu", "X-OpenRouter-Title": "Reshoot model comparison" },
-        body: JSON.stringify(request), signal: AbortSignal.timeout(280_000),
+        body: JSON.stringify({ ...request, model: `openrouter/${model}` }), signal: AbortSignal.timeout(280_000),
       });
       record.durationSeconds = Math.round((performance.now() - start) / 100) / 10;
       record.httpStatus = response.status;
