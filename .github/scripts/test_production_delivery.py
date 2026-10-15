@@ -201,6 +201,32 @@ class DeliveryTests(unittest.TestCase):
         self.assertNotIn("sensitive-provider-details", str(raised.exception))
         self.assertNotIn("fake-secret", str(raised.exception))
 
+    def test_existing_production_row_is_updated_by_id_without_touching_preview(self):
+        production = {"id": "production-id", "key": "K", "target": ["production"], "type": "sensitive"}
+        preview = {"id": "preview-id", "key": "K", "target": ["preview"], "type": "sensitive"}
+        with (
+            patch.object(d, "verify_vercel"),
+            patch.object(d, "vercel_request", side_effect=[
+                {"envs": [production, preview]}, production, {"envs": [production, preview]},
+            ]) as request,
+        ):
+            d.sync_vercel(self.config, {"K": "fake-secret"})
+        write = request.call_args_list[1]
+        self.assertEqual(write.args[1:3], ("PATCH", "/v9/projects/prj_example/env/production-id"))
+        self.assertEqual(write.args[3]["target"], ["production"])
+        self.assertEqual(write.args[3]["type"], "sensitive")
+
+    def test_missing_production_row_is_created_without_upsert(self):
+        production = {"id": "new-id", "key": "K", "target": ["production"], "type": "sensitive"}
+        with (
+            patch.object(d, "verify_vercel"),
+            patch.object(d, "vercel_request", side_effect=[
+                {"envs": []}, {"created": production}, {"envs": [production]},
+            ]) as request,
+        ):
+            d.sync_vercel(self.config, {"K": "fake-secret"})
+        self.assertEqual(request.call_args_list[1].args[1:3], ("POST", "/v10/projects/prj_example/env"))
+
     def test_all_targets_are_checked_before_first_write(self):
         envs = [{"key": "SECOND", "target": ["production", "preview"]}]
         with (

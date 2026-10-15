@@ -204,18 +204,27 @@ def sync_vercel(config, values):
     for key in values:
         production_matches(before, key)
     for key, value in values.items():
-        result = vercel_request(
-            config,
-            "POST",
-            path + "?upsert=true",
-            {
-                "key": key,
-                "value": value,
-                "type": "sensitive",
-                "target": ["production"],
-                "comment": "Managed from Infisical by GitHub production-delivery; no deletions",
-            },
-        )
+        payload = {
+            "key": key,
+            "value": value,
+            "type": "sensitive",
+            "target": ["production"],
+            "comment": "Managed from Infisical by GitHub production-delivery; no deletions",
+        }
+        existing = production_matches(before, key)
+        if existing:
+            env_id = existing[0].get("id")
+            if not isinstance(env_id, str) or not env_id:
+                raise DeliveryError("Existing production variable has no identifier; no write.")
+            # Address the production row explicitly when the same key also has Preview rows.
+            updated = vercel_request(
+                config, "PATCH",
+                "/v9/projects/" + config["vercelProjectId"] + "/env/" + urllib.parse.quote(env_id, safe=""),
+                payload,
+            )
+            result = {"created": updated}
+        else:
+            result = vercel_request(config, "POST", path, payload)
         created = result.get("created", {})
         if result.get("failed"):
             codes = []
