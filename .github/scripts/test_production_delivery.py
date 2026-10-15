@@ -231,7 +231,7 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(write.args[3]["value"], "fake-secret")
         self.assertNotIn("key", write.args[3])
         self.assertNotIn("target", write.args[3])
-        self.assertNotIn("type", write.args[3])
+        self.assertEqual(write.args[3]["type"], "sensitive")
 
     def test_missing_production_row_is_created_without_upsert(self):
         production = {"id": "new-id", "key": "K", "target": ["production"], "type": "sensitive"}
