@@ -75,3 +75,5 @@ Production and Preview call OpenRouter directly using their own server-only
 `OPENROUTER_API_KEY`; a missing production key disables model requests.
 Production credentials come from this app’s isolated Infisical project.
 Image generation keeps the supported image models.
+
+Production delivery keeps Vercel secret isolation enabled and distinguishes public configuration from private credentials; see [production delivery](docs/production-delivery.md).
