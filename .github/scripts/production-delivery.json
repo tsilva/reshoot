@@ -21,5 +21,14 @@
   "destination": "vercel",
   "vercelProjectId": "prj_L1D4dlxsUv8zZORHmxEmDZnE3lCV",
   "vercelProjectName": "reshoot",
-  "vercelTeamId": "team_eE2Iv7IMqPOx8ZVN2xNfR2f0"
+  "vercelTeamId": "team_eE2Iv7IMqPOx8ZVN2xNfR2f0",
+  "configNames": [
+    "NEXT_PUBLIC_SENTRY_DSN",
+    "R2_ACCOUNT_ID",
+    "R2_BUCKET_NAME",
+    "R2_ENDPOINT",
+    "SENTRY_DSN",
+    "SENTRY_ORG",
+    "SENTRY_PROJECT"
+  ]
 }
