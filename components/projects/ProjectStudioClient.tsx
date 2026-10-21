@@ -75,13 +75,22 @@ function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-export function ProjectStudioClient({ initialProject, checkoutAvailable }: { initialProject: ProjectDetail; checkoutAvailable: boolean }) {
+export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack, onOpenWallet, onBalanceChange, walletRevision = 0 }: {
+  initialProject: ProjectDetail;
+  checkoutAvailable: boolean;
+  onBack?: () => void;
+  onOpenWallet?: () => void;
+  onBalanceChange?: () => void;
+  walletRevision?: number;
+}) {
   const router = useRouter();
   const [project, setProject] = useState(initialProject);
   const [tab, setTab] = useState<StudioTab>("photos");
   const [additionalReferences, setAdditionalReferences] = useState<string[]>([]);
   const [selectedPresets, setSelectedPresets] = useState<string[]>(PRESETS.map((preset) => preset.id));
-  const [quote, setQuote] = useState<GenerationQuote | null>(null);
+  const [storedQuote, setQuote] = useState<GenerationQuote | null>(null);
+  const [quotedWalletRevision, setQuotedWalletRevision] = useState(walletRevision);
+  const quote = quotedWalletRevision === walletRevision ? storedQuote : null;
   const [quotedRequests, setQuotedRequests] = useState<ShotRequest[]>([]);
   const [quoting, setQuoting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -136,7 +145,8 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable }: { ini
       `/api/projects/${project.id}`,
     );
     setProject(response.project);
-  }, [project.id]);
+    onBalanceChange?.();
+  }, [project.id, onBalanceChange]);
 
   useEffect(() => {
     if (!batch || batchIsTerminal(batch.status)) return;
@@ -165,7 +175,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable }: { ini
       active = false;
       if (pollingRef.current) window.clearTimeout(pollingRef.current);
     };
-  }, [batch, refreshProject, router]);
+  }, [batch, refreshProject, router, onBalanceChange]);
 
   async function uploadMore(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -210,6 +220,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable }: { ini
         { method: "PATCH", body: JSON.stringify({ primaryAssetId: assetId }) },
       );
       setProject(response.project);
+      onBalanceChange?.();
       setAdditionalReferences((current) => current.filter((id) => id !== assetId));
       invalidateQuote();
       setNotice("Primary photo updated.");
@@ -261,6 +272,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable }: { ini
       );
       if (revision !== quoteRevision.current) return;
       setQuotedRequests(requests);
+      setQuotedWalletRevision(walletRevision);
       setQuote(response.quote);
     } catch (quoteError) {
       if (revision === quoteRevision.current) setError(quoteError instanceof Error ? quoteError.message : "Could not create a quote.");
@@ -288,6 +300,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable }: { ini
       setQuote(null);
       setTab("review");
       router.refresh();
+      onBalanceChange?.();
       setNotice("Generation is running. You can close this page and come back later.");
     } catch (batchError) {
       setError(batchError instanceof Error ? batchError.message : "Could not start generation.");
@@ -354,14 +367,12 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable }: { ini
   );
 
   return (
-    <main className="studio-main">
+    <section className="studio-main" aria-label="Product studio">
       <header className="studio-project-header">
-        <Link href="/projects" className="back-link">
-          <ArrowLeft size={18} /> Projects
-        </Link>
+        {onBack ? <button className="back-link" onClick={onBack}><ArrowLeft size={18} /> All shoots</button> : <Link href="/" className="back-link"><ArrowLeft size={18} /> All shoots</Link>}
         <div>
           <div className="page-kicker">Product project</div>
-          <h1>{project.title}</h1>
+          <h2>{project.title}</h2>
         </div>
         <div className="studio-summary">
           <span>{project.originalCount} originals</span>
@@ -591,7 +602,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable }: { ini
                       Confirm generation
                     </button>
                   ) : checkoutAvailable ? (
-                    <Link href="/account" className="button primary-button">Add credits</Link>
+                    onOpenWallet ? <button className="button primary-button" onClick={onOpenWallet}>Top up wallet</button> : <Link href="/?wallet=open#wallet" className="button primary-button">Top up wallet</Link>
                   ) : (
                     <button className="button secondary-button" onClick={() => setTab("review")}>Review saved results</button>
                   )}
@@ -700,6 +711,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable }: { ini
           )}
         </section>
       ) : null}
-    </main>
+    </section>
   );
 }

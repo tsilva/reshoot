@@ -42,12 +42,14 @@ export function AccountClient({
   displayName,
   email,
   isDemo,
+  onCreditsChange,
 }: {
   initialCredits: CreditSummary;
   initialActivity: CreditLedgerEntry[];
   displayName: string;
   email: string;
   isDemo: boolean;
+  onCreditsChange?: (credits: CreditSummary) => void;
 }) {
   const [credits, setCredits] = useState(initialCredits);
   const [activity, setActivity] = useState(initialActivity);
@@ -92,6 +94,7 @@ export function AccountClient({
         "/api/account/activity",
       );
       setCredits(response.credits);
+      onCreditsChange?.(response.credits);
       setActivity(latestActivity.activity);
       setCheckoutStep("success");
     } catch (checkoutError) {
@@ -106,11 +109,11 @@ export function AccountClient({
   }
 
   return (
-    <main className="product-main account-page">
+    <section className="product-main account-page">
       <header className="page-heading-row account-heading">
         <div>
           <div className="page-kicker">Account & credits</div>
-          <h1>Your account</h1>
+          <h2>Your wallet</h2>
           <p className="page-lede">{isDemo ? "Review your fake testing credits and every balance change." : "Manage purchase credits and review every balance change."}</p>
         </div>
         <div className="account-identity">
@@ -264,6 +267,6 @@ export function AccountClient({
           </section>
         </Dialog>
       ) : null}
-    </main>
+    </section>
   );
 }

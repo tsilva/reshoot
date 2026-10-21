@@ -6,7 +6,9 @@ Infisical remains the source of application secrets. Local development uses the 
 
 The workflow does not run on pull requests or forks, export `.env` files, upload secret artifacts, delete secret variables, or change preview/development variables. All required source keys and destination targets are checked before writes. Failed CI or sync prevents deployment. Existing production remains live on failure.
 
-After changing a production secret, use **Actions → Production delivery → Run workflow → main** to sync and deploy. A secret change alone does not trigger delivery. There is no schedule or automatic retry; rerun a failed workflow manually after fixing the cause. For an old failed commit superseded by a newer main commit, run a fresh workflow on main. Deployment tokens expire after one year and need rotation before expiry.
+Production secret creates, updates, and deletes in Infisical’s `prod` environment at `/` notify the signed webhook receiver at `https://modelarchviz.tsilva.eu/api/infisical-webhook`. The receiver dispatches this repository’s **Production delivery** workflow on `main`; its existing CI, OIDC, allowlist, sync, and deployment checks still apply. Development and other folders do not trigger delivery. No secret values are sent in webhook notifications.
+
+Use **Actions → Production delivery → Run workflow → main** to recover after fixing a failed webhook or workflow. There is no polling schedule. GitHub dispatch failures receive short bounded retries; failed workflows need a fresh run after the cause is fixed. Deployment tokens expire after one year and need rotation before expiry.
 
 Native Infisical syncs are disabled after this workflow has successfully replaced them. Updating a deployment credential in GitHub does not replace application keys in Infisical.
 
@@ -38,7 +40,7 @@ the old token. Allow outstanding signed URLs to drain before revocation.
 Historical deployments freeze credentials: after revocation, rebuild an older
 application commit with current environment values before rolling back.
 
-Production and Preview call OpenRouter directly with their own server-only `OPENROUTER_API_KEY`. Production delivery reads this key only from this app’s isolated production Infisical project; it never copies a development key. Missing production keys fail closed. AgentBridge is used only for development. Image generation retains the supported image models; DeepSeek is not an image generator.
+Production and Preview call OpenRouter directly with their own server-only `OPENROUTER_API_KEY`. Production delivery reads this key only from this app’s isolated production Infisical project; it never copies a development key. Missing production keys fail closed. AgentBridge is used only for development. The shared text-routing default is `deepseek/deepseek-v4.1-flash-1017`. Image generation retains the supported image models; DeepSeek is not an image generator.
 
 Secret synchronization updates an existing Production variable by its exact Vercel ID, preserving separately configured Preview rows. New variables are created only when Production has no matching row; duplicate or combined targets still stop delivery.
 
