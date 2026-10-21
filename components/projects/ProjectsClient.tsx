@@ -68,13 +68,28 @@ async function readLegacyShoot(): Promise<LegacyShoot | null> {
 
 export function ProjectsClient({
   initialProjects,
+  onOpenProject,
+  createOpen,
+  onCreateClose,
 }: {
   initialProjects: ProjectSummary[];
+  onOpenProject?: (projectId: string) => Promise<void>;
+  createOpen?: boolean;
+  onCreateClose?: () => void;
 }) {
   const router = useRouter();
   const [projects, setProjects] = useState(initialProjects);
   const [search, setSearch] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
+  const [internalModalOpen, setInternalModalOpen] = useState(false);
+  const modalOpen = createOpen || internalModalOpen;
+  function setModalOpen(open: boolean) {
+    setInternalModalOpen(open);
+    if (!open) onCreateClose?.();
+  }
+  async function openProject(projectId: string) {
+    if (onOpenProject) await onOpenProject(projectId);
+    else router.push(`/projects/${projectId}`);
+  }
   const [title, setTitle] = useState("");
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -231,7 +246,11 @@ export function ProjectsClient({
         setOffline(!navigator.onLine);
         return;
       }
-      router.push(`/projects/${created.id}`);
+      await openProject(created.id);
+      setModalOpen(false);
+      setTitle("");
+      setUploads([]);
+      setCreatedProject(null);
       router.refresh();
     } catch (requestError) {
       if (!navigator.onLine) setOffline(true);
@@ -256,11 +275,11 @@ export function ProjectsClient({
   }
 
   return (
-    <main className="product-main">
+    <section className="product-main" id="shoots" aria-label="Your shoots">
       <div className="page-heading-row">
         <div>
           <div className="page-kicker">Product library</div>
-          <h1>Your product library</h1>
+          <h2>Your shoots, all here.</h2>
           <p className="page-lede">
             Keep every original, generated shot, approval, and version together.
           </p>
@@ -297,7 +316,7 @@ export function ProjectsClient({
             <div className="project-grid">
               {visibleProjects.map((project) => (
                 <article className="project-card" key={project.id}>
-                  <Link href={`/projects/${project.id}`} className="project-image-link">
+                  <Link href={`/projects/${project.id}`} className="project-image-link" onClick={onOpenProject ? (event) => { event.preventDefault(); void openProject(project.id).catch(() => {}); } : undefined}>
                     <div className="project-image-frame">
                       {project.primaryPreviewUrl ? (
                         <Image
@@ -325,7 +344,7 @@ export function ProjectsClient({
                       </p>
                     </div>
                     <div className="project-card-actions">
-                      <Link href={`/projects/${project.id}`} aria-label={`Open ${project.title}`}>
+                      <Link href={`/projects/${project.id}`} aria-label={`Open ${project.title}`} onClick={onOpenProject ? (event) => { event.preventDefault(); void openProject(project.id).catch(() => {}); } : undefined}>
                         <ArrowRight size={20} />
                       </Link>
                       <button
@@ -448,7 +467,7 @@ export function ProjectsClient({
               <span>{uploads.length}/25 photos · max 500 MB</span>
               {createdProject ? (
                 <button className="button secondary-button" disabled={submitting} onClick={() => {
-                  router.push(`/projects/${createdProject.id}`);
+                  void openProject(createdProject.id).catch(() => {});
                   router.refresh();
                   resetModal();
                 }}>
@@ -463,6 +482,6 @@ export function ProjectsClient({
           </section>
         </Dialog>
       ) : null}
-    </main>
+    </section>
   );
 }

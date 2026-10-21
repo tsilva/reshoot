@@ -6,7 +6,9 @@
   <!-- repo-tagline:end -->
 </p>
 
-Reshoot is a persistent product-photography workspace for small brands, studios, and product teams. Create a project for each product, upload every original photo you have, choose the views you need, and keep every generated version and approval together.
+Reshoot is a single-page product-photography studio for small brands, studios, and product teams. Explore a free, pre-made sample on the home page, upload your own product, choose the views you need, and keep every generated version and approval together. Opening a saved or newly uploaded shoot replaces the sample canvas, and the wallet expands on the same page for balances, credit activity, and supported test top-ups.
+
+The sample requires no session and uses no credits. Starting your own shoot or opening a wallet creates or resumes the private browser workspace. Older welcome, project, and account links return to the home studio; a selected shoot remains addressable through `/?project=<id>#studio`. Real billing remains disabled, and no-charge test top-ups remain limited to local and Preview environments.
 
 One selected original remains the primary identity anchor. Up to four additional originals can support each generation, and Reshoot shows the exact credit quote before a batch begins.
 
@@ -74,6 +76,9 @@ Development uses AgentBridge (`AGENTBRIDGE_BASE_URL`, default
 Production and Preview call OpenRouter directly using their own server-only
 `OPENROUTER_API_KEY`; a missing production key disables model requests.
 Production credentials come from this app’s isolated Infisical project.
+The shared text-routing default is `deepseek/deepseek-v4.1-flash-1017`.
 Image generation keeps the supported image models.
+
+Production secrets are delivered through GitHub Actions. Infisical production secret changes automatically trigger sync and deployment; see [production delivery](docs/production-delivery.md) for scope and recovery.
 
 Production delivery keeps Vercel secret isolation enabled and distinguishes public configuration from private credentials; see [production delivery](docs/production-delivery.md).

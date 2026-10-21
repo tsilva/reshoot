@@ -54,7 +54,10 @@ export async function POST(request: Request) {
         maxAge: DEMO_SESSION_MAX_AGE,
       });
     }
-    return Response.redirect(new URL("/projects", url), 303);
+    if (request.headers.get("accept")?.includes("application/json")) {
+      return Response.json({ ready: true });
+    }
+    return Response.redirect(new URL("/", url), 303);
   } catch (error) {
     return apiErrorResponse(error);
   }
