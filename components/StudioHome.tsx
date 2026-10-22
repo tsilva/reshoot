@@ -3,8 +3,8 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import {
-  ArrowDown, ArrowRight, ArrowsClockwise, Check, Coins, ImageSquare,
-  Plus, ShieldCheck, Sparkle, SpinnerGap, UploadSimple, X,
+  ArrowDown, ArrowRight, ArrowUpRight, Aperture, ArrowsClockwise, Check, Coins,
+  Plus, ShieldCheck, Sparkle, SpinnerGap, X,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProjectsClient } from "@/components/projects/ProjectsClient";
@@ -153,85 +153,76 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
     <div className="one-page-studio">
       <header className="home-header">
         <div className="home-header-inner">
-          <a href="#" className="home-brand" aria-label="Reshoot home">
-            <Image src="/brand/logo/wordmark.png" width={136} height={32} alt="Reshoot" priority />
-          </a>
-          <span className="home-header-caption">Your always-open photo studio.</span>
-          <div className="home-header-actions">
-            <a href="#shoots" className="home-shoots-link">Your shoots</a>
-            <button className="home-wallet-button" onClick={() => void openWallet()} disabled={busy !== null}>
-              {busy === "wallet" ? <SpinnerGap className="spin" size={18} /> : <Coins size={19} />}
-              <span>{credits ? `${credits.availableCredits.toLocaleString()} test credits` : "Wallet"}</span>
-              <Plus size={15} weight="bold" />
-            </button>
-          </div>
+          <nav className="home-navigation" aria-label="Main navigation">
+            <a href={activeProject ? "#studio" : "#sample"}>The studio <ArrowDown size={12} /></a>
+            <a href="#shoots">Your shoots</a>
+          </nav>
+          <a href="#" className="home-brand" aria-label="Reshoot home"><Aperture size={24} weight="light" aria-hidden="true" />reshoot.</a>
+          <button className="home-wallet-button" onClick={() => void openWallet()} disabled={busy !== null}>
+            {busy === "wallet" ? <SpinnerGap className="spin" size={17} /> : <Coins size={17} />}
+            <span>{credits ? `${credits.availableCredits.toLocaleString()} test credits` : "Your wallet"}</span>
+            <Plus size={14} />
+          </button>
         </div>
       </header>
 
       <main className="home-content">
-        <section className="home-intro" aria-labelledby="home-title">
-          <div>
-            <p className="home-eyebrow"><span /> THE PRODUCT PHOTOGRAPHY STUDIO, REIMAGINED</p>
-            <h1 id="home-title">One product photo.<br />A whole new <span>perspective.</span></h1>
-          </div>
-          <div className="home-intro-copy">
-            <p>Turn the photo you have into the angles you need.<br className="desktop-break" /> Upload, create, and keep your best shots. Right here.</p>
-            <a href={activeProject ? "#studio" : "#sample"} className="home-text-link">{activeProject ? "Back to your shoot" : "Take the studio for a spin"} <ArrowDown size={16} /></a>
-          </div>
-        </section>
-
         {error ? <div className="home-error" role="alert"><span>{error}</span><button className="icon-button" onClick={() => setError(null)} aria-label="Dismiss error"><X size={18} /></button></div> : null}
+
+        <div className={`home-hero${activeProject ? " has-project" : ""}`}>
+          <section className="home-intro" aria-labelledby="home-title">
+            <p className="home-handwritten">Made for what you make.</p>
+            <h1 id="home-title">One photo.<br />{" "}A fresh<br />{" "}<em>perspective.</em></h1>
+            <div className="home-intro-copy">
+              <p>You made something worth seeing.<br />Turn one product photo into a whole new set of angles. All in your own little studio.</p>
+              <div className="home-start-row">
+                <button className="home-circle-button" onClick={() => void startShoot()} disabled={busy !== null}>
+                  {busy === "shoot" ? <SpinnerGap className="spin" size={24} /> : <ArrowUpRight size={25} weight="light" />}
+                  <span>{busy === "shoot" ? "Opening…" : "Start a shoot"}</span>
+                </button>
+                <p>Bring your product.<br /><span>We’ll find its good side.</span></p>
+              </div>
+            </div>
+            {!activeProject ? <div className="home-original-note">
+              <div className="home-original-image"><Image src="/assets/angle-guides/front.jpg" width={144} height={144} alt="The original sample photo: a handmade knitted doll facing forward" priority /></div>
+              <div><span className="home-eyebrow">THE STARTING POINT</span><p>Just one<br />{" "}ordinary photo.</p><span className="home-handwritten">A little possibility →</span></div>
+            </div> : <a href="#studio" className="home-text-link">Back to your shoot <ArrowDown size={16} /></a>}
+          </section>
+
+          {!activeProject ? <section className="sample-workspace" id="sample" aria-labelledby="sample-heading">
+            <header className="sample-toolbar"><h2 id="sample-heading">A little demonstration</h2><span><Sparkle size={14} /> Free to explore</span></header>
+            <div className="sample-layout">
+              <div className="sample-viewer">
+                <Image key={angle.id} src={`/assets/angle-guides/${angle.id}.jpg`} width={640} height={640} alt={`Sample result: knitted doll, ${angle.label.toLowerCase()} view`} priority />
+                <span className="sample-view-label">{angle.label} view</span>
+                <span className="sample-angle"><ArrowsClockwise size={14} /> {angle.rotation}</span>
+              </div>
+              <div className="sample-angle-rail">
+                <p className="sample-rail-heading">See every<br />{" "}<em>little detail.</em></p>
+                <div className="sample-angle-options" role="group" aria-label="Explore sample angles">
+                  {sampleAngles.map((item) => <button key={item.id} className={angle.id === item.id ? "is-selected" : ""} aria-pressed={angle.id === item.id} onClick={() => setAngle(item)}>
+                    <Image src={`/assets/angle-guides/${item.id}.jpg`} width={80} height={80} alt="" />
+                    <span>{item.label}</span>{angle.id === item.id ? <Check size={13} weight="bold" /> : <span className="angle-option-degree">{item.rotation}</span>}
+                  </button>)}
+                </div>
+                <span className="home-handwritten sample-try-note">Pick a side.</span>
+              </div>
+            </div>
+            <div className="sample-bottom-bar"><span>ONE PRODUCT. A WORLD OF POSSIBILITIES.</span><span>01 — 04</span></div>
+            <p className="sample-disclosure">Pre-made sample images. Switching views uses no credits. Unseen product details are estimates.</p>
+          </section> : null}
+        </div>
 
         {activeProject ? <section className="home-active-studio" ref={studioRef} id="studio">
           <ProjectStudioClient key={activeProject.id} initialProject={activeProject} checkoutAvailable={credits?.demoCheckoutAvailable ?? false} onBack={closeProject} onOpenWallet={() => void openWallet()} onBalanceChange={refreshBalance} walletRevision={walletRevision} />
-        </section> : (
-        <section className="sample-workspace" id="sample" aria-labelledby="sample-heading">
-          <header className="sample-toolbar">
-            <div><span className="sample-live-dot" /><h2 id="sample-heading">Meet your next product shoot.</h2><span className="sample-badge">INTERACTIVE SAMPLE</span></div>
-            <span className="sample-no-charge"><Sparkle size={15} /> Free to explore</span>
-          </header>
-          <div className="sample-layout">
-            <aside className="sample-source">
-              <div className="sample-step"><span>01</span><h3>Start with one photo</h3></div>
-              <div className="sample-original">
-                <Image src="/assets/angle-guides/front.jpg" width={512} height={512} alt="Sample original: a knitted doll facing forward on a cream background" priority />
-                <span><ImageSquare size={14} /> Original photo</span>
-              </div>
-              <div className="sample-source-caption"><strong>The everyday photo.</strong><p>The starting point for a whole new set.</p></div>
-              <button className="sample-upload" onClick={() => void startShoot()} disabled={busy !== null}>
-                {busy === "shoot" ? <SpinnerGap className="spin" size={23} /> : <UploadSimple size={25} weight="light" />}
-                <strong>{busy === "shoot" ? "Opening your studio…" : "Upload your product"}</strong>
-                <span>JPG, PNG or WebP · up to 20 MB each</span>
-                <span className="sample-upload-cta">Make it yours <ArrowRight size={16} /></span>
-              </button>
-              <p className="sample-private"><ShieldCheck size={14} /> Your originals stay private.</p>
-            </aside>
-            <div className="sample-results">
-              <div className="sample-result-heading"><div className="sample-step"><span>02</span><h3>Find its good side. Every side.</h3></div><span className="sample-result-count">4 example angles</span></div>
-              <div className="sample-viewer">
-                <Image key={angle.id} src={`/assets/angle-guides/${angle.id}.jpg`} width={512} height={512} alt={`Sample result: knitted doll, ${angle.label.toLowerCase()} view`} priority />
-                <span className="sample-view-label"><Sparkle size={14} /> {angle.label} view</span>
-                <span className="sample-angle"><ArrowsClockwise size={15} /> {angle.rotation}</span>
-              </div>
-              <div className="sample-angle-options" role="group" aria-label="Explore sample angles">
-                {sampleAngles.map((item) => <button key={item.id} className={angle.id === item.id ? "is-selected" : ""} aria-pressed={angle.id === item.id} onClick={() => setAngle(item)}>
-                  <Image src={`/assets/angle-guides/${item.id}.jpg`} width={64} height={64} alt="" />
-                  <span>{item.label}</span>{angle.id === item.id ? <Check size={15} weight="bold" /> : <span className="angle-option-degree">{item.rotation}</span>}
-                </button>)}
-              </div>
-              <p className="sample-disclosure">Pre-made sample images. Switching views uses no credits. Unseen product details are estimates.</p>
-            </div>
-          </div>
-          <footer className="sample-bottom-bar"><span><Check size={17} /> Same product. More possibilities.</span><span>Explore the sample, then try your own.</span></footer>
-        </section>
-        )}
+        </section> : null}
 
         <section className="home-next-step" aria-labelledby="next-step-title">
-          <div className="home-next-icon"><Sparkle size={26} weight="duotone" /></div>
-          <div><p className="home-eyebrow">YOUR PRODUCT IS NEXT</p><h2 id="next-step-title">A full photo studio. A little credit goes a long way.</h2><p>Choose your angles, see the exact quote, then create. Top up your wallet whenever you need.</p></div>
-          <button className="button primary-button" onClick={() => void openWallet()} disabled={busy !== null}>Explore your wallet <ArrowRight size={18} /></button>
+          <div className="home-next-heading"><p className="home-eyebrow">A LITTLE CREDIT. A LOT OF POSSIBILITY.</p><h2 id="next-step-title">Good things deserve<br /><em>a second look.</em></h2></div>
+          <div className="home-next-copy"><p>Upload your product, choose your angles, and see the exact quote before you create. Add credits here whenever inspiration strikes.</p><span><ShieldCheck size={14} /> Your originals stay private.</span></div>
+          <button className="home-circle-button home-wallet-cta" onClick={() => void openWallet()} disabled={busy !== null}><ArrowUpRight size={25} weight="light" /><span>Explore wallet</span></button>
         </section>
-        <div className="home-build-note"><ShieldCheck size={17} /><p>This is a test studio. Start with 1,000 fake credits; no payment is required. Real billing is coming later.</p></div>
+        <div className="home-build-note"><span>THE TEST STUDIO</span><p>Begin with 1,000 fake credits. No payment required. Real billing is coming later.</p></div>
 
         {walletOpen && credits ? <section className="home-wallet" id="wallet" ref={walletRef} aria-label="Inline wallet">
           <button className="home-panel-close" onClick={closeWallet}><X size={17} /> Close wallet</button>
@@ -242,7 +233,7 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
 
         {credits ? <ProjectsClient key={projects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={projects} onOpenProject={openProject} createOpen={createOpen} onCreateClose={() => setCreateOpen(false)} /> : <section className="home-saved-empty" id="shoots"><div><p className="home-eyebrow">A PLACE FOR EVERY PRODUCT</p><h2>Your next shoot starts here.</h2><p>Every original, angle, and approved version, together in your private workspace.</p></div><button className="button secondary-button" onClick={() => void startShoot()} disabled={busy !== null}>Start your first shoot <ArrowRight size={17} /></button></section>}
       </main>
-      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span><span>Less setup. More good shots.</span><a href={activeProject ? "#studio" : "#sample"}>Back to the studio ↑</a></footer>
+      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span><span>A little less setup. A little more possibility.</span><a href={activeProject ? "#studio" : "#sample"}>Back to the studio ↑</a></footer>
     </div>
   );
 }
