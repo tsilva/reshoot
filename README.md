@@ -10,6 +10,8 @@ Reshoot is a single-page product-photography studio for small brands, studios, a
 
 The sample requires no session and uses no credits. Starting your own shoot or opening a wallet creates or resumes the private browser workspace. Older welcome, project, and account links return to the home studio; a selected shoot remains addressable through `/?project=<id>#studio`. Real billing remains disabled, and no-charge test top-ups remain limited to local and Preview environments.
 
+The visual design takes inspiration from [Mudora by RylicStudio](https://dribbble.com/shots/26596729-Mudora-Pottery-and-Ceramics-Landing-Page): parchment surfaces, clay and olive accents, thin editorial rules, and circular actions. Instrument Serif and Caveat provide the display and handwritten styles, with Hanken Grotesk for controls. The interactive sample, inline wallet, and saved shoots share this design.
+
 One selected original remains the primary identity anchor. Up to four additional originals can support each generation, and Reshoot shows the exact credit quote before a batch begins.
 
 ## Install

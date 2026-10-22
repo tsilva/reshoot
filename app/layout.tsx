@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
+import { Caveat, Hanken_Grotesk, Instrument_Serif } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import "@/app/globals.css";
@@ -12,7 +12,9 @@ import {
   SOCIAL_IMAGE_PATH,
 } from "@/lib/site";
 
-const display = Bricolage_Grotesque({
+const display = Instrument_Serif({
+  weight: "400",
+  style: ["normal", "italic"],
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
@@ -21,6 +23,12 @@ const display = Bricolage_Grotesque({
 const body = Hanken_Grotesk({
   subsets: ["latin"],
   variable: "--font-body",
+  display: "swap",
+});
+
+const handwritten = Caveat({
+  subsets: ["latin"],
+  variable: "--font-handwritten",
   display: "swap",
 });
 
@@ -97,7 +105,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#faf9f6",
+  themeColor: "#f2e7d2",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -109,7 +117,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${display.variable} ${body.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${display.variable} ${body.variable} ${handwritten.variable}`}>
       <body>
         {children}
         {googleAnalyticsId ? (

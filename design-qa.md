@@ -1,6 +1,54 @@
 # Reshoot single-page studio QA
 
-## Current experience — 2026-10-21
+## Mudora-inspired visual redesign — 2026-10-23
+
+**Findings:** No remaining actionable P0/P1/P2 findings in the reviewed states.
+
+**Visual truth:** [Mudora — Pottery and Ceramics Landing Page, RylicStudio](https://dribbble.com/shots/26596729-Mudora-Pottery-and-Ceramics-Landing-Page), with the selected public poster at `https://cdn.dribbble.com/userupload/45134256/file/still-78859d86c028ce02589720f6259766a5.png`. Its browser capture is [mudora-reference.jpg](design/qa/artisan/mudora-reference.jpg).
+
+**Implementation:** `http://localhost:51276/`, tested in Brave Stable. [Desktop viewport](design/qa/artisan/desktop-home.jpg), [complete page](design/qa/artisan/desktop-full.jpg), [phone home](design/qa/artisan/mobile-home.jpg), [phone sample](design/qa/artisan/mobile-sample.jpg), [phone wallet](design/qa/artisan/mobile-wallet.jpg), [phone upload dialog](design/qa/artisan/mobile-upload.jpg), and [tablet](design/qa/artisan/tablet-home.jpg).
+
+This is an adaptation of the selected reference for Reshoot, rather than a clone of a pottery shop. The reference is a framed desktop mockup; Reshoot is a live product with different content and controls. Product imagery, interactive angle selection, private workspaces, credit accounting, and inline project/wallet behavior take precedence over matching the reference's commerce content.
+
+### Comparison evidence and normalization
+
+- Full-view comparison: [comparison.png](design/qa/artisan/comparison.png), with both browser captures together at 720 pixels wide each. The source capture is 1436 × 867 pixels; the desktop implementation capture is 1421 × 803 pixels. The live desktop CSS viewport reported 1436 × 811 with devicePixelRatio 2; browser capture output is normalized to approximately CSS-pixel resolution. Differing frame margins and viewport heights are intentional and are not treated as fidelity errors.
+- Focused typography comparison: [typography-comparison.png](design/qa/artisan/typography-comparison.png). Source and implementation headline regions are cropped from those same captures and scaled to 520 pixels wide each. This checks serif contrast, condensed proportions, handwritten accents, wrapping, and optical hierarchy; it does not assert identical fonts or pixel coordinates.
+- Responsive CSS viewports: 390 × 844, 768 × 1024, 600 × 900, 540 × 900, and 320 × 800. Phone and tablet capture files exclude the browser scrollbar area. Document width never exceeds the tested viewport. Temporary viewport overrides are reset after verification.
+- Desktop state: private browser workspace with its initial 1,000 test credits, sample visible, wallet closed. Phone states include sample, open wallet, and upload dialog. No additional top-up or paid generation was submitted.
+
+### Required fidelity surfaces
+
+- **Fonts and typography:** Instrument Serif in normal and true italic supplies the high-contrast editorial display style. Caveat supplies handwritten accents, and Hanken Grotesk keeps small controls legible. These are deliberate available-font interpretations; the reference's original font files were not supplied. Fonts load through `next/font` and are self-hosted. Headings wrap cleanly across tested widths; hidden line breaks preserve spaces.
+- **Spacing and layout:** Cocoa outer frame, centered wordmark, fine column rules, generous editorial headline, large product image, compact angle rail, original-photo note, and olive circular actions echo the reference. On phones, the image and four angle buttons stack. Wallet and library surfaces have square corners and restrained borders. The real studio retains its existing functional structure.
+- **Colors and tokens:** Shared tokens now use parchment `#f2e7d2`, espresso `#291c16`, clay `#602912` / `#8c4a2b`, olive `#4c503a`, and sand `#c6b6a0`. Body and muted text remain visibly legible on their surfaces. Selected angles have a border and checkmark as well as color; focus indicators remain visible.
+- **Image quality:** Existing Reshoot photographs are reused. Product previews retain their original colors, without a blend-mode tint. Responsive image dimensions remain explicit; actual product photos replace the reference's pottery because this is Reshoot's working demonstration. Phosphor icons supply functional symbols; no pottery artwork or custom imitation illustration was introduced.
+- **Copy and content:** The page introduces product photography, invites visitors to use the sample or start a shoot, explains credit quotes, and clearly labels fake credits and disabled real billing. No design-reference language appears in the customer experience.
+
+### Comparison history
+
+1. The first browser review found a product-photo tint that changed the sample's appearance. Removed the multiply blend; final desktop and phone captures show the original photo colors.
+2. The phone review found missing spaces when editorial line breaks were hidden, such as “oneordinary” and “everylittle.” Added explicit spaces; final phone sample and home captures show the repaired copy.
+3. The responsive review prompted a fluid tablet headline size and constrained grid tracks. The final 600-pixel and 320-pixel checks report no overflowing elements; the tablet capture documents the resulting editorial layout.
+4. The final combined full-view and focused comparisons found no remaining P0/P1/P2 issues. Differences in copy, product subject, lettering, and interactive layout are accepted adaptations to the user's inspiration request.
+
+### Interaction and engineering checks
+
+- Sample selection updates the main image and pressed state without spending credits.
+- Header wallet and the circular wallet call to action open the wallet on the same page; closing it preserves the workspace.
+- A credit pack opens the existing no-charge checkout confirmation, displaying $0 charged. Confirmation was not submitted.
+- Starting a shoot opens the existing upload dialog on desktop and phone. Escape closes it and restores focus to the triggering button.
+- No browser console errors or warnings were captured in the final reviewed state.
+- ESLint, TypeScript, 37 application tests, and the production build pass. The previously documented dependency-audit failure remains outside this visual change; dependencies were not changed.
+- No paid generation, actual payment, migration, reconciliation, or cleanup was run. Existing upload/generation/account logic was retained; uploading and generating new assets were not repeated for this visual pass.
+
+**Implementation checklist:** Visual system, responsive layout, interactive sample, inline wallet/dialogs, keyboard dismissal, documentation, and build checks complete.
+
+**Follow-up polish:** No blocking polish items. An exact licensed Mudora font match would require the original design's font information; the current display and handwritten fonts are intentional interpretations.
+
+**final result: passed**
+
+## Previous functional verification — 2026-10-21
 
 The home page is both the introduction and the working studio. A visitor can explore four pre-made product angles before starting a private browser workspace. The sample uses no credits. Uploading or opening a saved shoot replaces the sample canvas with the real studio; photos, shot selection, exact quotes, review, history, and exports stay on the home page.
 
