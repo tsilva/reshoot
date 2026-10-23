@@ -27,6 +27,7 @@ overrides:
   'brace-expansion@>=2 <3': 2.1.7
   'brace-expansion@>=4': 5.0.12
   source-map-js: 1.2.2
+  'zod@>=4 <4.6.6': 4.6.7
 
 # Approved security-patch exception; all other packages retain the seven-day hold.
 minimumReleaseAgeExclude:
