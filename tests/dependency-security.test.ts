@@ -89,6 +89,7 @@ describe("dependency security boundaries", () => {
       "vite": { "8": "8.2.4" },
       "vitest": { "4": "4.1.12" },
       "@vitest/mocker": { "4": "4.1.12" },
+      "zod": { "4": "4.6.6" },
     };
     for (const [name, floors] of Object.entries(patchedBranches)) {
       assertPatchedVersions(name, lockedVersions(name), floors);
