@@ -84,7 +84,11 @@ describe("dependency security boundaries", () => {
       "fast-uri": { "3": "3.1.8" },
       "js-yaml": { "4": "4.3.2" },
       "nanoid": { "3": "3.3.18", "5": "5.1.16" },
+      "next": { "16": "16.4.1" },
       "undici": { "7": "7.29.1" },
+      "vite": { "8": "8.2.4" },
+      "vitest": { "4": "4.1.12" },
+      "@vitest/mocker": { "4": "4.1.12" },
     };
     for (const [name, floors] of Object.entries(patchedBranches)) {
       assertPatchedVersions(name, lockedVersions(name), floors);
