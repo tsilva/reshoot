@@ -24,8 +24,8 @@
     "test:provider": "node scripts/verify-provider-routing.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1147.0",
-    "@aws-sdk/s3-request-presigner": "3.1147.0",
+    "@aws-sdk/client-s3": "3.1152.0",
+    "@aws-sdk/s3-request-presigner": "3.1152.0",
     "@neondatabase/serverless": "^1.1.0",
     "@next/third-parties": "^16.4.2",
     "@phosphor-icons/react": "^2.1.10",
