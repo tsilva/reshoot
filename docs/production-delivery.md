@@ -47,3 +47,9 @@ Secret synchronization updates an existing Production variable by its exact Verc
 Production values must differ from Preview and Development under the Vercel isolation policy. Delivery reports `production-secret-reused` without printing the provider response. Reshoot uses the separate `reshoot-production-build` Sentry organization token with `org:ci` scope for source-map uploads and releases; keep it only in the production vault. Rotate the source token rather than weakening isolation or editing Preview.
 
 Production delivery classifies public settings through the pinned `configNames` list; all other allowlisted values remain write-only Secrets. Vercel’s Require Separate Values policy stays enabled: real Production secrets must differ from non-production values. Existing variables are updated by their exact Production IDs. A legacy Secret explicitly listed as public configuration is replaced only in Production because Vercel cannot convert it to Config in place; Preview and Development rows are preserved. Provider responses and credential values are never logged. A failed sync holds deployment; rerun delivery after fixing the named key at its source.
+
+A READY build is not a completed release until Vercel confirms Production domain
+assignment. Required integration checks, including Clerk DNS verification,
+remain enforced. The workflow waits for assignment, fails on alias errors or
+timeout, and rechecks the current main commit before reporting `Production
+READY`. Never bypass a failed integration check to make delivery green.
