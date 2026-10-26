@@ -10,3 +10,7 @@ reference. Use that existing project rather than creating a replacement.
 The local reference file is intentionally excluded from Git. If it is missing,
 find the project named **Reshoot AI Creative Studio** with the Stitch MCP and
 recreate the local file with its project ID.
+
+## License
+
+[MIT License](../../LICENSE).
