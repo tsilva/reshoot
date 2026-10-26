@@ -1,5 +1,23 @@
 # Reshoot single-page studio QA
 
+## Clearer first screen and frameless page — 2026-10-26
+
+The first screen identifies Reshoot as AI product photography, explains that one uploaded product photo becomes multiple views, and leads with “Upload your product photo.” The example identifies the input photo and offers four views. The lower call to action also opens upload rather than the wallet. Test-credit and hidden-surface disclosures remain visible.
+
+The brown outer background, page border, and outer spacing are removed across breakpoints; the cream background fills the viewport. The content keeps its readable maximum width and internal spacing.
+
+Brave checks confirmed the primary action opens the existing product-upload dialog. Desktop, 768-pixel tablet, and 390/320-pixel mobile layouts have no horizontal overflow. At 390 × 844 pixels, the primary upload button appears on the first screen. Lint, TypeScript, and the production build passed for the copy and CTA update; the subsequent frame removal changes only the outer CSS. See the updated [desktop](design/qa/clarity/desktop.png) capture.
+
+## Consistent linen-doll sample — 2026-10-26
+
+The approved front photograph and four-view preview supplied the same references to four independent, parallel built-in image-generation calls. No newly generated view was used to generate another. Each prompt kept the camera and camera-left softbox fixed while rotating only the doll to 0°, 45°, 90°, or 180°, with matching full-body square framing and rightward floor shadows.
+
+The individual 1254 × 1254 photographs replace the four JPEGs in `public/assets/angle-guides/`. JPEG export preserves the generated dimensions. Static image imports give changed assets new URLs; the starting-point photo, selected view, and thumbnails share those assets. The viewer uses `object-fit: contain` to preserve the whole doll across desktop and mobile layouts.
+
+Brave verification: all four angle buttons update the photograph and pressed state; every main image and thumbnail loads. Desktop frames remain 623.5 × 498 pixels for all angles. At a 390 × 844 mobile viewport, the image is 321 × 321 pixels and the page has no horizontal overflow. See [desktop](design/qa/doll/desktop.png) and [mobile](design/qa/doll/mobile.png) captures.
+
+Lint, TypeScript, and the production build pass. The test suite passes 42 of 43 checks; the unchanged dependency audit reports seven advisories in `undici` and `fast-uri`. No dependencies or application generation/credit paths changed.
+
 ## Mudora-inspired visual redesign — 2026-10-23
 
 **Findings:** No remaining actionable P0/P1/P2 findings in the reviewed states.
