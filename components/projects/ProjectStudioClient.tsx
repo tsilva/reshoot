@@ -35,6 +35,7 @@ import type {
 import { apiRequest } from "@/lib/client/api";
 import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
 import { exportApprovedShots } from "@/lib/client/export";
+import { useBatchRealtime } from "@/lib/client/use-batch-realtime";
 
 type StudioTab = "photos" | "create" | "review";
 type ShotRequest = {
@@ -99,8 +100,11 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   const [uploading, setUploading] = useState<Array<{ name: string; progress: number }>>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const pollingRef = useRef<number | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const [liveRetry, setLiveRetry] = useState(0);
   const quoteRevision = useRef(0);
+  const batchConfirmation = useRef<{ quoteId: string; key: string } | null>(null);
 
   function invalidateQuote() {
     quoteRevision.current += 1;
@@ -117,18 +121,21 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   useEffect(() => {
     if (!initialProject.activeBatchId) return;
     let active = true;
-    void apiRequest<{ batch: GenerationBatchStatus }>(
-      `/api/generation-batches/${initialProject.activeBatchId}`,
-    )
+    void apiRequest<{ batch: GenerationBatchStatus }>(`/api/generation-batches/${initialProject.activeBatchId}`, { cache: "no-store" })
       .then((response) => {
         if (!active) return;
         setBatch(response.batch);
         setTab("review");
         setNotice("Your active generation resumed from its saved workflow.");
+        if (!batchIsTerminal(response.batch.status)) {
+          void apiRequest<void>(`/api/generation-batches/${response.batch.id}/resume`, { method: "POST" })
+            .then(() => { if (active) setResumeError(null); })
+            .catch(() => { if (active) setResumeError("Could not resume generation. Reconnect to try again."); });
+        }
       })
       .catch((resumeError) => {
         if (active) {
-          setError(
+          setResumeError(
             resumeError instanceof Error
               ? resumeError.message
               : "The active generation could not be resumed.",
@@ -148,34 +155,47 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
     onBalanceChange?.();
   }, [project.id, onBalanceChange]);
 
+  const activeBatchId = batch && !batchIsTerminal(batch.status) ? batch.id : null;
+  useBatchRealtime({
+    batchId: activeBatchId,
+    retry: liveRetry,
+    onConnected: () => setLiveError(null),
+    onError: setLiveError,
+    onChange: async (signal) => {
+      if (!activeBatchId) return;
+      const response = await apiRequest<{ batch: GenerationBatchStatus }>(`/api/generation-batches/${activeBatchId}`, { cache: "no-store", signal });
+      setBatch(response.batch);
+      onBalanceChange?.();
+    },
+  });
+
+  const terminalBatchId = batch && batchIsTerminal(batch.status) ? batch.id : null;
   useEffect(() => {
-    if (!batch || batchIsTerminal(batch.status)) return;
+    if (!terminalBatchId) return;
     let active = true;
-    async function poll() {
-      try {
-        const response = await apiRequest<{ batch: GenerationBatchStatus }>(
-          `/api/generation-batches/${batch!.id}`,
-        );
+    void apiRequest<{ project: ProjectDetail }>(`/api/projects/${project.id}`, { cache: "no-store" })
+      .then((response) => {
         if (!active) return;
-        setBatch(response.batch);
-        if (batchIsTerminal(response.batch.status)) {
-          await refreshProject();
-          router.refresh();
-          return;
-        }
-      } catch (pollError) {
-        if (active) setError(pollError instanceof Error ? pollError.message : "Could not refresh generation.");
-      }
-      if (active) {
-        pollingRef.current = window.setTimeout(poll, document.hidden ? 5000 : 2000);
-      }
-    }
-    pollingRef.current = window.setTimeout(poll, document.hidden ? 5000 : 2000);
-    return () => {
-      active = false;
-      if (pollingRef.current) window.clearTimeout(pollingRef.current);
-    };
-  }, [batch, refreshProject, router, onBalanceChange]);
+        setProject(response.project);
+        onBalanceChange?.();
+        router.refresh();
+      })
+      .catch(() => { if (active) setError("Could not refresh the completed shoot. Reload the page to try again."); });
+    return () => { active = false; };
+  }, [terminalBatchId, project.id, onBalanceChange, router]);
+
+  async function reconnectGeneration() {
+    const batchId = activeBatchId ?? initialProject.activeBatchId;
+    if (!batchId) return;
+    try {
+      await apiRequest<void>(`/api/generation-batches/${batchId}/resume`, { method: "POST" });
+      const response = await apiRequest<{ batch: GenerationBatchStatus }>(`/api/generation-batches/${batchId}`, { cache: "no-store" });
+      setBatch(response.batch);
+      setLiveError(null);
+      setResumeError(null);
+      setLiveRetry((value) => value + 1);
+    } catch { setResumeError("Could not resume generation. Reconnect to try again."); }
+  }
 
   async function uploadMore(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -283,25 +303,31 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
 
   async function confirmBatch() {
     if (!quote) return;
+    if (batchConfirmation.current?.quoteId !== quote.id) {
+      batchConfirmation.current = { quoteId: quote.id, key: crypto.randomUUID() };
+    }
     setSubmitting(true);
     setError(null);
     try {
-      const created = await apiRequest<{ batchId: string }>(
+      const created = await apiRequest<{ batchId: string; monitoringStarted: boolean }>(
         `/api/projects/${project.id}/generation-batches`,
         {
           method: "POST",
-          body: JSON.stringify({ quoteId: quote.id, idempotencyKey: crypto.randomUUID() }),
+          body: JSON.stringify({ quoteId: quote.id, idempotencyKey: batchConfirmation.current.key }),
         },
       );
       const response = await apiRequest<{ batch: GenerationBatchStatus }>(
         `/api/generation-batches/${created.batchId}`,
       );
       setBatch(response.batch);
+      setResumeError(created.monitoringStarted ? null : "Generation is saved but could not start. Reconnect to resume it.");
       setQuote(null);
       setTab("review");
       router.refresh();
       onBalanceChange?.();
-      setNotice("Generation is running. You can close this page and come back later.");
+      setNotice(created.monitoringStarted
+        ? "Generation is running. You can close this page and come back later."
+        : "Your generation is saved. Reconnect to start it.");
     } catch (batchError) {
       setError(batchError instanceof Error ? batchError.message : "Could not start generation.");
     } finally {
@@ -411,6 +437,12 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
           <button className="icon-button" onClick={() => setError(null)} aria-label="Dismiss">
             <X size={16} />
           </button>
+        </div>
+      ) : null}
+      {resumeError || liveError ? (
+        <div className="studio-notice error-notice" role="alert">
+          <WarningCircle size={18} /> {resumeError ?? liveError}
+          <button className="button button-secondary" onClick={() => void reconnectGeneration()}>Reconnect</button>
         </div>
       ) : null}
 

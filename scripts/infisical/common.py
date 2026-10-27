@@ -10,6 +10,8 @@ from uuid import UUID
 ROOT = Path(__file__).resolve().parents[2]
 KEYS = (
     "DATABASE_URL",
+    "NEON_REALTIME_URL",
+    "NEON_REALTIME_SECRET",
     "AGENTBRIDGE_API_KEY",
     "R2_ACCESS_KEY_ID",
     "R2_SECRET_ACCESS_KEY",

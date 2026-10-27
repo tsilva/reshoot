@@ -15,6 +15,13 @@
       "when": 1785608332755,
       "tag": "0001_eminent_sleepwalker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793114215638,
+      "tag": "0002_generation_realtime",
+      "breakpoints": true
     }
   ]
 }

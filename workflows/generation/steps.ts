@@ -179,7 +179,7 @@ export async function executeGenerationJob(
     });
     const providerKey = requireImageProviderKey();
 
-    await db
+    const [started] = await db
       .update(generationAttempts)
       .set({ state: "started", startedAt: new Date(), updatedAt: new Date() })
       .where(
@@ -187,7 +187,10 @@ export async function executeGenerationJob(
           eq(generationAttempts.id, attemptId),
           eq(generationAttempts.state, "claimed"),
         ),
-      );
+      ).returning({ id: generationAttempts.id });
+    // Another step may have started or ended this attempt while references
+    // were loading. Only the transition winner sends the paid request.
+    if (!started) return { status: "duplicate" as const };
     providerStarted = true;
 
     const response = await fetch(imageProviderConfig.endpoint, {

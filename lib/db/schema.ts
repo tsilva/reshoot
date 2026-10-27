@@ -319,6 +319,13 @@ export const generationBatches = pgTable(
   ],
 );
 
+// Built-in Postgres types only: the Realtime beta cannot read our custom enums.
+export const generationBatchRevisions = pgTable("generation_batch_revisions", {
+  batchId: uuid("batch_id").primaryKey().references(() => generationBatches.id, { onDelete: "cascade" }),
+  ownerId: uuid("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  revision: bigint("revision", { mode: "bigint" }).default(sql`0`).notNull(),
+});
+
 export const generationJobs = pgTable(
   "generation_jobs",
   {
