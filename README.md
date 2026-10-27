@@ -81,7 +81,7 @@ Production credentials come from this app’s isolated Infisical project.
 The shared text-routing default is `deepseek/deepseek-v4.1-flash-1017`.
 Image generation keeps the supported image models.
 
-Production secrets are delivered through GitHub Actions. Infisical production secret changes automatically trigger sync and deployment; see [production delivery](docs/production-delivery.md) for scope and recovery.
+Production secrets are delivered through the pinned shared GitHub Actions workflow. The standalone signed Infisical relay triggers synchronization and deployment; see [production delivery](docs/production-delivery.md) for scope and recovery.
 
 Production delivery keeps Vercel secret isolation enabled and distinguishes public configuration from private credentials; see [production delivery](docs/production-delivery.md).
 
