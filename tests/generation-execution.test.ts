@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import sharp from "sharp";
 const state = vi.hoisted(() => ({
-  attemptState: "claimed", inputs: ["primary", "supporting"],
+  attemptState: "claimed", transitionWon: true, inputs: ["primary", "supporting"],
   getObjectBuffer: vi.fn(), headObject: vi.fn(), putObject: vi.fn(),
   capture: vi.fn(), release: vi.fn(), fetch: vi.fn(), updates: [] as unknown[],
 }));
@@ -19,13 +19,13 @@ vi.mock("@/lib/db", () => ({ db: {
     innerJoin: () => ({ where: () => ({ limit: async () => [{ shot: { id: "shot", projectId: "project", label: "Right profile", azimuth: 90, elevation: 0 } }] }) }),
     where: () => ({ orderBy: async () => selection ? [] : state.inputs.map((frozenR2Key) => ({ frozenR2Key })) }),
   }) }),
-  update: () => ({ set: (values: unknown) => { state.updates.push(values); return { where: async () => undefined }; } }),
+  update: () => ({ set: (values: unknown) => { state.updates.push(values); return { where: () => ({ then: (resolve: (value: undefined) => void) => resolve(undefined), returning: async () => state.transitionWon ? [{ id: "attempt" }] : [] }) }; } }),
 } }));
 import { executeGenerationJob } from "../workflows/generation/steps";
 
 describe("durable generation dispatch", () => {
   beforeEach(() => {
-    state.attemptState = "claimed"; state.inputs = ["primary", "supporting"]; state.updates = [];
+    state.attemptState = "claimed"; state.transitionWon = true; state.inputs = ["primary", "supporting"]; state.updates = [];
     vi.clearAllMocks();
     state.headObject.mockRejectedValue({ $metadata: { httpStatusCode: 404 } });
     state.getObjectBuffer.mockImplementation(async (key) => Buffer.from(key));
@@ -58,6 +58,13 @@ describe("durable generation dispatch", () => {
     expect(state.fetch).not.toHaveBeenCalled();
     expect(state.capture).toHaveBeenCalledTimes(1);
     expect(state.release).not.toHaveBeenCalled();
+  });
+
+  it("does not pay if the attempt ended while references were loading", async () => {
+    state.transitionWon = false;
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "duplicate" });
+    expect(state.fetch).not.toHaveBeenCalled();
+    expect(state.capture).not.toHaveBeenCalled();
   });
 
   it("releases a replayed started attempt without a second paid request", async () => {

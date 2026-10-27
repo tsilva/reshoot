@@ -264,7 +264,7 @@ export async function dispatchBatchOutbox(batchId: string, userId: string) {
         eq(generationJobs.ownerId, userId),
         eq(workflowOutbox.ownerId, userId),
         or(
-          eq(workflowOutbox.status, "pending"),
+          and(eq(workflowOutbox.status, "pending"), lte(workflowOutbox.nextAttemptAt, new Date())),
           and(
             eq(workflowOutbox.status, "dispatching"),
             or(
@@ -293,8 +293,8 @@ export async function dispatchBatchOutbox(batchId: string, userId: string) {
           eq(workflowOutbox.id, row.outbox.id),
           eq(workflowOutbox.ownerId, userId),
           or(
-            eq(workflowOutbox.status, "pending"),
-            lt(workflowOutbox.leaseExpiresAt, new Date()),
+            and(eq(workflowOutbox.status, "pending"), lte(workflowOutbox.nextAttemptAt, new Date())),
+            and(eq(workflowOutbox.status, "dispatching"), or(isNull(workflowOutbox.leaseExpiresAt), lt(workflowOutbox.leaseExpiresAt, new Date()))),
           ),
         ),
       )

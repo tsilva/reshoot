@@ -8,7 +8,9 @@ export async function GET(_request: Request, context: RouteContext) {
   try {
     const user = await resolveCurrentUser();
     const { batchId } = await context.params;
-    return Response.json({ batch: await getGenerationBatchStatus(user.id, batchId) });
+    return Response.json({ batch: await getGenerationBatchStatus(user.id, batchId) }, {
+      headers: { "Cache-Control": "private, no-store" },
+    });
   } catch (error) {
     return apiErrorResponse(error);
   }
