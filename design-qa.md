@@ -1,5 +1,42 @@
 # Reshoot single-page studio QA
 
+## White studio and simplified carousel — 2026-10-27
+
+**Findings:** No remaining actionable P0/P1/P2 issues in the reviewed states. **final result: passed**
+
+**Visual truth:** The selected [white mockup](design/qa/white-studio/reference.png), refined by the user's [annotated request](design/qa/white-studio/annotated-request.png). Those annotations explicitly replace the thumbnail rail with previous/next controls, remove header navigation, the separate original-photo block and the sample note, and add Original/Generated badges. The later request to remove redundancy also overrides repeated marketing sections in the mockup.
+
+**Implementation:** `http://localhost:64456/`, verified in Brave. [Desktop](design/qa/white-studio/desktop.png), [complete page](design/qa/white-studio/desktop-full.png), [mobile](design/qa/white-studio/mobile.png), [mobile carousel](design/qa/white-studio/mobile-carousel.png), and [wallet](design/qa/white-studio/wallet.png). The current-run [before capture](design/qa/white-studio/before.png) records the redundant labels, repeated upload sections, and oversized empty-library illustration that were removed.
+
+### Comparison evidence
+
+- [Full-view comparison](design/qa/white-studio/comparison-final.png): selected mockup, annotated request, then implementation, each normalized to a 720 × 450 panel without stretching. Source pixels: 1586 × 992 and 2898 × 1828. Implementation: 1425 × 891 pixels captured at a 1440 × 900 CSS viewport; the browser capture is approximately CSS-pixel density. The photo state is front/original for the annotation and implementation; the original mockup's three-quarter state is a style reference, not a requirement to mislabel the front view.
+- [Focused photo comparison](design/qa/white-studio/photo-comparison.png) checks subject detail, white background, framing, and shadow treatment. Regions are shown within equal 620 × 620 panels; the deliberate removal of the sidebar gives the implementation a wider stage. Product colors, face, cream yarn, linen texture, and rightward shadows remain consistent.
+- Fonts/typography: Instrument Serif and Hanken Grotesk retain the chosen editorial hierarchy. Removed decorative handwritten copy also removes the unused Caveat font. Copy and CTA wrap cleanly at 1440, 768, 390, and 320 CSS pixels.
+- Spacing/layout: one hero, one image stage, compact saved shoots, and a minimal footer. The removed sidebar, repeated headings, angle captions, page counter, original thumbnail, second upload pitch, and empty-library illustration are intentional user-requested reductions. No horizontal overflow at tested widths.
+- Colors/tokens: white page, image surfaces, dialogs, browser theme, and installable-app theme; espresso text, clay primary action, restrained olive account accents, and neutral rules. No brown outer frame or photo tint.
+- Image quality: four independent parallel background edits retain 1254 × 1254 output dimensions. A narrow horizontal edge mask fades only the surrounding photo background; the doll remains opaque and uncropped. Assets and exact built-in imagegen prompt set are recorded in [generation.json](design/qa/white-studio/generation.json).
+- Copy/content: the product explanation and upload action remain. Only requested Original/Generated badges appear on the photo; screen-reader status includes view and position. The test-credit/no-payment helper remains. The visible sample disclosure was removed at the user's explicit request; hidden surfaces remain estimates as documented in the README.
+
+### Audit steps and interaction checks
+
+1. Homepage: passed. The original full-page capture showed repeated product pitches, repeated angle labels and navigation, and duplicated upload actions. The final page removes those elements and keeps the primary action visible on the first mobile screen.
+2. Carousel: passed. Next cycles original/front → generated/three-quarter → generated/side → generated/back → original/front. Previous wraps in reverse. ArrowLeft/ArrowRight work while a carousel control has focus; a live status announces the view. Buttons have accessible names and 48 × 48 CSS-pixel touch targets. Sample browsing leaves credits unchanged.
+3. Upload: passed. The primary action opens the existing product-photo dialog; closing returns to the page. No files were uploaded or projects created.
+4. Wallet: passed. The header balance opens the existing inline wallet and credit history; closing preserves the landing page. No pack, checkout, payment, or credit grant was submitted.
+
+### Comparison history and limits
+
+The first [comparison](design/qa/white-studio/comparison.png) found a P2 photo-edge seam: the shadow stopped at the raster boundary. The horizontal mask initially covered the wider element rather than its contained square image. Constraining the image to its actual rendered square and centering it applies the fade to the raster edges; the final comparison and focused crop show the repaired transition. A malformed full-page mobile capture was rejected and replaced with the verified top-of-page viewport capture.
+
+Final pre-push checks on the combined repository state passed: lint, TypeScript, the production build, 61 Vitest tests (one database test skipped), four provider-routing checks, and 11 secret-launcher tests. An initial design test run concurrent with the production build hit the existing ESLint integration test's five-second timeout; the non-concurrent retry passed. The final CSS-only edge and unused-style cleanup was verified in the browser and with lint. No browser errors were captured. One development LCP warning from an earlier hot-reload state remains in the log; the final image explicitly has `loading="eager"` and `fetchPriority="high"`.
+
+Screenshots and keyboard checks do not establish complete accessibility compliance. Upload/storage writes, real image-service generation, real billing, and production delivery were not exercised. Existing auth, billing, storage, and telemetry items in the private repository inbox remain outside this design change.
+
+**Implementation checklist:** White photo assets, white surfaces, minimal content, cyclic controls, provenance badges, responsive layout, upload/wallet preservation, visual comparisons, and documentation complete.
+
+**Follow-up polish:** None required for this scope. **final result: passed**
+
 ## Clearer first screen and frameless page — 2026-10-26
 
 The first screen identifies Reshoot as AI product photography, explains that one uploaded product photo becomes multiple views, and leads with “Upload your product photo.” The example identifies the input photo and offers four views. The lower call to action also opens upload rather than the wallet. Test-credit and hidden-surface disclosures remain visible.

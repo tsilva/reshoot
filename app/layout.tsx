@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Hanken_Grotesk, Instrument_Serif } from "next/font/google";
+import { Hanken_Grotesk, Instrument_Serif } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import "@/app/globals.css";
@@ -23,12 +23,6 @@ const display = Instrument_Serif({
 const body = Hanken_Grotesk({
   subsets: ["latin"],
   variable: "--font-body",
-  display: "swap",
-});
-
-const handwritten = Caveat({
-  subsets: ["latin"],
-  variable: "--font-handwritten",
   display: "swap",
 });
 
@@ -105,7 +99,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f2e7d2",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -117,7 +111,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${display.variable} ${body.variable} ${handwritten.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${display.variable} ${body.variable}`}>
       <body>
         {children}
         {googleAnalyticsId ? (

@@ -3,8 +3,7 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import {
-  ArrowDown, ArrowRight, Aperture, ArrowsClockwise, Check, Coins,
-  Plus, ShieldCheck, Sparkle, SpinnerGap, X,
+  ArrowRight, Aperture, CaretLeft, CaretRight, Coins, Plus, SpinnerGap, X,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProjectsClient } from "@/components/projects/ProjectsClient";
@@ -19,10 +18,10 @@ const AccountClient = dynamic(() => import("@/components/account/AccountClient")
 const ProjectStudioClient = dynamic(() => import("@/components/projects/ProjectStudioClient").then((module) => module.ProjectStudioClient));
 
 const sampleAngles = [
-  { id: "front", label: "Front", rotation: "0°", image: sampleFront },
-  { id: "front-three-quarter", label: "Three-quarter", rotation: "45°", image: sampleThreeQuarter },
-  { id: "right-profile", label: "Side", rotation: "90°", image: sampleSide },
-  { id: "back", label: "Back", rotation: "180°", image: sampleBack },
+  { id: "front", label: "Front", image: sampleFront },
+  { id: "front-three-quarter", label: "Three-quarter", image: sampleThreeQuarter },
+  { id: "right-profile", label: "Side", image: sampleSide },
+  { id: "back", label: "Back", image: sampleBack },
 ];
 
 export function StudioHome({ initialCredits, initialProjects, initialProject = null, initialWalletOpen = false }: {
@@ -34,7 +33,8 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
   const [credits, setCredits] = useState(initialCredits);
   const [projects, setProjects] = useState(initialProjects);
   const [activeProject, setActiveProject] = useState(initialProject);
-  const [angle, setAngle] = useState(sampleAngles[1]);
+  const [angleIndex, setAngleIndex] = useState(0);
+  const angle = sampleAngles[angleIndex];
   const [createOpen, setCreateOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(initialWalletOpen);
   const [walletActivity, setWalletActivity] = useState<CreditLedgerEntry[] | null>(null);
@@ -44,6 +44,10 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
   const sessionRequest = useRef<Promise<CreditSummary> | null>(null);
   const studioRef = useRef<HTMLElement>(null);
   const walletRef = useRef<HTMLElement>(null);
+
+  function cycleSample(direction: -1 | 1) {
+    setAngleIndex((current) => (current + direction + sampleAngles.length) % sampleAngles.length);
+  }
 
   const refreshBalance = useCallback(() => {
     void Promise.all([
@@ -157,10 +161,6 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
     <div className="one-page-studio">
       <header className="home-header">
         <div className="home-header-inner">
-          <nav className="home-navigation" aria-label="Main navigation">
-            <a href={activeProject ? "#studio" : "#sample"}>{activeProject ? "Your studio" : "See an example"} <ArrowDown size={12} /></a>
-            <a href="#shoots">Your shoots</a>
-          </nav>
           <a href="#" className="home-brand" aria-label="Reshoot home"><Aperture size={24} weight="light" aria-hidden="true" />reshoot.</a>
           <button className="home-wallet-button" onClick={() => void openWallet()} disabled={busy !== null}>
             {busy === "wallet" ? <SpinnerGap className="spin" size={17} /> : <Coins size={17} />}
@@ -185,49 +185,28 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
                   {busy === "shoot" ? <SpinnerGap className="spin" size={20} /> : <ArrowRight size={20} />}
                 </button>
                 <p className="home-start-note">1,000 test credits included. No payment required.</p>
-                {!activeProject ? <a href="#sample" className="home-example-link">Explore the example <ArrowDown size={14} /></a> : null}
               </div>
             </div>
-            {!activeProject ? <div className="home-original-note">
-              <div className="home-original-image"><Image src={sampleFront} sizes="92px" alt="The original sample photo: a handmade linen doll facing forward" loading="eager" /></div>
-              <div><span className="home-eyebrow">THE INPUT</span><p>One original photo.</p><span className="home-handwritten">See the new angles →</span></div>
-            </div> : <a href="#studio" className="home-text-link">Back to your shoot <ArrowDown size={16} /></a>}
           </section>
 
-          {!activeProject ? <section className="sample-workspace" id="sample" aria-labelledby="sample-heading">
-            <header className="sample-toolbar"><h2 id="sample-heading">One photo. Four views.</h2><span><Sparkle size={14} /> Free example</span></header>
-            <div className="sample-layout">
+          {!activeProject ? <section className="sample-workspace" id="sample" aria-label="Product photo example" aria-roledescription="carousel" onKeyDown={(event) => {
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+            event.preventDefault();
+            cycleSample(event.key === "ArrowLeft" ? -1 : 1);
+          }}>
               <div className="sample-viewer">
-                <Image key={angle.id} src={angle.image} sizes="(max-width: 600px) 100vw, (max-width: 1050px) 65vw, 50vw" alt={`Sample result: linen doll, ${angle.label.toLowerCase()} view`} loading="eager" fetchPriority="high" />
-                <span className="sample-view-label">{angle.label} view</span>
-                <span className="sample-angle"><ArrowsClockwise size={14} /> {angle.rotation}</span>
+                <Image key={angle.id} src={angle.image} sizes="(max-width: 850px) 100vw, 60vw" alt={`${angle.id === "front" ? "Original" : "Generated"} linen doll, ${angle.label.toLowerCase()} view`} loading="eager" fetchPriority="high" />
+                <span className="sample-origin-badge">{angle.id === "front" ? "Original" : "Generated"}</span>
+                <button className="sample-previous" aria-label="Previous view" onClick={() => cycleSample(-1)}><CaretLeft size={22} aria-hidden="true" /></button>
+                <button className="sample-next" aria-label="Next view" onClick={() => cycleSample(1)}><CaretRight size={22} aria-hidden="true" /></button>
               </div>
-              <div className="sample-angle-rail">
-                <p className="sample-rail-heading">Choose<br />{" "}<em>an angle.</em></p>
-                <div className="sample-angle-options" role="group" aria-label="Explore sample angles">
-                  {sampleAngles.map((item) => <button key={item.id} className={angle.id === item.id ? "is-selected" : ""} aria-pressed={angle.id === item.id} onClick={() => setAngle(item)}>
-                    <Image src={item.image} sizes="110px" alt="" />
-                    <span>{item.label}</span>{angle.id === item.id ? <Check size={13} weight="bold" /> : <span className="angle-option-degree">{item.rotation}</span>}
-                  </button>)}
-                </div>
-                <span className="home-handwritten sample-try-note">Try each view.</span>
-              </div>
-            </div>
-            <div className="sample-bottom-bar"><span>YOUR PHOTO IN. NEW ANGLES OUT.</span><span>01 — 04</span></div>
-            <p className="sample-disclosure">Pre-made sample images. Switching views uses no credits. Unseen product details are estimates.</p>
+              <p className="sr-only" role="status" aria-atomic="true">{angle.id === "front" ? "Original" : "Generated"} photo, {angle.label.toLowerCase()} view. {angleIndex + 1} of {sampleAngles.length}.</p>
           </section> : null}
         </div>
 
         {activeProject ? <section className="home-active-studio" ref={studioRef} id="studio">
           <ProjectStudioClient key={activeProject.id} initialProject={activeProject} checkoutAvailable={credits?.demoCheckoutAvailable ?? false} onBack={closeProject} onOpenWallet={() => void openWallet()} onBalanceChange={refreshBalance} walletRevision={walletRevision} />
         </section> : null}
-
-        <section className="home-next-step" aria-labelledby="next-step-title">
-          <div className="home-next-heading"><p className="home-eyebrow">READY TO TRY YOUR OWN PRODUCT?</p><h2 id="next-step-title">Your next shoot<br /><em>starts with a photo.</em></h2></div>
-          <div className="home-next-copy"><p>Upload your photo, choose your angles, and review the credit cost before generating. Download the results when you’re happy.</p><span><ShieldCheck size={14} /> Your originals stay private.</span></div>
-          <button className="home-primary-button home-next-upload" onClick={() => void startShoot()} disabled={busy !== null}><span>{busy === "shoot" ? "Opening upload…" : "Upload a photo"}</span>{busy === "shoot" ? <SpinnerGap className="spin" size={18} /> : <ArrowRight size={18} />}</button>
-        </section>
-        <div className="home-build-note"><span>THE TEST STUDIO</span><p>Begin with 1,000 fake credits. No payment required. Real billing is coming later.</p></div>
 
         {walletOpen && credits ? <section className="home-wallet" id="wallet" ref={walletRef} aria-label="Inline wallet">
           <button className="home-panel-close" onClick={closeWallet}><X size={17} /> Close wallet</button>
@@ -236,9 +215,9 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
 
         {busy === "project" ? <p className="home-loading" role="status"><SpinnerGap className="spin" /> Opening your shoot…</p> : null}
 
-        {credits ? <ProjectsClient key={projects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={projects} onOpenProject={openProject} createOpen={createOpen} onCreateClose={() => setCreateOpen(false)} /> : <section className="home-saved-empty" id="shoots"><div><p className="home-eyebrow">YOUR PRODUCT LIBRARY</p><h2>Keep every angle together.</h2><p>Your original photos and generated images, saved in one private workspace.</p></div><button className="button secondary-button" onClick={() => void startShoot()} disabled={busy !== null}>Upload a product photo <ArrowRight size={17} /></button></section>}
+        {credits ? <ProjectsClient key={projects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={projects} onOpenProject={openProject} createOpen={createOpen} onCreateClose={() => setCreateOpen(false)} /> : <section className="home-saved-empty" id="shoots"><h2>Your shoots</h2><p>Your product photos will be saved here.</p></section>}
       </main>
-      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span><span>A little less setup. A little more possibility.</span><a href={activeProject ? "#studio" : "#sample"}>Back to the studio ↑</a></footer>
+      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span></footer>
     </div>
   );
 }

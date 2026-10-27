@@ -7,7 +7,6 @@ import {
   ArrowRight,
   CheckCircle,
   CloudSlash,
-  FolderOpen,
   ImageSquare,
   MagnifyingGlass,
   Plus,
@@ -278,15 +277,11 @@ export function ProjectsClient({
     <section className="product-main" id="shoots" aria-label="Your shoots">
       <div className="page-heading-row">
         <div>
-          <div className="page-kicker">Product library</div>
-          <h2>Your shoots, all here.</h2>
-          <p className="page-lede">
-            Keep every original, generated shot, approval, and version together.
-          </p>
+          <h2>Your shoots</h2>
         </div>
-        <button className="button primary-button" onClick={() => setModalOpen(true)}>
+        {projects.length ? <button className="button primary-button" onClick={() => setModalOpen(true)}>
           <Plus size={18} weight="bold" /> New project
-        </button>
+        </button> : null}
       </div>
 
       {importNotice ? (
@@ -364,23 +359,7 @@ export function ProjectsClient({
           )}
         </>
       ) : (
-        <section className="library-empty-state">
-          <div className="empty-copy">
-            <FolderOpen size={30} weight="thin" />
-            <div className="page-kicker">No projects yet</div>
-            <h2>One product. Every usable shot.</h2>
-            <p>
-              Upload all the photos you already have. Reshoot keeps those originals and
-              every generated version in one permanent workspace.
-            </p>
-            <button className="button primary-button" onClick={() => setModalOpen(true)}>
-              Create your first project <ArrowRight size={18} />
-            </button>
-          </div>
-          <div className="empty-contact-sheet" aria-hidden="true">
-            <Image src="/assets/sample-doll.png" fill sizes="420px" alt="" priority />
-          </div>
-        </section>
+        <p className="library-empty-message">Your product photos will be saved here.</p>
       )}
 
       {error && !modalOpen ? (

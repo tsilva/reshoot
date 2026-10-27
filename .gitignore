@@ -21,3 +21,5 @@ __pycache__/
 
 # Durable local Workflow state lives outside disposable build output.
 .workflow-local/
+/INBOX.md
+/.local/repo-inbox/

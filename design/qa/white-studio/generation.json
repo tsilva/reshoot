@@ -1,0 +1,29 @@
+{
+  "mode": "built-in imagegen",
+  "execution": "Four independent edits launched in parallel. No output used as another edit's input.",
+  "reference": "reference.png",
+  "sourceCommit": "c2583b9",
+  "prompt": "Use case: precise-object-edit. Asset type: individual website product photograph for a pure-white studio website. Image 1 is the EDIT TARGET: the approved individual doll photograph. Image 2 is a supporting STYLE REFERENCE of the selected white website. Change ONLY the original photograph's backdrop and floor from beige to clean PURE WHITE (#FFFFFF). Preserve the exact existing doll in Image 1, its pose, rotation, entire silhouette, fabric color, yarn hairstyle and strand pattern, face, two pigtails, dress seams and stitches, folds, legs, and feet. Do not redesign or regenerate any product details. Preserve the original square framing and scale: identical crown and soles positions, doll axis centered, full doll visible with the same margins. This photograph is one of four independent background edits; do not introduce changes to camera, exposure or product lighting. The softbox remains fixed above CAMERA LEFT, and the realistic soft neutral-gray floor shadow extends to SCREEN RIGHT from the feet. Retain natural warm ivory cloth and cream yarn with detailed texture: do not bleach the doll white or remove the ground shadow. The backdrop and floor outside the localized contact/cast shadow must be perfectly uniform #FFFFFF, especially all four edges and corners, so the square photo blends invisibly into a #FFFFFF webpage. No beige haze, ivory background, gray edge gradient, vignette, horizon line, borders, labels, logos, extra props or text. Deliver ONE single high-resolution square product photograph at the original aspect ratio, not a sheet and not a website screenshot. Invariants: same doll, same exact view, same lighting, same scale; only background color changes.",
+  "assets": [
+    {
+      "id": "front",
+      "output": "public/assets/angle-guides/front.jpg",
+      "viewInstruction": "This asset's identifier is front. Preserve precisely the angle in image 1."
+    },
+    {
+      "id": "front-three-quarter",
+      "output": "public/assets/angle-guides/front-three-quarter.jpg",
+      "viewInstruction": "This asset's identifier is front-three-quarter. Preserve precisely the angle in image 1."
+    },
+    {
+      "id": "right-profile",
+      "output": "public/assets/angle-guides/right-profile.jpg",
+      "viewInstruction": "This asset's identifier is right-profile. Preserve precisely the angle in image 1."
+    },
+    {
+      "id": "back",
+      "output": "public/assets/angle-guides/back.jpg",
+      "viewInstruction": "This asset's identifier is back. Preserve precisely the angle in image 1."
+    }
+  ]
+}

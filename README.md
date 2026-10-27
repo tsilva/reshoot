@@ -8,13 +8,13 @@
 
 Reshoot is a single-page product-photography studio for small brands, studios, and product teams. Explore a free, pre-made sample on the home page, upload your own product, choose the views you need, and keep every generated version and approval together. Opening a saved or newly uploaded shoot replaces the sample canvas, and the wallet expands on the same page for balances, credit activity, and supported test top-ups.
 
-The home page introduces AI product photography with “One product photo. Every angle.” Its primary action, “Upload your product photo,” opens the photo-upload dialog; a secondary link lets visitors explore the example. The input photo and resulting views explain the workflow before visitors start a project.
+The home page introduces AI product photography with “One product photo. Every angle.” Its primary action, “Upload your product photo,” opens the photo-upload dialog. Left/right carousel controls cycle through the sample views, including keyboard arrow navigation; badges distinguish the original front photo from the generated views.
 
 The sample requires no session and uses no credits. Starting your own shoot or opening a wallet creates or resumes the private browser workspace. Older welcome, project, and account links return to the home studio; a selected shoot remains addressable through `/?project=<id>#studio`. Real billing remains disabled, and no-charge test top-ups remain limited to local and Preview environments.
 
-The sample’s four full-size linen-doll photographs are generated independently from the same approved references, with a fixed camera and lighting setup. The viewer fits each complete image without cropping, and the starting-point photo and angle thumbnails use the same assets.
+The sample’s four full-size linen-doll photographs share a fixed camera, lighting setup, and scale. Each approved photograph’s background was independently changed to white; no new view was used to generate another. The viewer fits the complete doll without cropping and softly fades the outer background edges into the white page.
 
-The visual design takes inspiration from [Mudora by RylicStudio](https://dribbble.com/shots/26596729-Mudora-Pottery-and-Ceramics-Landing-Page): parchment surfaces, clay and olive accents, and thin editorial rules. The cream background fills the page without an outer frame, and prominent upload buttons lead into the studio. Instrument Serif and Caveat provide the display and handwritten styles, with Hanken Grotesk for controls. The interactive sample, inline wallet, and saved shoots share this design.
+The visual design retains the editorial typography, clay and olive accents, and fine rules inspired by [Mudora by RylicStudio](https://dribbble.com/shots/26596729-Mudora-Pottery-and-Ceramics-Landing-Page), on a white studio surface. Instrument Serif supplies the headlines and Hanken Grotesk the controls. The sample uses a single photo carousel; repeated marketing sections and the oversized empty-library illustration are removed. The inline wallet, upload dialog, and saved shoots share the white design.
 
 One selected original remains the primary identity anchor. Up to four additional originals can support each generation, and Reshoot shows the exact credit quote before a batch begins.
 
