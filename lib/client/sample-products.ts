@@ -77,8 +77,6 @@ const productSources: SampleProductSource[] = [
 
 export const sampleProducts = productSources.map(({ images, offsets, upload, ...product }) => ({
   ...product,
-  angles: [
-    { id: "original", label: "Example upload", image: upload, offset: undefined },
-    ...views.map((view, index) => ({ ...view, image: images[index], offset: offsets?.[index] })),
-  ],
+  upload,
+  angles: views.map((view, index) => ({ ...view, image: images[index], offset: offsets?.[index] })),
 }));
