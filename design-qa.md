@@ -1,5 +1,21 @@
 # Reshoot single-page studio QA
 
+## Full-screen mobile dialogs — 2026-10-29
+
+Mobile dialogs now cover the complete dynamic viewport instead of displaying a bottom sheet limited to 92vh. This applies up to 850px wide, plus short touch-device landscape screens. The upload panel uses a fixed header/footer with a flexible scrolling content area; controls include safe-area padding. The background page is scroll-locked only while a mobile dialog is open. Checkout panels use the same full-screen sizing, with their own scrolling content. Desktop dialogs retain their centered, bounded layout.
+
+Brave measured the upload panel at exactly (0, 0) with the viewport’s full width/height at 320 × 568, 390 × 844, 667 × 375, and 844 × 390. Its footer stayed at the viewport bottom. At 1440 × 1000, it remained 720px wide and centered. Closing restored root overflow and removed the modal. Short landscape content had scrollHeight greater than clientHeight with overflow:auto; an attempted native wheel check timed out, and PageDown on the file input did not scroll, so wheel/touch scrolling was not independently exercised. See [mobile](design/qa/fullscreen-modal/mobile.png), [landscape](design/qa/fullscreen-modal/landscape.png), and [measurements](design/qa/fullscreen-modal/verification.json). Lint, TypeScript, and whitespace checks passed. Verified locally; no deployment performed.
+
+## Automatic shoot names and phone capture — 2026-10-29
+
+The creation dialog starts with photos and no name field. It requires at least one photo before creation. On touch devices with native file-capture support, a separate Take a photo button requests the environment-facing camera; existing photo selection remains available. Both paths share validation, limits, upload progress, and retry handling. Desktop browsers without touch support keep the file picker alone.
+
+After the first primary original is verified and saved, a normalized 640px preview is sent inline to the vision naming model through existing environment-specific routing. The eight-second, 80-token request returns a short product title; failures retain Product shoot without failing or deleting the saved upload. A conditional asset transition prevents concurrent finalization retries from requesting naming twice. Conditional title/primary/owner/deleted checks preserve concurrent edits and workspace boundaries. Later originals and ready retries do not rename the shoot.
+
+A real Development API upload of the public sample mug as `IMG_1234.jpg` saved one ready original and produced **Blue ceramic mug** in 7.88 seconds through the configured provider. The temporary Development shoot was moved to deleted projects afterward; normal retention remains in place. No generated image or generation-credit hold was created. Brave verified the missing name field, disabled empty-submit action, file-chooser invocation, keyboard focus on photo selection, and no overflow at 390 × 844. See [desktop](design/qa/photo-naming/desktop.png) and [narrow layout](design/qa/photo-naming/mobile-layout.png).
+
+Brave’s extension blocked automated file selection because file-URL access is disabled, so the saved-photo/provider check used the local app API. A resized desktop window does not emulate a phone camera: native capture on physical iOS/Android hardware remains unverified. No browser warnings/errors were captured. All 80 unit tests plus four provider-routing checks, lint, TypeScript, production build, and whitespace checks pass; one opt-in database test remains skipped. This update is local.
+
 ## Playback control fix — 2026-10-29
 
 Reproduced Play changing its label to Pause without advancing the mug for 2.1 seconds while the pointer remained over the button, with all photographs loaded. The existing mouse-hover pause still blocked the timer after the explicit Play action.

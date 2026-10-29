@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import sharp from "sharp";
 import { z } from "zod";
 import { apiErrorResponse, ApiError, readJson } from "@/lib/api/errors";
@@ -11,6 +11,7 @@ import {
   MAX_UPLOAD_BYTES,
 } from "@/lib/projects/limits";
 import { requireOwnedProject } from "@/lib/projects/service";
+import { AUTO_PROJECT_TITLE, suggestPhotoTitle } from "@/lib/projects/naming";
 import {
   getObjectBuffer,
   headObject,
@@ -155,7 +156,7 @@ export async function POST(request: Request, context: RouteContext) {
       putObject({ key: referenceKey, body: reference.data, mimeType: "image/webp" }),
     ]);
 
-    await db.transaction(async (tx) => {
+    const { savedProject, firstFinalization } = await db.transaction(async (tx) => {
       const [usage] = await tx
         .select({
           totalBytes: sql<number>`coalesce(sum(${assets.sizeBytes}), 0)::bigint`,
@@ -202,7 +203,7 @@ export async function POST(request: Request, context: RouteContext) {
           },
         ])
         .onConflictDoNothing();
-      await tx
+      const [finalizedAsset] = await tx
         .update(assets)
         .set({
           status: "ready",
@@ -212,16 +213,37 @@ export async function POST(request: Request, context: RouteContext) {
           uploadedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(and(eq(assets.id, asset.id), eq(assets.ownerId, user.id)));
-      await tx
+        .where(and(eq(assets.id, asset.id), eq(assets.ownerId, user.id), ne(assets.status, "ready")))
+        .returning({ id: assets.id });
+      const [savedProject] = await tx
         .update(projects)
         .set({
           primaryAssetId: sql`coalesce(${projects.primaryAssetId}, ${asset.id}::uuid)`,
           status: "ready",
           updatedAt: new Date(),
         })
-        .where(and(eq(projects.id, projectId), eq(projects.ownerId, user.id)));
+        .where(and(eq(projects.id, projectId), eq(projects.ownerId, user.id)))
+        .returning({ primaryAssetId: projects.primaryAssetId, title: projects.title });
+      return { savedProject, firstFinalization: Boolean(finalizedAsset) };
     });
+
+    if (firstFinalization && savedProject?.primaryAssetId === asset.id && savedProject.title === AUTO_PROJECT_TITLE) {
+      try {
+        const title = await suggestPhotoTitle(preview.data);
+        if (title) {
+          await db.update(projects).set({ title, updatedAt: new Date() }).where(and(
+            eq(projects.id, projectId),
+            eq(projects.ownerId, user.id),
+            eq(projects.primaryAssetId, asset.id),
+            eq(projects.title, AUTO_PROJECT_TITLE),
+            isNull(projects.deletedAt),
+          ));
+        }
+      } catch {
+        // The photo is already saved. Keep the default name if naming or its
+        // conditional update fails; never delete a successfully uploaded photo.
+      }
+    }
 
     return Response.json({
       asset: {

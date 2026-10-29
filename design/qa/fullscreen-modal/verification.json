@@ -1,0 +1,123 @@
+{
+  "scrollBefore": {
+    "content": {
+      "height": 182,
+      "scrollHeight": 299,
+      "scrollTop": 0
+    },
+    "footerBottom": 375,
+    "modal": {
+      "height": 375,
+      "left": 0,
+      "top": 0,
+      "width": 667
+    },
+    "rootOverflow": "hidden",
+    "viewport": {
+      "height": 375,
+      "width": 667
+    }
+  },
+  "afterClose": {
+    "dialogCount": 0,
+    "rootOverflow": "visible"
+  },
+  "sizes": [
+    {
+      "content": {
+        "height": 315,
+        "scrollHeight": 320,
+        "scrollTop": 0
+      },
+      "footerBottom": 568,
+      "modal": {
+        "height": 568,
+        "left": 0,
+        "top": 0,
+        "width": 320
+      },
+      "rootOverflow": "hidden",
+      "viewport": {
+        "height": 568,
+        "width": 320
+      }
+    },
+    {
+      "content": {
+        "height": 622,
+        "scrollHeight": 622,
+        "scrollTop": 0
+      },
+      "footerBottom": 844,
+      "modal": {
+        "height": 844,
+        "left": 0,
+        "top": 0,
+        "width": 390
+      },
+      "rootOverflow": "hidden",
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    {
+      "content": {
+        "height": 182,
+        "scrollHeight": 299,
+        "scrollTop": 0
+      },
+      "footerBottom": 375,
+      "modal": {
+        "height": 375,
+        "left": 0,
+        "top": 0,
+        "width": 667
+      },
+      "rootOverflow": "hidden",
+      "viewport": {
+        "height": 375,
+        "width": 667
+      }
+    },
+    {
+      "content": {
+        "height": 197,
+        "scrollHeight": 299,
+        "scrollTop": 0
+      },
+      "footerBottom": 390,
+      "modal": {
+        "height": 390,
+        "left": 0,
+        "top": 0,
+        "width": 844
+      },
+      "rootOverflow": "hidden",
+      "viewport": {
+        "height": 390,
+        "width": 844
+      }
+    },
+    {
+      "content": {
+        "height": 299,
+        "scrollHeight": 299,
+        "scrollTop": 0
+      },
+      "footerBottom": 745.796875,
+      "modal": {
+        "height": 493.59375,
+        "left": 360,
+        "top": 253.203125,
+        "width": 720
+      },
+      "rootOverflow": "visible",
+      "viewport": {
+        "height": 1000,
+        "width": 1440
+      }
+    }
+  ],
+  "scrolling": "Scrollable content confirmed from overflow:auto and scrollHeight > clientHeight; the attempted wheel check timed out and PageDown on the file input did not scroll."
+}

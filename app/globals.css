@@ -2690,6 +2690,10 @@ h3 {
   padding: 20px;
 }
 
+.upload-name-hint { color: var(--text-soft); font-size: 14px; line-height: 1.5; }
+.camera-upload-option { display: flex; justify-content: center; }
+.upload-dropzone:focus-within { outline: 2px solid var(--coral); outline-offset: 3px; }
+
 .modal-footer {
   position: sticky;
   bottom: 0;
@@ -3865,6 +3869,72 @@ dialog.native-modal:not([open]) {
 dialog.native-modal::backdrop {
   background: rgba(10, 17, 40, 0.54);
   backdrop-filter: blur(6px);
+}
+
+@media (max-width: 850px), (max-height: 540px) and (pointer: coarse) {
+  html:has(dialog.native-modal[open]),
+  body:has(dialog.native-modal[open]) {
+    overflow: hidden;
+  }
+
+  dialog.native-modal {
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  dialog.native-modal > .project-modal,
+  dialog.native-modal > .checkout-modal {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  dialog.native-modal > .project-modal {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .project-modal > .modal-header,
+  .project-modal > .modal-footer {
+    flex-shrink: 0;
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+
+  .project-modal > .modal-header {
+    padding-top: max(20px, env(safe-area-inset-top));
+  }
+
+  .project-modal > .modal-content {
+    flex: 1;
+    min-height: 0;
+    align-content: start;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+
+  .project-modal > .modal-footer {
+    position: static;
+    flex-wrap: wrap;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+
+  dialog.native-modal > .checkout-modal {
+    padding: max(32px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+    overscroll-behavior-y: contain;
+  }
+
+  .checkout-modal > .checkout-close {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+  }
 }
 
 @media (min-width: 1120px) {

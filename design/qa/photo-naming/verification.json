@@ -1,0 +1,26 @@
+{
+  "desktop": {
+    "cameraOptionVisible": false,
+    "createDisabled": true,
+    "focus": "Choose product photos",
+    "nameInputs": 0
+  },
+  "mobileLayout": {
+    "dialogWidth": 390,
+    "modalWidth": 390,
+    "noPageOverflow": true
+  },
+  "integration": {
+    "surface": "Development API",
+    "filename": "IMG_1234.jpg",
+    "photoSaved": "ready",
+    "title": "Blue ceramic mug",
+    "originalCount": 1,
+    "elapsedSeconds": 7.88,
+    "fixtureDisposition": "Shoot moved to deleted projects; normal retention preserved"
+  },
+  "limitations": [
+    "Browser file selection blocked by extension file-URL permission",
+    "Physical phone camera launch unverified"
+  ]
+}
