@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { sampleProducts } from "@/lib/client/sample-products";
 
 const ROTATION_INTERVAL_MS = 900;
+const UPLOAD_PREVIEW_MS = 2400;
 
 function subscribeToMotionPreference(onChange: () => void) {
   const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -35,7 +36,6 @@ export function SampleCarousel() {
   const sampleAngles = product.angles;
   const [angleIndex, setAngleIndex] = useState(0);
   const [rotationOverride, setRotationOverride] = useState<boolean | null>(null);
-  const [pointerPaused, setPointerPaused] = useState(false);
   const [focusPaused, setFocusPaused] = useState(false);
   const [inView, setInView] = useState(false);
   const [loadedViews, setLoadedViews] = useState<Set<string>>(() => new Set());
@@ -44,9 +44,9 @@ export function SampleCarousel() {
   const pageVisible = useSyncExternalStore(subscribeToVisibility, getPageVisible, getServerVisible);
   const rotationEnabled = rotationOverride ?? !reducedMotion;
   const productLoaded = sampleAngles.every((angle) => loadedViews.has(`${product.id}:${angle.id}`));
-  const rotating = rotationEnabled && !pointerPaused && !focusPaused && inView && pageVisible && productLoaded;
+  const rotating = rotationEnabled && !focusPaused && inView && pageVisible && productLoaded;
   const angle = sampleAngles[angleIndex];
-  const angleOrigin = angle.id === "front" ? "Original" : "Generated";
+  const angleOrigin = angle.id === "original" ? "Example upload" : "Generated";
 
   useEffect(() => {
     const sample = sampleRef.current;
@@ -58,11 +58,11 @@ export function SampleCarousel() {
 
   useEffect(() => {
     if (!rotating) return;
-    const timer = window.setInterval(() => {
+    const timer = window.setTimeout(() => {
       setAngleIndex((current) => (current + 1) % sampleAngles.length);
-    }, ROTATION_INTERVAL_MS);
-    return () => window.clearInterval(timer);
-  }, [rotating, sampleAngles.length]);
+    }, angle.id === "original" ? UPLOAD_PREVIEW_MS : ROTATION_INTERVAL_MS);
+    return () => window.clearTimeout(timer);
+  }, [rotating, sampleAngles.length, angle.id]);
 
   function cycleSample(direction: -1 | 1) {
     setRotationOverride(false);
@@ -71,9 +71,7 @@ export function SampleCarousel() {
 
   function togglePlayback() {
     setRotationOverride(!rotationEnabled);
-    // Play overrides the current interaction pause. A later pointer/focus
-    // entry can pause again, without blocking the click that resumes playback.
-    setPointerPaused(false);
+    // Explicit playback also resumes while a keyboard control retains focus.
     setFocusPaused(false);
   }
 
@@ -84,9 +82,7 @@ export function SampleCarousel() {
       ref={sampleRef}
       aria-label="Product photo example"
       aria-roledescription="carousel"
-      onPointerEnter={(event) => { if (event.pointerType === "mouse") setPointerPaused(true); }}
-      onPointerLeave={() => setPointerPaused(false)}
-      onFocusCapture={() => setFocusPaused(true)}
+      onFocusCapture={(event) => { if (event.target.matches(":focus-visible")) setFocusPaused(true); }}
       onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocusPaused(false); }}
       onKeyDown={(event) => {
         if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -105,7 +101,9 @@ export function SampleCarousel() {
               transformOrigin: "top left",
             } : undefined}
             sizes="(max-width: 850px) 100vw, 60vw"
-            alt={`${sampleAngle.id === "front" ? "Original" : "Generated"} ${sampleProduct.description}, ${sampleAngle.label.toLowerCase()} view`}
+            alt={sampleAngle.id === "original"
+              ? `Illustrative upload: ${sampleProduct.description} in a noisy phone-style photo with a cluttered background`
+              : `Generated ${sampleProduct.description}, ${sampleAngle.label.toLowerCase()} studio view`}
             preload
             onLoad={() => {
               const key = `${sampleProduct.id}:${sampleAngle.id}`;
@@ -116,7 +114,7 @@ export function SampleCarousel() {
         )))}
         <span className="sample-origin-badge">
           <span className="sample-origin-medallion" aria-hidden="true">
-            <Image src="/assets/badges/original.webp" alt="" width={160} height={160} loading="eager" unoptimized hidden={angleOrigin !== "Original"} />
+            <Image src="/assets/badges/original.webp" alt="" width={160} height={160} loading="eager" unoptimized hidden={angleOrigin !== "Example upload"} />
             <Image src="/assets/badges/generated.webp" alt="" width={160} height={160} loading="eager" unoptimized hidden={angleOrigin !== "Generated"} />
           </span>
           <span>{angleOrigin}</span>
@@ -135,7 +133,7 @@ export function SampleCarousel() {
             aria-label={sampleProduct.label}
             title={sampleProduct.label}
             aria-pressed={index === productIndex}
-            onClick={() => { setProductIndex(index); setAngleIndex(0); setRotationOverride(false); }}
+            onClick={() => { setProductIndex(index); setAngleIndex(0); }}
           >
             <Image
               src={sampleProduct.angles[0].image}
@@ -148,7 +146,8 @@ export function SampleCarousel() {
           </button>
         ))}
       </div>
-      <p className="sr-only" aria-live={rotationEnabled ? "off" : "polite"} aria-atomic="true">{product.label}: {angleOrigin} photo, {angle.label.toLowerCase()} view. {angleIndex + 1} of {sampleAngles.length}.</p>
+      <p className="sample-disclosure">Illustrative examples</p>
+      <p className="sr-only" aria-live={rotationEnabled ? "off" : "polite"} aria-atomic="true">{product.label}: {angle.id === "original" ? "Illustrative example upload with a cluttered background." : `Generated ${angle.label.toLowerCase()} studio view.`} {angleIndex + 1} of {sampleAngles.length}.</p>
     </section>
   );
 }

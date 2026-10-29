@@ -6,6 +6,15 @@ export type GenerationShot = {
   prompt?: string | null;
 };
 
+export const CATALOG_STUDIO_INSTRUCTIONS = [
+  "This image belongs to a consistent multi-angle ecommerce photo set. Keep the same product pose, scale and neutral white balance across every camera view.",
+  "LIGHTING: use one large diffused key light above CAMERA LEFT, approximately 45 degrees left and 45 degrees above the camera, with neutral 5500 K daylight and gentle fill. Keep the light fixed relative to the image across views; highlights stay on the screen-left surfaces and a soft neutral-gray contact shadow extends toward screen right. Do not rotate the lighting with the product or copy uneven source lighting.",
+  "BACKGROUND: a seamless pure-white #FFFFFF studio floor and backdrop extend edge-to-edge. Keep the outer margins uniformly white, with no horizon, vignette, color cast or decorative border; only the local contact shadow may interrupt the white floor.",
+  "MARGINS: place the complete product silhouette inside the central 80% safe box: x = 10% to 90% and y = 10% to 90% of the square canvas. Leave at least 10% clear margin on all four sides, including around handles, hair, feet, protrusions and packaging. Measure the product silhouette separately from its soft shadow. Never crop a product part or stretch its proportions to fill the box.",
+  "SCALE AND ALIGNMENT: center the product in the safe box, aiming for its longest dimension to occupy 80% of the canvas in the widest or tallest view. For a multi-angle set, keep one fixed scale, central body axis and contact-point placement across views; do not independently zoom a narrower profile or recenter around a moving handle. Narrower views may have more white space while retaining the same anchor and scale.",
+  "Square composition, natural short-telephoto perspective without wide-angle distortion, sharp product details and faithful color reproduction. Remove unrelated scenery, flowers, hands, people and display props from the original.",
+].join("\n");
+
 function cameraDirection(azimuth: number | null | undefined) {
   if (azimuth == null) return "Use the requested shot label to choose the camera viewpoint.";
   const angle = ((azimuth % 360) + 360) % 360;
@@ -40,11 +49,8 @@ export function buildGenerationPrompt(shot: GenerationShot, referenceCount: numb
     "Keep the product fixed while the camera moves. Do not independently turn a doll's head, reposition limbs, mirror the source image, or paste its original front view into a new background.",
     "Prefer visible evidence from the originals. For an unseen surface, use only a conservative continuation of the observed materials and construction; introduce no new labels, decorative parts or accessories.",
     "STUDIO AND FRAMING:",
-    "This image belongs to a consistent multi-angle ecommerce photo set. Keep the same product pose, scale, neutral white balance, white studio sweep, soft diffused key light and gentle fill across every camera view.",
-    "Single centered product, fully visible with comfortable margins on every side, occupying about 75–85% of the frame. Keep all extremities and product packaging inside the image.",
-    "Square composition, natural short-telephoto perspective without wide-angle distortion, sharp product details, neutral soft studio lighting and faithful color reproduction.",
-    "A clean seamless pure-white background extends edge-to-edge. Ground the product with a small soft natural contact shadow. Remove unrelated scenery, flowers, hands, people and display props from the original.",
-    shot.prompt?.trim() ? `OPTIONAL STYLING (lower priority than identity, camera and framing): ${JSON.stringify(shot.prompt.trim())}` : null,
+    CATALOG_STUDIO_INSTRUCTIONS,
+    shot.prompt?.trim() ? `OPTIONAL STYLING (lower priority than identity, camera, studio lighting, background and margins): ${JSON.stringify(shot.prompt.trim())}` : null,
     "FINAL CHECK: same product and pose; requested camera view; original markings intact; no cropped parts, duplicated products, collage, contact sheet, added captions, watermarks or decorative props. Return one image only.",
   ].filter(Boolean).join("\n");
 }

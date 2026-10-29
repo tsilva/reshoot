@@ -12,7 +12,7 @@
     "start": "node scripts/dev-server.mjs next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/verify-provider-routing.mjs && vitest run",
+    "test": "node scripts/verify-provider-routing.mjs && node scripts/verify-sample-framing.mjs && vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",

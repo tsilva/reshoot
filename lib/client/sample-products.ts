@@ -1,4 +1,8 @@
 import type { StaticImageData } from "next/image";
+import sampleFraming from "@/lib/client/sample-framing.json";
+import dollUpload from "@/public/assets/samples/example-uploads/linen-doll.jpg";
+import mugUpload from "@/public/assets/samples/example-uploads/ceramic-mug.jpg";
+import handbagUpload from "@/public/assets/samples/example-uploads/leather-handbag.jpg";
 import dollFront from "@/public/assets/angle-guides/front.jpg";
 import dollFrontRight from "@/public/assets/angle-guides/front-three-quarter.jpg";
 import dollRight from "@/public/assets/angle-guides/right-profile.jpg";
@@ -28,6 +32,7 @@ type SampleProductSource = {
   id: string;
   label: string;
   description: string;
+  upload: StaticImageData;
   images: StaticImageData[];
   offsets?: { x: number; y: number; scale?: number }[];
 };
@@ -48,47 +53,32 @@ const productSources: SampleProductSource[] = [
     id: "linen-doll",
     label: "Linen doll",
     description: "linen doll",
+    upload: dollUpload,
     images: [dollFront, dollFrontRight, dollRight, dollBackRight, dollBack, dollBackLeft, dollLeft, dollFrontLeft],
-    offsets: undefined,
+    offsets: sampleFraming["linen-doll"],
   },
   {
     id: "ceramic-mug",
     label: "Ceramic mug",
     description: "cobalt-blue ceramic mug",
+    upload: mugUpload,
     images: [mugFront, mugFrontRight, mugRight, mugBackRight, mugBack, mugBackLeft, mugLeft, mugFrontLeft],
-    // Source-pixel offsets register the ceramic foot at (627, 1003).
-    // Centering the whole silhouette would move the body as the handle turns.
-    offsets: [
-      { x: 58, y: 1 },
-      { x: 58, y: 0 },
-      { x: 20.5, y: 0 },
-      { x: 17, y: 0 },
-      { x: 2, y: 2 },
-      { x: 54, y: 0 },
-      { x: 58.5, y: 0 },
-      { x: 55.5, y: 0 },
-    ],
+    offsets: sampleFraming["ceramic-mug"],
   },
   {
     id: "leather-handbag",
     label: "Leather handbag",
     description: "cognac leather handbag",
+    upload: handbagUpload,
     images: [handbagFront, handbagFrontRight, handbagRight, handbagBackRight, handbagBack, handbagBackLeft, handbagLeft, handbagFrontLeft],
-    // Uniform scale and translation register the resting base and handle height.
-    offsets: [
-      { x: 4, y: 0, scale: 1 },
-      { x: 19.649302, y: 1.443721, scale: 0.965581395 },
-      { x: 19.858634, y: -0.907021, scale: 0.984819734 },
-      { x: 20.53352, y: 6.212291, scale: 0.966480447 },
-      { x: 5.697115, y: 2.130769, scale: 0.998076923 },
-      { x: 24.150418, y: 2.534819, scale: 0.963788301 },
-      { x: 7.824442, y: -12.556741, scale: 1.006789525 },
-      { x: 18.314448, y: 5.308782, scale: 0.980169972 },
-    ],
+    offsets: sampleFraming["leather-handbag"],
   },
 ];
 
-export const sampleProducts = productSources.map(({ images, offsets, ...product }) => ({
+export const sampleProducts = productSources.map(({ images, offsets, upload, ...product }) => ({
   ...product,
-  angles: views.map((view, index) => ({ ...view, image: images[index], offset: offsets?.[index] })),
+  angles: [
+    { id: "original", label: "Example upload", image: upload, offset: undefined },
+    ...views.map((view, index) => ({ ...view, image: images[index], offset: offsets?.[index] })),
+  ],
 }));
