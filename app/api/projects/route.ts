@@ -4,9 +4,10 @@ import { resolveCurrentUser } from "@/lib/auth/current-user";
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
 import { listProjects } from "@/lib/projects/service";
+import { AUTO_PROJECT_TITLE } from "@/lib/projects/naming";
 
 const createProjectSchema = z.object({
-  title: z.string().trim().min(1).max(120),
+  title: z.string().trim().min(1).max(120).optional().default(AUTO_PROJECT_TITLE),
 });
 
 export async function GET() {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
       throw new ApiError(
         400,
         "invalid_project",
-        "Enter a project name up to 120 characters.",
+        "The project details are invalid.",
       );
     }
 

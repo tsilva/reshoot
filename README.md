@@ -8,6 +8,10 @@
 
 Reshoot is a single-page product-photography studio for small brands, studios, and product teams. Explore free, pre-made samples on the home page, upload your own product, choose the views you need, and keep every generated version and approval together. Opening a saved or newly uploaded shoot replaces the sample canvas, and the wallet expands on the same page for balances, credit activity, and supported test top-ups.
 
+Start a shoot by selecting at least one product photo; no name is required. Reshoot suggests a short name from the first saved photo’s visible content. On touch devices whose browser supports native capture, **Take a photo** opens the rear-facing camera; choosing existing photos remains available. Both inputs use the same JPG/PNG/WebP validation, upload limits, progress, and retry flow. Camera availability and the native chooser depend on the device/browser. If automatic naming is unavailable, photos are still saved under **Product shoot**. Later uploads preserve the shoot’s existing name.
+
+On mobile, upload and checkout dialogs fill the available screen, including short phone landscape layouts. The upload dialog keeps its header and actions visible while the photo list scrolls independently. Safe-area padding keeps controls clear of screen cutouts and the home indicator; the page behind the dialog stays still. Desktop dialogs remain centered.
+
 The home page introduces AI product photography with “One product photo. Every angle.” Its primary action, “Upload your product photo,” opens the photo-upload dialog. Left/right carousel controls cycle through the sample views, including keyboard arrow navigation; matching silver-and-ivory medallion badges distinguish the original front photo (camera) from the generated views (sparkle). Their labels remain live text, and both lightweight transparent emblems load eagerly so changing views also switches the badge immediately.
 
 The samples require no session and use no credits. Choose Linen doll, Ceramic mug, or Leather handbag using the thumbnail image buttons below the viewer. The selected thumbnail has a contrasting border; product names remain available to screen readers and in hover tooltips. Each product has eight views; changing products returns to its source photo and pauses rotation until Play is selected. All twenty-four product photographs preload and stay mounted, so switching products uses images already fetched. Starting your own shoot or opening a wallet creates or resumes the private browser workspace. Older welcome, project, and account links return to the home studio; a selected shoot remains addressable through `/?project=<id>#studio`. Real billing remains disabled, and no-charge test top-ups remain limited to local and Preview environments.
@@ -88,6 +92,8 @@ Production and Preview call OpenRouter directly using their own server-only
 Production credentials come from this app’s isolated Infisical project.
 The shared text-routing default is `deepseek/deepseek-v4.1-flash-1017`.
 Image generation keeps the supported image models.
+
+Automatic shoot naming uses the vision-capable [`openai/gpt-4.1-mini`](https://openrouter.ai/openai/gpt-4.1-mini) through the same environment-specific provider routing. It sends only the first validated 640px preview inline, without filenames, owner details, EXIF metadata, or signed storage URLs. One naming attempt has an eight-second timeout and an 80-token output cap; it creates no image-generation jobs or credit holds. The title update is conditional on the original placeholder and primary photo, so a concurrent rename or primary-photo change wins.
 
 Production secrets are delivered through the pinned shared GitHub Actions workflow. The standalone signed Infisical relay triggers synchronization and deployment; see [production delivery](docs/production-delivery.md) for scope and recovery.
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
+  Camera,
   CheckCircle,
   CloudSlash,
   ImageSquare,
@@ -16,11 +17,24 @@ import {
   WarningCircle,
   X,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
 import type { ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
 import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
 import { Dialog } from "@/components/Dialog";
+
+function subscribeToCameraSupport(onChange: () => void) {
+  const pointer = window.matchMedia("(pointer: coarse)");
+  pointer.addEventListener("change", onChange);
+  return () => pointer.removeEventListener("change", onChange);
+}
+
+function supportsCameraCapture() {
+  return "capture" in HTMLInputElement.prototype &&
+    (navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches);
+}
+
+function noCameraOnServer() { return false; }
 
 type PendingUpload = {
   file: File;
@@ -89,7 +103,6 @@ export function ProjectsClient({
     if (onOpenProject) await onOpenProject(projectId);
     else router.push(`/projects/${projectId}`);
   }
-  const [title, setTitle] = useState("");
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [createdProject, setCreatedProject] = useState<ProjectSummary | null>(null);
@@ -97,6 +110,8 @@ export function ProjectsClient({
   const [offline, setOffline] = useState(false);
   const [importNotice, setImportNotice] = useState<string | null>(null);
   const importStarted = useRef(false);
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const cameraAvailable = useSyncExternalStore(subscribeToCameraSupport, supportsCameraCapture, noCameraOnServer);
 
   useEffect(() => {
     if (importStarted.current) return;
@@ -153,7 +168,6 @@ export function ProjectsClient({
   function resetModal() {
     if (submitting) return;
     setModalOpen(false);
-    setTitle("");
     setUploads([]);
     setError(null);
     setCreatedProject(null);
@@ -196,8 +210,8 @@ export function ProjectsClient({
   }
 
   async function createProject() {
-    if (!title.trim()) {
-      setError("Give this product project a name.");
+    if (!uploads.length) {
+      setError("Add a product photo to start your shoot.");
       return;
     }
     setSubmitting(true);
@@ -206,7 +220,7 @@ export function ProjectsClient({
     try {
       const created = createdProject ?? (await apiRequest<{ project: ProjectSummary }>("/api/projects", {
         method: "POST",
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({}),
       })).project;
       if (!createdProject) {
         setCreatedProject(created);
@@ -233,21 +247,20 @@ export function ProjectsClient({
           });
         }
       }
+      // Refresh both the automatic title and saved-photo counts, also on retry.
+      try {
+        const latest = await apiRequest<{ projects: ProjectSummary[] }>("/api/projects");
+        setProjects(latest.projects);
+      } catch {
+        // An offline library refresh must not hide upload recovery controls.
+      }
       if (failures) {
-        // Refresh the saved project's counts while retaining failed files for retry.
-        try {
-          const latest = await apiRequest<{ projects: ProjectSummary[] }>("/api/projects");
-          setProjects(latest.projects);
-        } catch {
-          // An offline library refresh must not hide the upload recovery controls.
-        }
         setError(`${failures} photo${failures === 1 ? "" : "s"} could not be uploaded. Your project and successful uploads are saved. Retry the failed photos or continue to the project.`);
         setOffline(!navigator.onLine);
         return;
       }
       await openProject(created.id);
       setModalOpen(false);
-      setTitle("");
       setUploads([]);
       setCreatedProject(null);
       router.refresh();
@@ -381,29 +394,29 @@ export function ProjectsClient({
               </button>
             </header>
             <div className="modal-content">
-              <label className="field-label">
-                Project name
-                <input
-                  data-autofocus
-                  disabled={submitting || Boolean(createdProject)}
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  placeholder="e.g. Handmade cream doll"
-                  maxLength={120}
-                />
-              </label>
+              <p className="upload-name-hint">We’ll name your shoot from your first product photo.</p>
               <label className="upload-dropzone">
                 <UploadSimple size={28} weight="thin" />
                 <strong>Add product photos</strong>
                 <span>JPG, PNG or WebP · up to 25 files · 20 MB each</span>
                 <input
                   type="file"
+                  data-autofocus
+                  aria-label="Choose product photos"
                   accept="image/jpeg,image/png,image/webp"
                   multiple
                   onChange={selectFiles}
                   disabled={submitting}
                 />
               </label>
+              {cameraAvailable ? (
+                <div className="camera-upload-option">
+                  <button type="button" className="button secondary-button" disabled={submitting} onClick={() => cameraInput.current?.click()}>
+                    <Camera size={20} aria-hidden="true" /> Take a photo
+                  </button>
+                  <input ref={cameraInput} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onChange={selectFiles} disabled={submitting} />
+                </div>
+              ) : null}
               {uploads.length ? (
                 <div className="upload-list">
                   {uploads.map((upload, index) => (
@@ -453,7 +466,7 @@ export function ProjectsClient({
                   Continue to project
                 </button>
               ) : null}
-              <button className="button primary-button" onClick={() => void createProject()} disabled={submitting}>
+              <button className="button primary-button" onClick={() => void createProject()} disabled={submitting || !uploads.length}>
                 {submitting ? <SpinnerGap className="spin" size={18} /> : null}
                 {submitting ? "Saving photos…" : createdProject ? "Retry failed uploads" : "Create project"}
               </button>
