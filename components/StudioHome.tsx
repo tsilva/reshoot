@@ -159,12 +159,12 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
         <div className={`home-hero${activeProject ? " has-project" : ""}`}>
           <section className="home-intro" aria-labelledby="home-title">
             <p className="home-eyebrow home-product-category">AI PRODUCT PHOTOGRAPHY</p>
-            <h1 id="home-title">One product photo.<br />{" "}<em>Every angle.</em></h1>
+            <h1 id="home-title">Your photos.<br />{" "}<em>Professional 360° views.</em></h1>
             <div className="home-intro-copy">
-              <p>Upload a photo of your product. AI creates new views from the front, side, and back, ready for your shop or catalog.</p>
+              <p>Turn an everyday product photo into clean, studio-quality views from every angle. AI removes distracting backgrounds and creates a consistent look for your shop or catalog.</p>
               <div className="home-start-row">
                 <button className="home-primary-button" onClick={() => void startShoot()} disabled={busy !== null}>
-                  <span>{busy === "shoot" ? "Opening upload…" : "Upload your product photo"}</span>
+                  <span>{busy === "shoot" ? "Opening upload…" : "Create professional 360° views"}</span>
                   {busy === "shoot" ? <SpinnerGap className="spin" size={20} /> : <ArrowRight size={20} />}
                 </button>
                 <p className="home-start-note">1,000 test credits included. No payment required.</p>

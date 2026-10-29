@@ -10,6 +10,18 @@ Flare gave the more convincing right profile of the knitted doll with the revise
 
 This is a small visual pilot, not a measured population-level quality or reliability ranking. There were no repeated seeds or runs per condition. The packaging reference is a deterministic illustration, not a photographic product. Sunburst produced sharper-looking, larger product framing in this pilot; Flare's angle adherence mattered more for the product's intended multi-angle workflow. The revised prompt makes requirements explicit, but these samples do not establish a universal improvement over the old prompt.
 
+## Studio presentation defaults — 2026-10-29
+
+`CATALOG_STUDIO_INSTRUCTIONS` in `lib/generation/request.ts` supplies the shared presentation instructions for new app generation requests and can be reused in isolated image-generation experiments:
+
+- Square canvas with a seamless pure-white `#FFFFFF` background and floor. Outer margins stay white; a local soft neutral-gray contact shadow may extend to screen right.
+- One large diffused key light approximately 45 degrees to camera-left and 45 degrees above the camera, neutral 5500 K daylight, and gentle fill. Light direction stays fixed relative to the image across views.
+- The complete product silhouette, including extremities, handles and packaging, stays inside x = 10–90% and y = 10–90% of the image. This leaves a minimum 10% clear margin on every side. The soft shadow is excluded from the product's bounding box.
+- Aim for 80% occupancy along the longest dimension of the widest or tallest view. Keep one scale, central body axis and contact-point placement across the set rather than zooming or recentering each silhouette independently. Narrower views can have larger margins.
+- Optional styling is subordinate to product identity, camera direction, studio lighting, background and margins.
+
+These are prompt targets for generated workspace images. The application does not currently measure arbitrary uploaded product masks or deterministically enforce those outputs’ margins or background pixel values. The pre-made home-page samples have separate measured display registration: all 24 studio views were independently regenerated from their respective illustrative phone upload, then uniformly scaled and positioned in the viewer to retain at least 10% measured product margins. The color-based silhouette check is specific to these known sample materials and excludes neutral-gray shadows; it is not a segmentation model for user uploads. Exact prompts, source hashes and rejected angle attempts are in [the rotation record](../design/qa/original-rotation/generation.json), with [display bounds](../design/qa/original-rotation/framing.json). `pnpm test` verifies this sample framing. The observations below describe the earlier provider pilot, not these built-in imagegen edits.
+
 ## Method and observations
 
 Both models used the same normalized originals and request parameters: one output, square aspect ratio, high quality, opaque background, and one WebP reference. The doll reference uses the app's 1536-pixel bounding box and WebP quality 90 normalization. Each call returned one 1024 × 1024 PNG. No retries or model fallback were performed.

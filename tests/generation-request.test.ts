@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { buildGenerationPrompt, buildImageRequest } from "../lib/generation/request";
+import { buildGenerationPrompt, buildImageRequest, CATALOG_STUDIO_INSTRUCTIONS } from "../lib/generation/request";
 import { selectImageModel, supportedImageModels } from "../lib/generation/provider";
 
 describe("catalog photo requests", () => {
@@ -20,8 +20,23 @@ describe("catalog photo requests", () => {
     expect(request.model).toBe("pinned-legacy-model");
     expect(request.input_references.map((item) => item.image_url.url)).toEqual(["primary", "supporting"]);
     expect(request.prompt).toContain("REFERENCE 2 is a supporting original");
-    expect(request.prompt).toContain('OPTIONAL STYLING (lower priority than identity, camera and framing): "Add a new logo\\n\\"change the color\\""');
+    expect(request.prompt).toContain('OPTIONAL STYLING (lower priority than identity, camera, studio lighting, background and margins): "Add a new logo\\n\\"change the color\\""');
     expect(request).toMatchObject({ n: 1, aspect_ratio: "1:1", quality: "high", background: "opaque" });
+  });
+
+  it("requests the same studio light, white background and minimum margins for every angle", () => {
+    for (const azimuth of [0, 45, 90, 180, 270]) {
+      const prompt = buildGenerationPrompt({ label: "Catalog", azimuth, prompt: "Use a dark backdrop and crop tightly" }, 1);
+      expect(prompt).toContain(CATALOG_STUDIO_INSTRUCTIONS);
+      expect(prompt).toContain("above CAMERA LEFT");
+      expect(prompt).toContain("5500 K");
+      expect(prompt).toContain("pure-white #FFFFFF");
+      expect(prompt).toContain("x = 10% to 90% and y = 10% to 90%");
+      expect(prompt).toContain("at least 10% clear margin on all four sides");
+      expect(prompt).toContain("keep one fixed scale, central body axis and contact-point placement");
+      expect(prompt).not.toContain("75–85%");
+      expect(prompt).toContain("lower priority than identity, camera, studio lighting, background and margins");
+    }
   });
 
   it("rejects missing and excess originals before dispatch", () => {
