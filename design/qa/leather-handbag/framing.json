@@ -1,0 +1,130 @@
+{
+  "method": "Color-isolated leather silhouette; fixed horizontal center, handle height and resting baseline. Uniform scale preserves proportions.",
+  "target": {
+    "centerX": 627,
+    "top": 70,
+    "bottom": 1108
+  },
+  "frames": [
+    {
+      "id": "front",
+      "width": 1254,
+      "height": 1254,
+      "left": 113,
+      "right": 1133,
+      "top": 70,
+      "bottom": 1108,
+      "center": 623,
+      "offset": {
+        "x": 4,
+        "y": 0,
+        "scale": 1
+      }
+    },
+    {
+      "id": "front-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "left": 128,
+      "right": 1130,
+      "top": 71,
+      "bottom": 1146,
+      "center": 629,
+      "offset": {
+        "x": 19.649302325581402,
+        "y": 1.44372093023253,
+        "scale": 0.9655813953488372
+      }
+    },
+    {
+      "id": "right-profile",
+      "width": 1254,
+      "height": 1254,
+      "left": 430,
+      "right": 803,
+      "top": 72,
+      "bottom": 1126,
+      "center": 616.5,
+      "offset": {
+        "x": 19.858633776091096,
+        "y": -0.9070208728653597,
+        "scale": 0.9848197343453511
+      }
+    },
+    {
+      "id": "back-right-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "left": 129,
+      "right": 1126,
+      "top": 66,
+      "bottom": 1140,
+      "center": 627.5,
+      "offset": {
+        "x": 20.53351955307255,
+        "y": 6.2122905027931665,
+        "scale": 0.9664804469273743
+      }
+    },
+    {
+      "id": "back",
+      "width": 1254,
+      "height": 1254,
+      "left": 112,
+      "right": 1133,
+      "top": 68,
+      "bottom": 1108,
+      "center": 622.5,
+      "offset": {
+        "x": 5.697115384615358,
+        "y": 2.130769230769147,
+        "scale": 0.9980769230769231
+      }
+    },
+    {
+      "id": "back-left-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "left": 143,
+      "right": 1108,
+      "top": 70,
+      "bottom": 1147,
+      "center": 625.5,
+      "offset": {
+        "x": 24.150417827298043,
+        "y": 2.534818941504227,
+        "scale": 0.9637883008356546
+      }
+    },
+    {
+      "id": "left-profile",
+      "width": 1254,
+      "height": 1254,
+      "left": 418,
+      "right": 812,
+      "top": 82,
+      "bottom": 1113,
+      "center": 615,
+      "offset": {
+        "x": 7.824442289039666,
+        "y": -12.556741028128044,
+        "scale": 1.0067895247332688
+      }
+    },
+    {
+      "id": "front-left-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "left": 140,
+      "right": 1102,
+      "top": 66,
+      "bottom": 1125,
+      "center": 621,
+      "offset": {
+        "x": 18.31444759206795,
+        "y": 5.308781869688346,
+        "scale": 0.9801699716713881
+      }
+    }
+  ]
+}

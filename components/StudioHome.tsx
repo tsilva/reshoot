@@ -1,36 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import {
-  ArrowRight, Aperture, CaretLeft, CaretRight, Coins, Plus, SpinnerGap, X,
+  ArrowRight, Aperture, Coins, Plus, SpinnerGap, X,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProjectsClient } from "@/components/projects/ProjectsClient";
+import { SampleCarousel } from "@/components/SampleCarousel";
 import type { CreditLedgerEntry, CreditSummary, ProjectDetail, ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
-import sampleFront from "@/public/assets/angle-guides/front.jpg";
-import sampleThreeQuarter from "@/public/assets/angle-guides/front-three-quarter.jpg";
-import sampleSide from "@/public/assets/angle-guides/right-profile.jpg";
-import sampleBack from "@/public/assets/angle-guides/back.jpg";
-import sampleBackRight from "@/public/assets/angle-guides/back-right-three-quarter.jpg";
-import sampleBackLeft from "@/public/assets/angle-guides/back-left-three-quarter.jpg";
-import sampleLeftSide from "@/public/assets/angle-guides/left-profile.jpg";
-import sampleLeftThreeQuarter from "@/public/assets/angle-guides/front-left-three-quarter.jpg";
 
 const AccountClient = dynamic(() => import("@/components/account/AccountClient").then((module) => module.AccountClient));
 const ProjectStudioClient = dynamic(() => import("@/components/projects/ProjectStudioClient").then((module) => module.ProjectStudioClient));
-
-const sampleAngles = [
-  { id: "front", label: "Front", image: sampleFront },
-  { id: "front-three-quarter", label: "Right three-quarter", image: sampleThreeQuarter },
-  { id: "right-profile", label: "Right profile", image: sampleSide },
-  { id: "back-right-three-quarter", label: "Back-right three-quarter", image: sampleBackRight },
-  { id: "back", label: "Back", image: sampleBack },
-  { id: "back-left-three-quarter", label: "Back-left three-quarter", image: sampleBackLeft },
-  { id: "left-profile", label: "Left profile", image: sampleLeftSide },
-  { id: "front-left-three-quarter", label: "Left three-quarter", image: sampleLeftThreeQuarter },
-];
 
 export function StudioHome({ initialCredits, initialProjects, initialProject = null, initialWalletOpen = false }: {
   initialCredits: CreditSummary | null;
@@ -41,9 +22,6 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
   const [credits, setCredits] = useState(initialCredits);
   const [projects, setProjects] = useState(initialProjects);
   const [activeProject, setActiveProject] = useState(initialProject);
-  const [angleIndex, setAngleIndex] = useState(0);
-  const angle = sampleAngles[angleIndex];
-  const angleOrigin = angle.id === "front" ? "Original" : "Generated";
   const [createOpen, setCreateOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(initialWalletOpen);
   const [walletActivity, setWalletActivity] = useState<CreditLedgerEntry[] | null>(null);
@@ -53,10 +31,6 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
   const sessionRequest = useRef<Promise<CreditSummary> | null>(null);
   const studioRef = useRef<HTMLElement>(null);
   const walletRef = useRef<HTMLElement>(null);
-
-  function cycleSample(direction: -1 | 1) {
-    setAngleIndex((current) => (current + direction + sampleAngles.length) % sampleAngles.length);
-  }
 
   const refreshBalance = useCallback(() => {
     void Promise.all([
@@ -198,34 +172,7 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
             </div>
           </section>
 
-          {!activeProject ? <section className="sample-workspace" id="sample" aria-label="Product photo example" aria-roledescription="carousel" onKeyDown={(event) => {
-            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-            event.preventDefault();
-            cycleSample(event.key === "ArrowLeft" ? -1 : 1);
-          }}>
-              <div className="sample-viewer">
-                {sampleAngles.map((sampleAngle, index) => (
-                  <Image
-                    key={sampleAngle.id}
-                    src={sampleAngle.image}
-                    sizes="(max-width: 850px) 100vw, 60vw"
-                    alt={`${sampleAngle.id === "front" ? "Original" : "Generated"} linen doll, ${sampleAngle.label.toLowerCase()} view`}
-                    preload
-                    hidden={index !== angleIndex}
-                  />
-                ))}
-                <span className="sample-origin-badge">
-                  <span className="sample-origin-medallion" aria-hidden="true">
-                    <Image src="/assets/badges/original.webp" alt="" width={160} height={160} loading="eager" unoptimized hidden={angleOrigin !== "Original"} />
-                    <Image src="/assets/badges/generated.webp" alt="" width={160} height={160} loading="eager" unoptimized hidden={angleOrigin !== "Generated"} />
-                  </span>
-                  <span>{angleOrigin}</span>
-                </span>
-                <button className="sample-previous" aria-label="Previous view" onClick={() => cycleSample(-1)}><CaretLeft size={22} aria-hidden="true" /></button>
-                <button className="sample-next" aria-label="Next view" onClick={() => cycleSample(1)}><CaretRight size={22} aria-hidden="true" /></button>
-              </div>
-              <p className="sr-only" role="status" aria-atomic="true">{angleOrigin} photo, {angle.label.toLowerCase()} view. {angleIndex + 1} of {sampleAngles.length}.</p>
-          </section> : null}
+          {!activeProject ? <SampleCarousel /> : null}
         </div>
 
         {activeProject ? <section className="home-active-studio" ref={studioRef} id="studio">

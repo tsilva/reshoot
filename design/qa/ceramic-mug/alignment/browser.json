@@ -1,0 +1,98 @@
+[
+  {
+    "images": [
+      {
+        "alt": "Original cobalt-blue ceramic mug, front view",
+        "animation": "none",
+        "loaded": true,
+        "opacity": "1",
+        "translate": "color: transparent; translate: 4.6252% 0.0797448%;"
+      }
+    ],
+    "status": "Ceramic mug: Original photo, front view. 1 of 8."
+  },
+  {
+    "images": [
+      {
+        "alt": "Generated cobalt-blue ceramic mug, right three-quarter view",
+        "animation": "none",
+        "loaded": true,
+        "opacity": "1",
+        "translate": "color: transparent; translate: 4.6252% 0%;"
+      }
+    ],
+    "status": "Ceramic mug: Generated photo, right three-quarter view. 2 of 8."
+  },
+  {
+    "images": [
+      {
+        "alt": "Generated cobalt-blue ceramic mug, right profile view",
+        "animation": "none",
+        "loaded": true,
+        "opacity": "1",
+        "translate": "color: transparent; translate: 1.63477% 0%;"
+      }
+    ],
+    "status": "Ceramic mug: Generated photo, right profile view. 3 of 8."
+  },
+  {
+    "images": [
+      {
+        "alt": "Generated cobalt-blue ceramic mug, back-right three-quarter view",
+        "animation": "none",
+        "loaded": true,
+        "opacity": "1",
+        "translate": "color: transparent; translate: 1.35566% 0%;"
+      }
+    ],
+    "status": "Ceramic mug: Generated photo, back-right three-quarter view. 4 of 8."
+  },
+  {
+    "images": [
+      {
+        "alt": "Generated cobalt-blue ceramic mug, back view",
+        "animation": "none",
+        "loaded": true,
+        "opacity": "1",
+        "translate": "color: transparent; translate: 0.15949% 0.15949%;"
+      }
+    ],
+    "status": "Ceramic mug: Generated photo, back view. 5 of 8."
+  },
+  {
+    "images": [
+      {
+        "alt": "Generated cobalt-blue ceramic mug, back-left three-quarter view",
+        "animation": "none",
+        "loaded": true,
+        "opacity": "1",
+        "translate": "color: transparent; translate: 4.30622% 0%;"
+      }
+    ],
+    "status": "Ceramic mug: Generated photo, back-left three-quarter view. 6 of 8."
+  },
+  {
+    "images": [
+      {
+        "alt": "Generated cobalt-blue ceramic mug, left profile view",
+        "animation": "none",
+        "loaded": true,
+        "opacity": "1",
+        "translate": "color: transparent; translate: 4.66507% 0%;"
+      }
+    ],
+    "status": "Ceramic mug: Generated photo, left profile view. 7 of 8."
+  },
+  {
+    "images": [
+      {
+        "alt": "Generated cobalt-blue ceramic mug, left three-quarter view",
+        "animation": "none",
+        "loaded": true,
+        "opacity": "1",
+        "translate": "color: transparent; translate: 4.42584% 0%;"
+      }
+    ],
+    "status": "Ceramic mug: Generated photo, left three-quarter view. 8 of 8."
+  }
+]

@@ -1,0 +1,91 @@
+{
+  "method": "Median rendered body-edge center in the unobstructed band above the foot. Screenshot coordinates normalized to the captured CSS viewport.",
+  "before": {
+    "frames": [
+      {
+        "frame": "before-front",
+        "center": 953.9368421052632
+      },
+      {
+        "frame": "before-back",
+        "center": 981.2210526315789
+      }
+    ],
+    "horizontalSpread": 27.284210526315746
+  },
+  "desktop": {
+    "frames": [
+      {
+        "frame": "after-0",
+        "center": 982.7368421052631
+      },
+      {
+        "frame": "after-1",
+        "center": 982.7368421052631
+      },
+      {
+        "frame": "after-2",
+        "center": 982.2315789473683
+      },
+      {
+        "frame": "after-3",
+        "center": 983.2421052631579
+      },
+      {
+        "frame": "after-4",
+        "center": 982.2315789473683
+      },
+      {
+        "frame": "after-5",
+        "center": 983.2421052631579
+      },
+      {
+        "frame": "after-6",
+        "center": 983.2421052631579
+      },
+      {
+        "frame": "after-7",
+        "center": 982.7368421052631
+      }
+    ],
+    "horizontalSpread": 1.0105263157895479
+  },
+  "mobile": {
+    "frames": [
+      {
+        "frame": "mobile-after-0",
+        "center": 187.72
+      },
+      {
+        "frame": "mobile-after-1",
+        "center": 187.72
+      },
+      {
+        "frame": "mobile-after-2",
+        "center": 187.72
+      },
+      {
+        "frame": "mobile-after-3",
+        "center": 188.24
+      },
+      {
+        "frame": "mobile-after-4",
+        "center": 187.72
+      },
+      {
+        "frame": "mobile-after-5",
+        "center": 188.24
+      },
+      {
+        "frame": "mobile-after-6",
+        "center": 188.24
+      },
+      {
+        "frame": "mobile-after-7",
+        "center": 187.72
+      }
+    ],
+    "horizontalSpread": 0.5200000000000102
+  },
+  "tolerance": 2
+}

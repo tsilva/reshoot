@@ -1,0 +1,146 @@
+[
+  {
+    "animation": "none",
+    "imageWidth": 341,
+    "loaded": true,
+    "opacity": "1",
+    "status": "Leather handbag: Original photo, front view. 1 of 8.",
+    "style": "color:transparent;translate:0.3189792663476874% 0%;scale:1;transform-origin:top left",
+    "viewer": {
+      "height": 341,
+      "left": 17,
+      "top": 550.765625,
+      "width": 341
+    },
+    "viewport": {
+      "height": 1000,
+      "width": 390
+    }
+  },
+  {
+    "animation": "none",
+    "imageWidth": 341,
+    "loaded": true,
+    "opacity": "1",
+    "status": "Leather handbag: Generated photo, right three-quarter view. 2 of 8.",
+    "style": "color:transparent;translate:1.5669299840510365% 0.11512926634768739%;scale:0.965581395;transform-origin:top left",
+    "viewer": {
+      "height": 341,
+      "left": 17,
+      "top": 377.765625,
+      "width": 341
+    },
+    "viewport": {
+      "height": 1000,
+      "width": 390
+    }
+  },
+  {
+    "animation": "none",
+    "imageWidth": 341,
+    "loaded": true,
+    "opacity": "1",
+    "status": "Leather handbag: Generated photo, right profile view. 3 of 8.",
+    "style": "color:transparent;translate:1.58362312599681% -0.07233022328548644%;scale:0.984819734;transform-origin:top left",
+    "viewer": {
+      "height": 341,
+      "left": 17,
+      "top": 377.765625,
+      "width": 341
+    },
+    "viewport": {
+      "height": 1000,
+      "width": 390
+    }
+  },
+  {
+    "animation": "none",
+    "imageWidth": 341,
+    "loaded": true,
+    "opacity": "1",
+    "status": "Leather handbag: Generated photo, back-right three-quarter view. 4 of 8.",
+    "style": "color: transparent; translate: 1.63744% 0.495398%; scale: 0.96648; transform-origin: left top;",
+    "viewer": {
+      "height": 341,
+      "left": 17,
+      "top": 377.765625,
+      "width": 341
+    },
+    "viewport": {
+      "height": 1000,
+      "width": 390
+    }
+  },
+  {
+    "animation": "none",
+    "imageWidth": 341,
+    "loaded": true,
+    "opacity": "1",
+    "status": "Leather handbag: Generated photo, back view. 5 of 8.",
+    "style": "color: transparent; translate: 0.454315% 0.169918%; scale: 0.998077; transform-origin: left top;",
+    "viewer": {
+      "height": 341,
+      "left": 17,
+      "top": 377.765625,
+      "width": 341
+    },
+    "viewport": {
+      "height": 1000,
+      "width": 390
+    }
+  },
+  {
+    "animation": "none",
+    "imageWidth": 341,
+    "loaded": true,
+    "opacity": "1",
+    "status": "Leather handbag: Generated photo, back-left three-quarter view. 6 of 8.",
+    "style": "color:transparent;translate:1.925870653907496% 0.20213867623604467%;scale:0.963788301;transform-origin:top left",
+    "viewer": {
+      "height": 341,
+      "left": 17,
+      "top": 377.765625,
+      "width": 341
+    },
+    "viewport": {
+      "height": 1000,
+      "width": 390
+    }
+  },
+  {
+    "animation": "none",
+    "imageWidth": 341,
+    "loaded": true,
+    "opacity": "1",
+    "status": "Leather handbag: Generated photo, left profile view. 7 of 8.",
+    "style": "color: transparent; translate: 0.623959% -1.00134%; scale: 1.00679; transform-origin: left top;",
+    "viewer": {
+      "height": 341,
+      "left": 17,
+      "top": 377.765625,
+      "width": 341
+    },
+    "viewport": {
+      "height": 1000,
+      "width": 390
+    }
+  },
+  {
+    "animation": "none",
+    "imageWidth": 341,
+    "loaded": true,
+    "opacity": "1",
+    "status": "Leather handbag: Generated photo, left three-quarter view. 8 of 8.",
+    "style": "color:transparent;translate:1.4604822966507176% 0.42334784688995214%;scale:0.980169972;transform-origin:top left",
+    "viewer": {
+      "height": 341,
+      "left": 17,
+      "top": 377.765625,
+      "width": 341
+    },
+    "viewport": {
+      "height": 1000,
+      "width": 390
+    }
+  }
+]

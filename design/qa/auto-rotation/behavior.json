@@ -1,0 +1,84 @@
+{
+  "intervalMs": 900,
+  "observedTransitions": [
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, back view",
+      "time": 1793276041403
+    },
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, back-left three-quarter view",
+      "time": 1793276042069
+    },
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, left profile view",
+      "time": 1793276042730
+    },
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, left three-quarter view",
+      "time": 1793276043713
+    },
+    {
+      "badge": "Original",
+      "live": "off",
+      "photo": "Original linen doll, front view",
+      "time": 1793276044704
+    },
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, right three-quarter view",
+      "time": 1793276045695
+    },
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, right profile view",
+      "time": 1793276046357
+    },
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, back-right three-quarter view",
+      "time": 1793276047341
+    },
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, back view",
+      "time": 1793276048325
+    },
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, back-left three-quarter view",
+      "time": 1793276048994
+    },
+    {
+      "badge": "Generated",
+      "live": "off",
+      "photo": "Generated linen doll, left profile view",
+      "time": 1793276049991
+    }
+  ],
+  "fullLoopObserved": true,
+  "orderCorrect": true,
+  "silentAutoplay": true,
+  "pauseControl": true,
+  "resumeControl": true,
+  "hoverPause": true,
+  "focusPause": true,
+  "manualNavigationPause": true,
+  "offscreenPause": true,
+  "backgroundTab": "Not independently verified: opening a second automation tab did not hide the tested document.",
+  "reducedMotion": "Default and preference-change subscription reviewed in source; OS preference was not changed.",
+  "preloadCount": 10,
+  "photoPreloadCount": 8
+}

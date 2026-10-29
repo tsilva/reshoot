@@ -1,5 +1,51 @@
 # Reshoot single-page studio QA
 
+## Thumbnail product selectors — 2026-10-29
+
+The product selectors are now 72 × 72 image buttons using each product’s source photograph. A contrasting clay border marks the selected product. Accessible product names, hover titles, pressed state, and visible keyboard focus remain; thumbnail images are decorative and load eagerly.
+
+Brave verified all three thumbnails loaded, pointer selection, Space/Enter activation, source-view reset, and matching selected states. At 320 × 1000 CSS pixels, all three 72px buttons fit without horizontal overflow. No browser warnings/errors were captured. Lint, TypeScript, and whitespace checks passed. See [desktop](design/qa/product-selectors/desktop.png) and [mobile](design/qa/product-selectors/mobile.png).
+
+## Leather handbag rotation — 2026-10-29
+
+Leather handbag is the third selectable example. Built-in imagegen prepared a straight-front source from the approved concept, then seven independent edits from that same source. All eight 1254 × 1254 photographs preserve cognac pebbled leather, stitching, two top handles, camera-left lighting, and rightward shadows. Front/three-quarter views show the clasp; side profiles are narrow, and rear views use a plain panel without duplicating the front clasp. Unseen construction remains a generative estimate. Exact prompts and source artwork are in [generation.json](design/qa/leather-handbag/generation.json).
+
+Measured color-isolated silhouettes determine per-frame uniform scale and translation, registering the handle height, rotation axis, and resting baseline. Width changes remain natural across side and front views. Raw framing observations and parameters are in [framing.json](design/qa/leather-handbag/framing.json).
+
+Independent browser-pixel checks across all eight views measured center spread of 0.56 CSS pixels on desktop (1440 × 1000) and 0.59 on mobile (390 × 1000); handle-top spread stayed below 0.7 pixels and floor-edge spread below two pixels. Color-boundary interpolation avoids rounding every contour to an integer screenshot pixel. The detector accounts for per-frame page scroll and rejects captures with clipped viewers. The final two-pixel tolerances are unchanged. Fresh screenshots, geometry, and measurements are in [alignment/](design/qa/leather-handbag/alignment/). Run `node scripts/verify-handbag-alignment.mjs` after refreshing those browser captures.
+
+All twenty-four product photos preload and stay mounted. Brave checked every handbag view and wraparound with full opacity and no animation, product selection, and mobile layout. Lint and TypeScript pass. The existing doll and mug sets, rotation controls, badges, and workspace flow are retained. This update is local; no deployment was performed.
+
+## Mug rotation alignment — 2026-10-29
+
+The independently generated mug photographs placed the ceramic foot at different horizontal coordinates. Actual browser captures of the original front and back showed 27.3 CSS pixels of body movement at a 1440 × 1000 viewport. Matching image dimensions and a fixed viewer did not prevent this movement inside the photographs.
+
+Source-pixel offsets now register the mug’s ceramic foot to a common anchor at (627, 1003) in each 1254 × 1254 photograph. The carousel applies these as responsive percentage translations; product scale, lighting, image files, preloading, and opacity remain unchanged. The handle can move around the anchored body. The doll has no registration offsets.
+
+Independent pixel measurements in fresh screenshots of all eight views found a maximum body-center spread of 1.01 CSS pixels on desktop and 0.52 on mobile (390 × 1000), both below the two-pixel tolerance. The detector measures the unobstructed body edges above the foot, below all handle positions; it does not compare configured offsets. Inputs and observations are in [alignment/](design/qa/ceramic-mug/alignment/), with results in [measurement.json](design/qa/ceramic-mug/alignment/measurement.json). Rerun `node scripts/verify-mug-alignment.mjs` after capturing fresh paused frames and their viewport geometry there. Changing viewport or scroll position requires matching per-frame geometry.
+
+All eight frames were loaded and remained fully opaque with no animation during the browser pass. Lint, TypeScript, and whitespace checks passed.
+
+## Ceramic mug rotation — 2026-10-29
+
+The first additional product is the cobalt-blue ceramic mug. Built-in imagegen prepared a source frame and seven independent rotation edits from that same frame; no rotated output was used to create another. The eight 1254 × 1254 photographs retain the cobalt glaze, curved handle, camera-left highlights, and rightward floor shadows. Visual inspection checked handle occlusion behind the mug and the edge-on handle facing the camera. These are generative estimates of the product's unseen surfaces. Exact prompts, source artwork, and JPEG asset paths are recorded in [generation.json](design/qa/ceramic-mug/generation.json).
+
+A product selector below the viewer switches between Linen doll and Ceramic mug. Selecting a product resets to its source view and pauses playback until Play is selected. All sixteen photographs preload and stay mounted, with loading tracked per product so one set does not block another. The existing automatic-rotation controls, provenance badges, reduced-motion behavior, and no-fade image changes are retained.
+
+Brave checks at `http://localhost:63573/` passed all eight mug positions and wraparound, source-view reset when switching products, autoplay resumption, full-opacity/no-animation frames, and sixteen responsive photo preloads. At 390 × 844 CSS pixels there is no horizontal overflow and both product buttons have 44px minimum height. Browser warnings/errors were absent. Lint, TypeScript, and diff whitespace checks passed. See [desktop](design/qa/ceramic-mug/desktop.png) and [mobile](design/qa/ceramic-mug/mobile.png). The handbag and skincare jar remain proposals; this step adds only the mug. No deployment was performed.
+
+## Automatic sample rotation — 2026-10-29
+
+The eight-view sample is now a self-contained `SampleCarousel`. After all eight photos load, it advances every 900ms and wraps around. Frames switch at full opacity using the existing mounted/preloaded photographs; there is no CSS rotation of the photograph and no reintroduced fade. Carousel state updates no longer re-render the wallet, upload flow, or saved shoots.
+
+A 44px pause/play control sits at the lower right of the viewer. Mouse hover, keyboard focus, insufficient viewport intersection, and document visibility gate the timer; previous/next and arrow-key navigation pause playback until Play is selected. Reduced motion defaults to stopped unless the viewer explicitly opts in. Automatic frames have `aria-live="off"`; manual navigation uses polite announcements. Timers, intersection observation, and browser subscriptions clean up on pause/unmount.
+
+Brave at `http://localhost:63573/` confirmed a full eight-view loop in the correct order with matching provenance badges, persistent Pause, Play resumption, hover pause, focus pause, manual keyboard navigation and persistent manual pause, and offscreen pause at 390 × 400 CSS pixels. At 390 × 844 CSS pixels the pause control fits with no horizontal overflow. Eight image preload links remain present. The [behavior receipt](design/qa/auto-rotation/behavior.json) preserves observed transitions and check outcomes. Reduced-motion preference changes and a truly hidden browser document were reviewed in source but were not independently exercised: opening another automation tab did not hide the tested document. No browser errors or warnings were captured.
+
+[Desktop](design/qa/auto-rotation/desktop.png) and [mobile](design/qa/auto-rotation/mobile.png) show the added control. An initial desktop screenshot taken immediately after changing responsive viewport size preceded image paint and was discarded; the replacement was captured after the photos had painted. Layout, fonts, existing medallions, photo treatment, and previous/next controls remain consistent with the badge design; only the requested rotation control is added.
+
+`pnpm lint`, `pnpm typecheck`, the four provider-routing checks, and 61 application tests passed (one opt-in database test skipped). An initial plain build reached configuration collection but lacked `DATABASE_URL`; the build then passed with the same dummy loopback database and R2 settings used by checked-in CI, without fetching credentials or contacting real application services. This change is local and has not been published.
+
 ## Visual provenance badges — 2026-10-29
 
 **Findings:** No actionable P0/P1/P2 differences in the scoped badge update. **final result: passed**
