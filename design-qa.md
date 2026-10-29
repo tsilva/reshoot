@@ -1,5 +1,13 @@
 # Reshoot single-page studio QA
 
+## Playback control fix — 2026-10-29
+
+Reproduced Play changing its label to Pause without advancing the mug for 2.1 seconds while the pointer remained over the button, with all photographs loaded. The existing mouse-hover pause still blocked the timer after the explicit Play action.
+
+Play now clears both current interaction-pause flags. Subsequent pointer entry or control focus can pause again; image loading, viewport visibility, reduced-motion defaults, and manual-navigation pauses retain their existing behavior. The button keeps keyboard focus when activated.
+
+Brave verified pointer Play advancing while hovered and focused, Pause holding its frame, Space to resume, Enter to pause, and playback/pause on all three products. Later keyboard focus, mouse re-entry, and manual Next each paused as expected. Assertions checked the observed transitions in [behavior.json](design/qa/playback-controls/behavior.json). No browser warnings or errors were captured; lint, TypeScript, and whitespace checks passed. Verified locally at `http://localhost:63573/`.
+
 ## Thumbnail product selectors — 2026-10-29
 
 The product selectors are now 72 × 72 image buttons using each product’s source photograph. A contrasting clay border marks the selected product. Accessible product names, hover titles, pressed state, and visible keyboard focus remain; thumbnail images are decorative and load eagerly.
