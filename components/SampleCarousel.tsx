@@ -35,8 +35,8 @@ export function SampleCarousel() {
   const sampleAngles = product.angles;
   const [angleIndex, setAngleIndex] = useState(0);
   const [rotationOverride, setRotationOverride] = useState<boolean | null>(null);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
+  const [pointerPaused, setPointerPaused] = useState(false);
+  const [focusPaused, setFocusPaused] = useState(false);
   const [inView, setInView] = useState(false);
   const [loadedViews, setLoadedViews] = useState<Set<string>>(() => new Set());
   const sampleRef = useRef<HTMLElement>(null);
@@ -44,7 +44,7 @@ export function SampleCarousel() {
   const pageVisible = useSyncExternalStore(subscribeToVisibility, getPageVisible, getServerVisible);
   const rotationEnabled = rotationOverride ?? !reducedMotion;
   const productLoaded = sampleAngles.every((angle) => loadedViews.has(`${product.id}:${angle.id}`));
-  const rotating = rotationEnabled && !hovered && !focused && inView && pageVisible && productLoaded;
+  const rotating = rotationEnabled && !pointerPaused && !focusPaused && inView && pageVisible && productLoaded;
   const angle = sampleAngles[angleIndex];
   const angleOrigin = angle.id === "front" ? "Original" : "Generated";
 
@@ -69,6 +69,14 @@ export function SampleCarousel() {
     setAngleIndex((current) => (current + direction + sampleAngles.length) % sampleAngles.length);
   }
 
+  function togglePlayback() {
+    setRotationOverride(!rotationEnabled);
+    // Play overrides the current interaction pause. A later pointer/focus
+    // entry can pause again, without blocking the click that resumes playback.
+    setPointerPaused(false);
+    setFocusPaused(false);
+  }
+
   return (
     <section
       className="sample-workspace"
@@ -76,10 +84,10 @@ export function SampleCarousel() {
       ref={sampleRef}
       aria-label="Product photo example"
       aria-roledescription="carousel"
-      onPointerEnter={(event) => { if (event.pointerType === "mouse") setHovered(true); }}
-      onPointerLeave={() => setHovered(false)}
-      onFocusCapture={() => setFocused(true)}
-      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}
+      onPointerEnter={(event) => { if (event.pointerType === "mouse") setPointerPaused(true); }}
+      onPointerLeave={() => setPointerPaused(false)}
+      onFocusCapture={() => setFocusPaused(true)}
+      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocusPaused(false); }}
       onKeyDown={(event) => {
         if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
         event.preventDefault();
@@ -115,7 +123,7 @@ export function SampleCarousel() {
         </span>
         <button className="sample-previous" aria-label="Previous view" onClick={() => cycleSample(-1)}><CaretLeft size={22} aria-hidden="true" /></button>
         <button className="sample-next" aria-label="Next view" onClick={() => cycleSample(1)}><CaretRight size={22} aria-hidden="true" /></button>
-        <button className="sample-rotation-toggle" aria-label={rotationEnabled ? "Pause rotation" : "Play rotation"} title={rotationEnabled ? "Pause rotation" : "Play rotation"} onClick={() => { setRotationOverride(!rotationEnabled); setFocused(false); }}>
+        <button className="sample-rotation-toggle" type="button" aria-label={rotationEnabled ? "Pause rotation" : "Play rotation"} title={rotationEnabled ? "Pause rotation" : "Play rotation"} onClick={togglePlayback}>
           {rotationEnabled ? <Pause size={17} weight="fill" aria-hidden="true" /> : <Play size={17} weight="fill" aria-hidden="true" />}
         </button>
       </div>
