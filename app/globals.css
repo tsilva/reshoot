@@ -4520,7 +4520,10 @@ body:has(.one-page-studio) { padding: 0; background: var(--surface); }
 .sample-viewer { position: relative; min-width: 0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .sample-viewer > img { display: block; width: 100%; max-width: 620px; height: 620px; object-fit: contain; mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent); }
 .sample-viewer > img[hidden] { display: none; }
-.sample-origin-badge { position: absolute; top: 12px; left: 18px; padding: 6px 11px; border: 1px solid var(--home-rule); border-radius: 100px; background: #fff; color: var(--text-soft); font-size: 12px; line-height: 1.4; }
+.sample-origin-badge { position: absolute; top: 12px; left: 18px; display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 13px 0 0; border: 1px solid #e0dbd3; border-radius: 100px; background: #faf8f5; box-shadow: inset 0 1px 1px #fff, 0 2px 5px #30291f0a; color: #47433e; font-size: 12px; font-weight: 600; line-height: 1; white-space: nowrap; }
+.sample-origin-medallion { display: block; flex: 0 0 44px; width: 44px; height: 44px; margin-left: -5px; }
+.sample-origin-medallion > img { display: block; width: 44px; height: 44px; object-fit: contain; }
+.sample-origin-medallion > img[hidden] { display: none; }
 .sample-previous, .sample-next { position: absolute; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 1px solid var(--home-rule); border-radius: 50%; background: #fffffff2; color: var(--ink); cursor: pointer; transition: background .15s, border-color .15s; }
 .sample-previous { left: 12px; }
 .sample-next { right: 12px; }

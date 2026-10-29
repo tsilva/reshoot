@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-29",
+  "mode": "built-in image_gen",
+  "transparent_background": true,
+  "reference": "design/qa/badges/reference.png, option 01",
+  "assets": [
+    {
+      "name": "generated",
+      "output": "public/assets/badges/generated.webp",
+      "source": "/Users/tsilva/.codex/generated_images/01a18710-16b5-7962-99b3-7caf5c59e352/exec-f4aae980-ae57-4394-a437-f525eea05351.png",
+      "reference_role": "selected concept sheet, option 01",
+      "prompt": "Use case: precise-object-edit. Production UI asset extraction and refinement. Use ONLY the round silver sparkle medallion from option 01 top left of the reference sheet. Output one single isolated circular medallion, face-on, centered in a square transparent canvas with the circular disc filling 90% of canvas width and height. Remove the pill, all words, all layout and other badges. Preserve the warm ivory opalescent face, thin brushed-silver double rim, and distinctive four-point metallic sparkle with subtle blue lavender and champagne highlights. Simplify and flatten the bevel slightly, reduce shadow so it is crisp and recognisable at 32px. The sparkle fills most of disc. No text, no typography, no label, no additional objects, no background or checkerboard baked into pixels. Genuine transparent alpha outside medallion, tight centered composition. This is the Generated badge emblem that will be paired with HTML text."
+    },
+    {
+      "name": "original",
+      "output": "public/assets/badges/original.webp",
+      "source": "/Users/tsilva/.codex/generated_images/01a18710-16b5-7962-99b3-7caf5c59e352/exec-74f8a4bc-f14a-48bd-a777-60a99882862d.png",
+      "reference_role": "generated sparkle medallion, preserved disc and finish",
+      "prompt": "Use case: precise-object-edit. Create the matching Original photo provenance medallion for a production UI. Edit this exact reference medallion: change ONLY the four-point sparkle emblem to a simple face-on camera emblem made of brushed charcoal-silver metal, with a large round lens and a small viewfinder hump. Keep the exact same warm ivory opalescent disc, subtle blue lavender champagne reflections, thin brushed silver double rim, shallow bevel, face-on perspective, lighting, circular dimensions, centering and proportions. The camera should be large and immediately legible at 32px, simple bold silhouette rather than fine details; front facing, no perspective. One single circular medallion centered in a square transparent canvas, disc filling 90% width/height. No sparkle, no words, no label, no pill, no extra objects or layout. Genuine transparent alpha outside circle; no background, no baked checkerboard. Preserve the existing transparency. A matching sibling to the Generated sparkle medallion, using a camera to mean the source Original photograph."
+    }
+  ],
+  "processing": "1254 x 1254 RGBA sources resized to 160 x 160 lossless WebP with alpha preserved. No recoloring or background removal. Badge labels are HTML text."
+}

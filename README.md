@@ -8,7 +8,7 @@
 
 Reshoot is a single-page product-photography studio for small brands, studios, and product teams. Explore a free, pre-made sample on the home page, upload your own product, choose the views you need, and keep every generated version and approval together. Opening a saved or newly uploaded shoot replaces the sample canvas, and the wallet expands on the same page for balances, credit activity, and supported test top-ups.
 
-The home page introduces AI product photography with “One product photo. Every angle.” Its primary action, “Upload your product photo,” opens the photo-upload dialog. Left/right carousel controls cycle through the sample views, including keyboard arrow navigation; badges distinguish the original front photo from the generated views.
+The home page introduces AI product photography with “One product photo. Every angle.” Its primary action, “Upload your product photo,” opens the photo-upload dialog. Left/right carousel controls cycle through the sample views, including keyboard arrow navigation; matching silver-and-ivory medallion badges distinguish the original front photo (camera) from the generated views (sparkle). Their labels remain live text, and both lightweight transparent emblems load eagerly so changing views also switches the badge immediately.
 
 The sample requires no session and uses no credits. Starting your own shoot or opening a wallet creates or resumes the private browser workspace. Older welcome, project, and account links return to the home studio; a selected shoot remains addressable through `/?project=<id>#studio`. Real billing remains disabled, and no-charge test top-ups remain limited to local and Preview environments.
 

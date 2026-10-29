@@ -214,7 +214,13 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
                     hidden={index !== angleIndex}
                   />
                 ))}
-                <span className="sample-origin-badge">{angleOrigin}</span>
+                <span className="sample-origin-badge">
+                  <span className="sample-origin-medallion" aria-hidden="true">
+                    <Image src="/assets/badges/original.webp" alt="" width={160} height={160} loading="eager" unoptimized hidden={angleOrigin !== "Original"} />
+                    <Image src="/assets/badges/generated.webp" alt="" width={160} height={160} loading="eager" unoptimized hidden={angleOrigin !== "Generated"} />
+                  </span>
+                  <span>{angleOrigin}</span>
+                </span>
                 <button className="sample-previous" aria-label="Previous view" onClick={() => cycleSample(-1)}><CaretLeft size={22} aria-hidden="true" /></button>
                 <button className="sample-next" aria-label="Next view" onClick={() => cycleSample(1)}><CaretRight size={22} aria-hidden="true" /></button>
               </div>

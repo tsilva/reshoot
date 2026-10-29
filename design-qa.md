@@ -1,5 +1,25 @@
 # Reshoot single-page studio QA
 
+## Visual provenance badges — 2026-10-29
+
+**Findings:** No actionable P0/P1/P2 differences in the scoped badge update. **final result: passed**
+
+**Source visual truth:** User-selected option 01 in [reference.png](design/qa/badges/reference.png), with an explicitly requested matching Original badge. Built-in imagegen produced two transparent medallions: sparkle for Generated and camera for Original. The shared ivory/silver finish, circular rim, and compact pill follow the selected option; the shallower pill bevel and lighter shadow are intentional adaptations for a small UI label. Exact prompts and production assets are recorded in [generation.json](design/qa/badges/generation.json).
+
+**Implementation evidence:** [Desktop Original](design/qa/badges/desktop-original.png), [desktop Generated](design/qa/badges/desktop-generated.png), [mobile Original](design/qa/badges/mobile-original.png), and [mobile Generated](design/qa/badges/mobile-generated.png), captured in Brave at `http://localhost:63573/`. Desktop captures are 1440 × 900 pixels at a 1440 × 900 CSS viewport; mobile captures are 390 × 844 pixels at a 390 × 844 CSS viewport. The mobile screenshots are scrolled to the sample after control interaction. A further 320 × 740 CSS viewport check found no horizontal overflow.
+
+**Comparison:** [Context comparison](design/qa/badges/context-comparison.png) places the 1536 × 1024 source concept sheet and desktop implementation together, each resized proportionally into a 768 × 512 panel. The source is a component exploration sheet, not a full-page layout; only option 01 defines the badge target. The [focused comparison](design/qa/badges/badge-comparison.png) shows the source badge above both actual rendered badges; implementation crops are enlarged 4× for inspection, which introduces visible pixel scaling. No full-page layout change was requested.
+
+- Fonts/typography: existing Hanken Grotesk, 12px/600 live labels, no wrapping or image-rendered text. Labels and the existing live status retain accessible provenance; decorative medallions are hidden from assistive technology.
+- Spacing/layout: 32px pill, 44px image box with transparent inset around the disc, camera/sparkle aligned with the text baseline and clear of the product. Both widths fit at 320px and 390px.
+- Colors/tokens: warm ivory surface, silver rim, restrained blue/lavender/champagne reflections, dark readable text, reduced elevation following option 01.
+- Image quality: genuine transparent 1254px source art, lossless 160px WebP assets, no baked background, no visible halo on white at display size. Both eagerly loaded assets stay mounted so view switching does not wait for a new emblem request.
+- Copy/content: Original appears only for front/source; Generated appears for all seven other views. Existing carousel content and navigation are preserved.
+
+**Checks:** All eight views matched the correct label and emblem; forward wraparound and ArrowLeft/ArrowRight transitions passed. Both emblems were loaded before view changes. No browser warnings or errors were captured. `pnpm lint`, `pnpm typecheck`, and `git diff --check` passed. `pnpm build` failed because Next.js could not fetch Hanken Grotesk and Instrument Serif from Google Fonts; production build verification remains blocked by that connection failure. No workspace, billing, storage, credit, or application image-generation operations were exercised.
+
+**Comparison history:** The first scoped visual comparison passed; no P0/P1/P2 visual repair loop was needed. **Implementation checklist:** both generated assets installed, live labels applied, eight-view provenance checked, desktop/mobile comparisons reviewed, README updated. Existing private inbox entries concern production services and are unaffected by this badge change.
+
 ## Eight-view rotation — 2026-10-29
 
 Added back-right and back-left three-quarter photographs between the side profiles and straight-back view. The carousel now follows eight positions around the doll: front, front-right three-quarter, right profile, back-right three-quarter, back, back-left three-quarter, left profile, front-left three-quarter.
