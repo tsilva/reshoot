@@ -1,5 +1,21 @@
 # Reshoot single-page studio QA
 
+## Eight-view rotation — 2026-10-29
+
+Added back-right and back-left three-quarter photographs between the side profiles and straight-back view. The carousel now follows eight positions around the doll: front, front-right three-quarter, right profile, back-right three-quarter, back, back-left three-quarter, left profile, front-left three-quarter.
+
+Both new 1254 × 1254 assets are independent built-in imagegen edits of the approved back photograph with the corresponding side profile as a geometry reference. Visual inspection confirmed rear/side geometry, consistent full-body framing, camera-left highlights, and rightward floor shadows. No CSS mirroring is used. Exact prompts, references, and output paths are in [rear-generation.json](design/qa/rotation-lighting/rear-generation.json).
+
+Brave checks at `http://localhost:63573/` confirmed all eight distinct images loaded before interaction, eight responsive preload links, one visible loaded image at each position, forward and reverse wraparound, and keyboard navigation. The repeated fade-in animation was removed to eliminate flashing on view changes; a subsequent pass through all eight views confirmed each selected image was loaded, fully opaque, and had no animation or transition. No browser warnings or errors were captured. Lint and TypeScript passed; lint also passed after the CSS animation removal.
+
+## Left-view lighting and early loading — 2026-10-29
+
+The home carousel now contains six photographs: front, right three-quarter, right profile, back, left profile, and left three-quarter. All six responsive images have preload links in the initial HTML and remain mounted; only the selected image is visible and exposed to assistive technology.
+
+The two left views are independent built-in imagegen edits of the matching approved right views, with the approved front and back photographs as lighting and framing references. Both retain 1254 × 1254 dimensions. Visual inspection confirmed left-facing geometry, warm ivory cloth and cream yarn, full-body framing, camera-left highlights, and floor shadows extending right. The CSS horizontal flip and Mirrored badges were removed. Only JPEG format conversion followed generation. Exact prompts, input roles, and asset paths are recorded in [generation.json](design/qa/rotation-lighting/generation.json).
+
+Brave inspection confirmed six distinct loaded image sources and six preload links. After a transient development database query failure recovered, the final check at `http://localhost:63573/` passed all six positions, forward and reverse wraparound, one visible loaded photograph per position, and no CSS transforms. An intermediate public-sample check at `127.0.0.1` rendered the images, but its controls did not update while Next.js blocked that origin's development resources; the passing interaction check used localhost. Lint and TypeScript passed. This check did not exercise workspace mutations, storage, billing, or application image-generation services.
+
 ## White studio and simplified carousel — 2026-10-27
 
 **Findings:** No remaining actionable P0/P1/P2 issues in the reviewed states. **final result: passed**
