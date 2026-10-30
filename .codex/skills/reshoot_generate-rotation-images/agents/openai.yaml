@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reshoot Rotation Images"
+  short_description: "Generate centered product rotations from a source photo"
+  default_prompt: "Use $reshoot_generate-rotation-images to generate and verify product rotation photos from this source image."

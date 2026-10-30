@@ -1,0 +1,108 @@
+{
+  "commit": "33546a166f3827289c3c5c69e2a1858790d6a108",
+  "url": "https://reshoot.tsilva.eu",
+  "surfaces": {
+    "desktop": {
+      "frames": [
+        {
+          "view": "Generated cognac leather handbag, front studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 482
+        },
+        {
+          "view": "Generated cognac leather handbag, right three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 482
+        },
+        {
+          "view": "Generated cognac leather handbag, right profile studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 483
+        },
+        {
+          "view": "Generated cognac leather handbag, back-right three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 481
+        },
+        {
+          "view": "Generated cognac leather handbag, back studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 482
+        },
+        {
+          "view": "Generated cognac leather handbag, back-left three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 481
+        },
+        {
+          "view": "Generated cognac leather handbag, left profile studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 483
+        },
+        {
+          "view": "Generated cognac leather handbag, left three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 483
+        }
+      ],
+      "axisSpreadCSS": 0,
+      "baseSpreadCSS": 2
+    },
+    "mobile": {
+      "frames": [
+        {
+          "view": "Generated cognac leather handbag, front studio view",
+          "axisOffsetCSS": -0.5,
+          "baseCSS": 300
+        },
+        {
+          "view": "Generated cognac leather handbag, right three-quarter studio view",
+          "axisOffsetCSS": -0.5,
+          "baseCSS": 299
+        },
+        {
+          "view": "Generated cognac leather handbag, right profile studio view",
+          "axisOffsetCSS": -0.5,
+          "baseCSS": 300
+        },
+        {
+          "view": "Generated cognac leather handbag, back-right three-quarter studio view",
+          "axisOffsetCSS": -0.5,
+          "baseCSS": 299
+        },
+        {
+          "view": "Generated cognac leather handbag, back studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 301
+        },
+        {
+          "view": "Generated cognac leather handbag, back-left three-quarter studio view",
+          "axisOffsetCSS": -0.5,
+          "baseCSS": 300
+        },
+        {
+          "view": "Generated cognac leather handbag, left profile studio view",
+          "axisOffsetCSS": -0.5,
+          "baseCSS": 301
+        },
+        {
+          "view": "Generated cognac leather handbag, left three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "baseCSS": 300
+        }
+      ],
+      "axisSpreadCSS": 0.5,
+      "baseSpreadCSS": 2
+    }
+  },
+  "verifiedAt": "2026-10-30T21:02:47.733057+00:00",
+  "deploymentId": "dpl_DaFLQjF72bmqJg8XJghAZa86dKGC",
+  "state": "READY",
+  "productionAlias": "reshoot.tsilva.eu",
+  "loadedStudioViews": 24,
+  "renderedViewsChecked": 24,
+  "maximumRenderedAxisOffsetCSS": 0.003944798519796677,
+  "autoplayAdvanced": true,
+  "browserErrors": [],
+  "workflow": "https://github.com/tsilva/reshoot/actions/runs/41127149906"
+}
