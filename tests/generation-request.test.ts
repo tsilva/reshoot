@@ -4,15 +4,28 @@ import { buildGenerationPrompt, buildImageRequest, CATALOG_STUDIO_INSTRUCTIONS }
 import { selectImageModel, supportedImageModels } from "../lib/generation/provider";
 
 describe("catalog photo requests", () => {
-  it("uses explicit camera directions while preserving product pose and original packaging", () => {
+  it("turns the whole product toward a fixed camera while preserving pose and original packaging", () => {
     const side = buildGenerationPrompt({ label: "Side", azimuth: 90, elevation: 0 }, 1);
     expect(side).toContain("RIGHT PROFILE view");
-    expect(side).toContain("Keep the product fixed while the camera moves");
+    expect(side).toContain("turn the whole product until its right side faces the fixed camera");
     expect(side).toContain("Preserve existing logos, lettering and packaging");
     expect(side).toContain("consistent multi-angle ecommerce photo set");
     expect(side).not.toContain("Do not add text, props, hands, people, packaging");
     expect(buildGenerationPrompt({ label: "Back", azimuth: 180 }, 1)).toContain("Show its rear surfaces, not its face or front label");
     expect(buildGenerationPrompt({ label: "Quarter", azimuth: -45, elevation: 4 }, 1)).toContain("FRONT-LEFT three-quarter view");
+  });
+
+  it("keeps the camera and central pivot fixed for every angle, including label-only shots", () => {
+    for (const azimuth of [undefined, 0, 45, 90, 135, 180, 225, 270, 315, -45, 405]) {
+      const prompt = buildGenerationPrompt({ label: "Catalog", azimuth }, 1);
+      expect(prompt).toContain("around its own center vertical axis");
+      expect(prompt).toContain("x = 50% of the canvas");
+      expect(prompt).toContain("Lock the camera position, distance, elevation, focal length and framing");
+      expect(prompt).toContain("floor contact stay fixed");
+      expect(prompt).not.toMatch(/move the camera|camera moves|change the viewpoint/i);
+    }
+    expect(buildGenerationPrompt({ label: "Quarter", azimuth: 405 }, 1))
+      .toBe(buildGenerationPrompt({ label: "Quarter", azimuth: 45 }, 1));
   });
 
   it("keeps ordered originals as identity evidence and creative styling subordinate", () => {

@@ -1,0 +1,113 @@
+{
+  "method": "Fresh Brave screenshots, measured with the leather material mask in scripts/sample-geometry.mjs; median full-body row midpoint at 55-85% of silhouette height relative to square viewer center. Bounds are normalized to CSS pixels.",
+  "surfaces": {
+    "desktop": {
+      "frames": [
+        {
+          "view": "Generated cognac leather handbag, front studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 86,
+          "baseCSS": 482
+        },
+        {
+          "view": "Generated cognac leather handbag, right three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 86,
+          "baseCSS": 481
+        },
+        {
+          "view": "Generated cognac leather handbag, right profile studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 87,
+          "baseCSS": 483
+        },
+        {
+          "view": "Generated cognac leather handbag, back-right three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 86,
+          "baseCSS": 481
+        },
+        {
+          "view": "Generated cognac leather handbag, back studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 86,
+          "baseCSS": 482
+        },
+        {
+          "view": "Generated cognac leather handbag, back-left three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 86,
+          "baseCSS": 481
+        },
+        {
+          "view": "Generated cognac leather handbag, left profile studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 86,
+          "baseCSS": 483
+        },
+        {
+          "view": "Generated cognac leather handbag, left three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 86,
+          "baseCSS": 483
+        }
+      ],
+      "axisSpreadCSS": 0,
+      "baseSpreadCSS": 2
+    },
+    "mobile": {
+      "frames": [
+        {
+          "view": "Generated cognac leather handbag, front studio view",
+          "axisOffsetCSS": -0.5,
+          "topCSS": 53,
+          "baseCSS": 301
+        },
+        {
+          "view": "Generated cognac leather handbag, right three-quarter studio view",
+          "axisOffsetCSS": -0.5,
+          "topCSS": 52,
+          "baseCSS": 299
+        },
+        {
+          "view": "Generated cognac leather handbag, right profile studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 53,
+          "baseCSS": 300
+        },
+        {
+          "view": "Generated cognac leather handbag, back-right three-quarter studio view",
+          "axisOffsetCSS": -0.5,
+          "topCSS": 52,
+          "baseCSS": 299
+        },
+        {
+          "view": "Generated cognac leather handbag, back studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 53,
+          "baseCSS": 300
+        },
+        {
+          "view": "Generated cognac leather handbag, back-left three-quarter studio view",
+          "axisOffsetCSS": -0.5,
+          "topCSS": 52,
+          "baseCSS": 299
+        },
+        {
+          "view": "Generated cognac leather handbag, left profile studio view",
+          "axisOffsetCSS": -0.5,
+          "topCSS": 53,
+          "baseCSS": 301
+        },
+        {
+          "view": "Generated cognac leather handbag, left three-quarter studio view",
+          "axisOffsetCSS": -1,
+          "topCSS": 52,
+          "baseCSS": 299
+        }
+      ],
+      "axisSpreadCSS": 0.5,
+      "baseSpreadCSS": 2
+    }
+  }
+}

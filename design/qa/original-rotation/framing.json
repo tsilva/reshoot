@@ -1,5 +1,5 @@
 {
-  "method": "Color-difference silhouette bounds (chroma > 15 and minimum channel < 240; row/column support >= 0.3%). Neutral-gray shadows excluded. Uniform CSS scale and translation only. Lower-body row centers anchor each rotation; 12% target guard band leaves at least 10% measured product margins.",
+  "method": "Sample-specific color silhouette bounds; row/column support >= 0.3%. Doll/mug: chroma > 15 and minimum channel < 240. Bag: R>70, G>35, R-G>25, R-B>45, excluding its brown floor shadow. Median full-silhouette row midpoint in product-specific body bands anchors x = 50%: doll torso 40-55%, mug base below handle 94-98%, handbag body below handles 55-85% of silhouette height. Uniform CSS scale and translation only; consistent displayed height and floor contact per product, with at least 10% product margins.",
   "frames": [
     {
       "product": "linen-doll",
@@ -8,22 +8,22 @@
       "height": 1254,
       "bounds": {
         "left": 291,
-        "top": 37,
         "right": 926,
+        "top": 37,
         "bottom": 1202
       },
-      "bodyAxisX": 603,
+      "bodyAxisX": 606.5,
       "output": "public/assets/angle-guides/front.jpg",
       "offset": {
-        "x": 137.801879,
+        "x": 130.846558,
         "y": 120.211777,
         "scale": 0.818060086
       },
       "displayBounds": {
-        "left": 0.2997267655331266,
-        "right": 0.7139756925717532,
-        "top": 0.1200000001403235,
-        "bottom": 0.8800000001403234
+        "left": 0.29418025759649125,
+        "right": 0.7084291847177033,
+        "top": 0.12000000014513557,
+        "bottom": 0.8800000002966508
       }
     },
     {
@@ -33,22 +33,22 @@
       "height": 1254,
       "bounds": {
         "left": 150,
-        "top": 201,
         "right": 1184,
+        "top": 201,
         "bottom": 1092
       },
-      "bodyAxisX": 508,
+      "bodyAxisX": 511.5,
       "output": "public/assets/samples/ceramic-mug/front.jpg",
       "offset": {
-        "x": 259.119755,
+        "x": 262.210536,
         "y": 165.931792,
         "scale": 0.713175882
       },
       "displayBounds": {
-        "left": 0.2919426932679323,
-        "right": 0.8799999997972184,
-        "top": 0.2466348838594121,
-        "bottom": 0.7533651160814565
+        "left": 0.29440743086124405,
+        "right": 0.8824647370717704,
+        "top": 0.2466348837974482,
+        "bottom": 0.7533651157448166
       }
     },
     {
@@ -57,23 +57,23 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 96,
-        "top": 31,
-        "right": 1152,
-        "bottom": 1158
+        "left": 97,
+        "right": 1150,
+        "top": 32,
+        "bottom": 1142
       },
-      "bodyAxisX": 623.5,
+      "bodyAxisX": 623,
       "output": "public/assets/samples/leather-handbag/front.jpg",
       "offset": {
-        "x": 170.349491,
-        "y": 164.335139,
-        "scale": 0.778241986
+        "x": 134.324865,
+        "y": 162.794054,
+        "scale": 0.790810811
       },
       "displayBounds": {
-        "left": 0.19542322300691253,
-        "right": 0.8507848953811961,
-        "top": 0.1502875921565218,
-        "bottom": 0.8497124072756671
+        "left": 0.16828828841068577,
+        "right": 0.8323423426236043,
+        "top": 0.14999999996172247,
+        "bottom": 0.8500000001291865
       }
     },
     {
@@ -83,22 +83,22 @@
       "height": 1254,
       "bounds": {
         "left": 338,
-        "top": 51,
         "right": 876,
+        "top": 51,
         "bottom": 1175
       },
-      "bodyAxisX": 605,
+      "bodyAxisX": 617,
       "output": "public/assets/angle-guides/back-right-three-quarter.jpg",
       "offset": {
-        "x": 118.112395,
+        "x": 103.84548,
         "y": 107.237082,
         "scale": 0.847900356
       },
       "displayBounds": {
-        "left": 0.32272943802607457,
-        "right": 0.6865016800189571,
-        "top": 0.12000000011919155,
-        "bottom": 0.8800000001191914
+        "left": 0.31135231286124404,
+        "right": 0.675124554909091,
+        "top": 0.12000000012440193,
+        "bottom": 0.8800000002392344
       }
     },
     {
@@ -108,22 +108,22 @@
       "height": 1254,
       "bounds": {
         "left": 364,
-        "top": 47,
         "right": 876,
+        "top": 47,
         "bottom": 1182
       },
-      "bodyAxisX": 636.5,
+      "bodyAxisX": 619,
       "output": "public/assets/angle-guides/back-left-three-quarter.jpg",
       "offset": {
-        "x": 96.633996,
+        "x": 107.236335,
         "y": 111.014907,
         "scale": 0.839682819
       },
       "displayBounds": {
-        "left": 0.3207962856901966,
-        "right": 0.663633290095483,
-        "top": 0.11999999961005837,
-        "bottom": 0.8799999996100583
+        "left": 0.32925110136842106,
+        "right": 0.6720881056172249,
+        "top": 0.11999999959569377,
+        "bottom": 0.8799999992488038
       }
     },
     {
@@ -133,22 +133,22 @@
       "height": 1254,
       "bounds": {
         "left": 312,
-        "top": 62,
         "right": 928,
+        "top": 62,
         "bottom": 1180
       },
-      "bodyAxisX": 624.5,
+      "bodyAxisX": 620.5,
       "output": "public/assets/angle-guides/back.jpg",
       "offset": {
-        "x": 98.736583,
+        "x": 98.054275,
         "y": 97.62805,
         "scale": 0.852450805
       },
       "displayBounds": {
-        "left": 0.2908303302733578,
-        "right": 0.7095780941374007,
-        "top": 0.1199999999286719,
-        "bottom": 0.879999999928672
+        "left": 0.2902862250079745,
+        "right": 0.7090339888676236,
+        "top": 0.11999999992822967,
+        "bottom": 0.8799999999202551
       }
     },
     {
@@ -158,22 +158,22 @@
       "height": 1254,
       "bounds": {
         "left": 300,
-        "top": 52,
         "right": 864,
+        "top": 52,
         "bottom": 1182
       },
       "bodyAxisX": 623,
       "output": "public/assets/angle-guides/front-three-quarter.jpg",
       "offset": {
-        "x": 105.655013,
+        "x": 101.562903,
         "y": 106.623292,
         "scale": 0.84339823
       },
       "displayBounds": {
-        "left": 0.2860243078361632,
-        "right": 0.6653517414644818,
-        "top": 0.11999999997177176,
-        "bottom": 0.8799999999717717
+        "left": 0.282761062200957,
+        "right": 0.6620884957894737,
+        "top": 0.11999999996810208,
+        "bottom": 0.8799999998883573
       }
     },
     {
@@ -183,22 +183,22 @@
       "height": 1254,
       "bounds": {
         "left": 374,
-        "top": 75,
         "right": 863,
+        "top": 75,
         "bottom": 1174
       },
-      "bodyAxisX": 610.5,
+      "bodyAxisX": 607.5,
       "output": "public/assets/angle-guides/left-profile.jpg",
       "offset": {
-        "x": 101.673621,
+        "x": 100.183076,
         "y": 85.440874,
         "scale": 0.867188353
       },
       "displayBounds": {
-        "left": 0.3397145654226766,
-        "right": 0.6778765308457885,
-        "top": 0.12000000038167218,
-        "bottom": 0.880000000381672
+        "left": 0.33852593303189793,
+        "right": 0.6766878984362041,
+        "top": 0.12000000037878787,
+        "bottom": 0.880000000336523
       }
     },
     {
@@ -208,22 +208,22 @@
       "height": 1254,
       "bounds": {
         "left": 418,
-        "top": 47,
         "right": 831,
+        "top": 47,
         "bottom": 1186
       },
-      "bodyAxisX": 620,
+      "bodyAxisX": 639.5,
       "output": "public/assets/angle-guides/right-profile.jpg",
       "offset": {
-        "x": 112.317044,
+        "x": 91.908622,
         "y": 111.153503,
         "scale": 0.836733977
       },
       "displayBounds": {
-        "left": 0.3684783464579719,
-        "right": 0.6440534123052063,
-        "top": 0.1199999999418892,
-        "bottom": 0.8799999999418892
+        "left": 0.35220368770813393,
+        "right": 0.6277787534984052,
+        "top": 0.11999999993540669,
+        "bottom": 0.8799999997783093
       }
     },
     {
@@ -233,22 +233,22 @@
       "height": 1254,
       "bounds": {
         "left": 90,
-        "top": 200,
         "right": 1052,
+        "top": 200,
         "bottom": 1044
       },
-      "bodyAxisX": 715.5,
+      "bodyAxisX": 719.5,
       "output": "public/assets/samples/ceramic-mug/back.jpg",
       "offset": {
-        "x": 82.719841,
+        "x": 85.295175,
         "y": 158.702014,
         "scale": 0.752890653
       },
       "displayBounds": {
-        "left": 0.11999999982291731,
-        "right": 0.6975764019527831,
-        "top": 0.24663488406510417,
-        "bottom": 0.7533651162871486
+        "left": 0.12205369519138756,
+        "right": 0.6996300972535885,
+        "top": 0.24663488405103667,
+        "bottom": 0.753365116213716
       }
     },
     {
@@ -258,22 +258,22 @@
       "height": 1254,
       "bounds": {
         "left": 217,
-        "top": 177,
         "right": 1084,
+        "top": 177,
         "bottom": 1070
       },
-      "bodyAxisX": 562,
+      "bodyAxisX": 561,
       "output": "public/assets/samples/ceramic-mug/front-three-quarter.jpg",
       "offset": {
-        "x": 221.505917,
+        "x": 227.804392,
         "y": 183.330728,
         "scale": 0.711578624
       },
       "displayBounds": {
-        "left": 0.2997755011178547,
-        "right": 0.7917521095573983,
-        "top": 0.2466348839257851,
-        "bottom": 0.7533651161478295
+        "left": 0.30479820845933014,
+        "right": 0.7967748169186604,
+        "top": 0.24663488392982455,
+        "bottom": 0.7533651161722488
       }
     },
     {
@@ -283,22 +283,22 @@
       "height": 1254,
       "bounds": {
         "left": 253,
-        "top": 163,
         "right": 991,
+        "top": 163,
         "bottom": 1096
       },
-      "bodyAxisX": 620,
+      "bodyAxisX": 623.5,
       "output": "public/assets/samples/ceramic-mug/left-profile.jpg",
       "offset": {
-        "x": 199.148772,
+        "x": 202.351919,
         "y": 198.26549,
         "scale": 0.681071502
       },
       "displayBounds": {
-        "left": 0.2962199856162148,
-        "right": 0.697041969946192,
-        "top": 0.24663488420903082,
-        "bottom": 0.7533651164310752
+        "left": 0.2987743293508772,
+        "right": 0.6995963137814992,
+        "top": 0.24663488423125995,
+        "bottom": 0.7533651165805422
       }
     },
     {
@@ -308,22 +308,22 @@
       "height": 1254,
       "bounds": {
         "left": 268,
-        "top": 158,
         "right": 980,
+        "top": 158,
         "bottom": 1094
       },
-      "bodyAxisX": 623.5,
+      "bodyAxisX": 626,
       "output": "public/assets/samples/ceramic-mug/right-profile.jpg",
       "offset": {
-        "x": 198.126074,
+        "x": 202.015749,
         "y": 202.015749,
         "scale": 0.67888858
       },
       "displayBounds": {
-        "left": 0.3030846997874553,
-        "right": 0.6885461584862754,
-        "top": 0.24663488412687784,
-        "bottom": 0.7533651163489222
+        "left": 0.306186513907496,
+        "right": 0.6916479724082935,
+        "top": 0.2466348840829346,
+        "bottom": 0.7533651160446571
       }
     },
     {
@@ -333,22 +333,22 @@
       "height": 1254,
       "bounds": {
         "left": 191,
-        "top": 154,
         "right": 1096,
+        "top": 154,
         "bottom": 1084
       },
-      "bodyAxisX": 546.5,
+      "bodyAxisX": 550,
       "output": "public/assets/samples/ceramic-mug/front-left-three-quarter.jpg",
       "offset": {
-        "x": 248.006865,
+        "x": 251.202321,
         "y": 204.056794,
         "scale": 0.683268507
       },
       "displayBounds": {
-        "left": 0.30184302214884906,
-        "right": 0.7949514739348171,
-        "top": 0.24663488359468397,
-        "bottom": 0.7533651158167284
+        "left": 0.3043912327248804,
+        "right": 0.7974996847464114,
+        "top": 0.2466348836347687,
+        "bottom": 0.7533651160988836
       }
     },
     {
@@ -357,23 +357,23 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 387,
+        "left": 388,
+        "right": 851,
         "top": 48,
-        "right": 855,
-        "bottom": 1168
+        "bottom": 1166
       },
-      "bodyAxisX": 620,
+      "bodyAxisX": 630.5,
       "output": "public/assets/samples/leather-handbag/right-profile.jpg",
       "offset": {
-        "x": 170.05765,
-        "y": 150.871553,
-        "scale": 0.783105998
+        "x": 131.961628,
+        "y": 150.412702,
+        "scale": 0.785152057
       },
       "displayBounds": {
-        "left": 0.37728841416587705,
-        "right": 0.6695480690549486,
-        "top": 0.15028759244108256,
-        "bottom": 0.8497124075602279
+        "left": 0.3481663685135566,
+        "right": 0.6380590338971291,
+        "top": 0.15000000058692184,
+        "bottom": 0.850000000368421
       }
     },
     {
@@ -383,22 +383,22 @@
       "height": 1254,
       "bounds": {
         "left": 328,
-        "top": 33,
         "right": 910,
+        "top": 33,
         "bottom": 1194
       },
-      "bodyAxisX": 612.5,
+      "bodyAxisX": 588,
       "output": "public/assets/angle-guides/front-left-three-quarter.jpg",
       "offset": {
-        "x": 128.303997,
+        "x": 144.323411,
         "y": 123.391008,
         "scale": 0.820878553
       },
       "displayBounds": {
-        "left": 0.3170272427230279,
-        "right": 0.6980091548677307,
-        "top": 0.1200000001978166,
-        "bottom": 0.8800000001978165
+        "left": 0.3298018950430622,
+        "right": 0.7107838072009569,
+        "top": 0.12000000019856459,
+        "bottom": 0.8800000002248803
       }
     },
     {
@@ -407,23 +407,23 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 138,
+        "left": 139,
+        "right": 1115,
         "top": 41,
-        "right": 1116,
-        "bottom": 1161
+        "bottom": 1149
       },
-      "bodyAxisX": 624,
+      "bodyAxisX": 630,
       "output": "public/assets/samples/leather-handbag/front-three-quarter.jpg",
       "offset": {
-        "x": 166.925226,
-        "y": 156.353295,
-        "scale": 0.783105998
+        "x": 127.889892,
+        "y": 155.618231,
+        "scale": 0.792238267
       },
       "displayBounds": {
-        "left": 0.21929334431675665,
-        "right": 0.8300410846618677,
-        "top": 0.15028759245025614,
-        "bottom": 0.8497124075694016
+        "left": 0.18980144426874002,
+        "right": 0.8064079423484849,
+        "top": 0.14999999995773525,
+        "bottom": 0.8499999998269536
       }
     },
     {
@@ -433,22 +433,22 @@
       "height": 1254,
       "bounds": {
         "left": 108,
+        "right": 1130,
         "top": 52,
-        "right": 1131,
-        "bottom": 1143
+        "bottom": 1132
       },
-      "bodyAxisX": 619.5,
+      "bodyAxisX": 620,
       "output": "public/assets/samples/leather-handbag/back.jpg",
       "offset": {
-        "x": 157.553794,
-        "y": 146.656706,
-        "scale": 0.803921831
+        "x": 123.077778,
+        "y": 145.835555,
+        "scale": 0.812777778
       },
       "displayBounds": {
-        "left": 0.19487827097392185,
-        "right": 0.8507092387712505,
-        "top": 0.15028759269351036,
-        "bottom": 0.8497124078126557
+        "left": 0.1681481483444976,
+        "right": 0.8305555559330143,
+        "top": 0.1499999995661882,
+        "bottom": 0.8499999997575757
       }
     },
     {
@@ -458,22 +458,22 @@
       "height": 1254,
       "bounds": {
         "left": 146,
-        "top": 149,
         "right": 1028,
+        "top": 149,
         "bottom": 1103
       },
-      "bodyAxisX": 666.5,
+      "bodyAxisX": 679,
       "output": "public/assets/samples/ceramic-mug/back-right-three-quarter.jpg",
       "offset": {
-        "x": 177.471209,
+        "x": 174.732113,
         "y": 210.034319,
         "scale": 0.666079362
       },
       "displayBounds": {
-        "left": 0.21907399986470197,
-        "right": 0.6875604409756486,
-        "top": 0.2466348835054953,
-        "bottom": 0.7533651157275396
+        "left": 0.21688971280063796,
+        "right": 0.685376154015949,
+        "top": 0.24663488352312601,
+        "bottom": 0.7533651158580542
       }
     },
     {
@@ -483,22 +483,22 @@
       "height": 1254,
       "bounds": {
         "left": 128,
-        "top": 159,
         "right": 1072,
+        "top": 159,
         "bottom": 1085
       },
-      "bodyAxisX": 720,
+      "bodyAxisX": 715.5,
       "output": "public/assets/samples/ceramic-mug/back-left-three-quarter.jpg",
       "offset": {
-        "x": 127.33471,
+        "x": 136.009596,
         "y": 200.171166,
         "scale": 0.686219991
       },
       "displayBounds": {
-        "left": 0.17158761466066666,
-        "right": 0.6881678945932908,
-        "top": 0.24663488396339017,
-        "bottom": 0.7533651161854344
+        "left": 0.17850538664114832,
+        "right": 0.6950856669473684,
+        "top": 0.2466348840263158,
+        "bottom": 0.7533651166148325
       }
     },
     {
@@ -507,23 +507,23 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 129,
-        "top": 39,
-        "right": 1099,
-        "bottom": 1159
+        "left": 130,
+        "right": 1098,
+        "top": 40,
+        "bottom": 1156
       },
-      "bodyAxisX": 774,
+      "bodyAxisX": 606.5,
       "output": "public/assets/samples/leather-handbag/back-right-three-quarter.jpg",
       "offset": {
-        "x": 49.459326,
-        "y": 157.919507,
-        "scale": 0.783105998
+        "x": 149.951882,
+        "y": 156.637634,
+        "scale": 0.78655914
       },
       "displayBounds": {
-        "left": 0.1199999998309436,
-        "right": 0.7257518486394893,
-        "top": 0.15028759245287718,
-        "bottom": 0.8497124075720226
+        "left": 0.2011200719298246,
+        "right": 0.808288530877193,
+        "top": 0.14999999968102073,
+        "bottom": 0.8499999998724083
       }
     },
     {
@@ -532,23 +532,23 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 129,
-        "top": 43,
-        "right": 1135,
-        "bottom": 1163
+        "left": 130,
+        "right": 1134,
+        "top": 44,
+        "bottom": 1161
       },
-      "bodyAxisX": 563,
+      "bodyAxisX": 638,
       "output": "public/assets/samples/leather-handbag/back-left-three-quarter.jpg",
       "offset": {
-        "x": 214.694692,
-        "y": 154.787083,
-        "scale": 0.783105998
+        "x": 125.62453,
+        "y": 153.522381,
+        "scale": 0.785854969
       },
       "displayBounds": {
-        "left": 0.25176663938437266,
-        "right": 0.8800000001074622,
-        "top": 0.15028759244763512,
-        "bottom": 0.8497124075667807
+        "left": 0.18164726951355661,
+        "right": 0.8108325875964911,
+        "top": 0.14999999970972888,
+        "bottom": 0.850000000007177
       }
     },
     {
@@ -557,23 +557,23 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 127,
-        "top": 43,
-        "right": 1106,
-        "bottom": 1178
+        "left": 128,
+        "right": 1104,
+        "top": 45,
+        "bottom": 1162
       },
-      "bodyAxisX": 755.5,
+      "bodyAxisX": 608.5,
       "output": "public/assets/samples/leather-handbag/front-left-three-quarter.jpg",
       "offset": {
-        "x": 71.765773,
-        "y": 155.232108,
-        "scale": 0.77275658
+        "x": 148.807251,
+        "y": 152.736526,
+        "scale": 0.785854969
       },
       "displayBounds": {
-        "left": 0.1354911153463067,
-        "right": 0.7387835329689,
-        "top": 0.15028759245189283,
-        "bottom": 0.8497124075710382
+        "left": 0.1988809306475279,
+        "right": 0.8105192478277512,
+        "top": 0.14999999968500796,
+        "bottom": 0.849999999982456
       }
     },
     {
@@ -582,23 +582,23 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 412,
+        "left": 413,
+        "right": 841,
         "top": 52,
-        "right": 842,
-        "bottom": 1175
+        "bottom": 1159
       },
       "bodyAxisX": 627,
       "output": "public/assets/samples/leather-handbag/left-profile.jpg",
       "offset": {
-        "x": 165.887593,
-        "y": 147.847913,
-        "scale": 0.781013997
+        "x": 129.817886,
+        "y": 146.866395,
+        "scale": 0.79295393
       },
       "displayBounds": {
-        "left": 0.38888784656378395,
-        "right": 0.6566996635728958,
-        "top": 0.15028759236217157,
-        "bottom": 0.8497124074813169
+        "left": 0.36467931346889954,
+        "right": 0.6353206867065391,
+        "top": 0.1499999994896332,
+        "bottom": 0.8499999998963318
       }
     }
   ]

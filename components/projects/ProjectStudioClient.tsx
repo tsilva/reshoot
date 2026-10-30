@@ -55,7 +55,7 @@ const PRESETS = [
     id: "front-three-quarter",
     label: "3/4 right",
     azimuth: 45,
-    elevation: 4,
+    elevation: 0,
     image: "/assets/angle-guides/front-three-quarter.jpg",
   },
   {

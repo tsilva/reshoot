@@ -56,4 +56,14 @@ The Brave adapter exposes no direct pointer-hover operation. The shared enlargem
 - [x] Desktop and phone captures inspected; required fidelity surfaces reviewed.
 - [x] Build, type, lint and existing tests pass.
 
+## Center-axis correction — 2026-10-30
+
+Products now use a fixed-camera turntable prompt around their own vertical center axis. All standard presets share level elevation. The pre-made sample registration centers the body at x = 50%; the bag uses its full body below the handles instead of a moving side-panel seam. A leather-specific mask excludes the brown floor shadow from its base measurement.
+
+- Fresh Brave captures cover all eight bag views at 1456 × 812 desktop and 390 × 844 phone viewports. [Desktop rotation](design/qa/center-axis/desktop-rotation.png), [phone rotation](design/qa/center-axis/mobile-rotation.png), and [full desktop context](design/qa/center-axis/bag-0.png).
+- [Screenshot measurements](design/qa/center-axis/measurement.json): body-axis spread 0 CSS px on desktop, 0.5 CSS px on phone; base spread 2 CSS px on both. Every captured image was loaded. All 24 studio images loaded in the browser.
+- The sample regression check first failed against the old registration, then passed after correction. It remeasures all 24 source assets and checks centered axes, consistent floor contact, minimum 10% margins and unchanged provenance hashes.
+- Final lint, TypeScript and tests passed: 82 tests passed, one database test skipped. The production build passed using dummy service settings; no paid generation or live service verification was performed. New generation behavior is verified at request construction; model output adherence remains a prompt target. Existing saved images are unchanged.
+- Changes are local and have not been deployed.
+
 final result: passed
