@@ -67,4 +67,12 @@ Products now use a fixed-camera turntable prompt around their own vertical cente
 - Published rotation implementation: `33546a166f3827289c3c5c69e2a1858790d6a108`, [successful production delivery](https://github.com/tsilva/reshoot/actions/runs/41127149906), exact-commit Vercel READY deployment assigned to `reshoot.tsilva.eu`. Fresh Brave verification on the live domain covered all 24 rendered views, loaded images and playback. [Live measurements](design/qa/center-axis/live-measurement.json) confirm bag axis spread 0 CSS px on desktop and 0.5 CSS px on phone, with base spread 2 CSS px on both. Browser error log was empty. No paid image generation was used.
 - Added the repository skill `reshoot_generate-rotation-images` for reproducing the source-image generation and verification process. Frontmatter, user-selected namespace and UI metadata validated; the installed Codex App Server discovered it as enabled in repository scope with the expected source path and display name. Creating the skill did not generate new artwork.
 
-final result: passed
+## Rigidity review — 2026-10-30
+
+The user rejected the bag's rear/three-quarter transition after live delivery: the bag changes dimensions and does not look like one object rotating in place. The earlier numeric results establish body-center/base registration and successful playback only. They do not establish consistent geometry, camera perspective, handle proportions or a natural rotation. The visual rigidity verdict is **failed**; the rotation task is reopened.
+
+Three native image-generation candidates were tested: one coordinated eight-view layout and two individually constrained rear views. They still changed construction/proportions or duplicated a rear orientation, so none replaced the published artwork. A foreground cutout was prepared from the existing illustrative source and supplied to the official Microsoft TRELLIS.2 demo through its anonymous public API. Its shared-shape preview was inspected, but repeated front hardware on the rear made it unsuitable. GLB export was also blocked by the demo's GPU quota. These trials remain outside public assets; no replacement was deployed.
+
+The skill now requires separate geometry and registration verdicts. A rigid turntable should come from one accepted shared asset with a fixed rig or a genuine photographic turntable sequence. A single source image can leave unseen construction ambiguous. Future acceptance must inspect body height/depth, rim, handle rise/shape/attachments, flap, perspective, all adjacent views and the wrap; a green centering test is insufficient.
+
+Final result: registration and production delivery passed; the bag's visual rigidity failed and remains unresolved.
