@@ -1,5 +1,5 @@
 {
-  "method": "Sample-specific color silhouette bounds; row/column support >= 0.3%. Doll/mug: chroma > 15 and minimum channel < 240. Bag: R>70, G>35, R-G>25, R-B>45, excluding its brown floor shadow. Median full-silhouette row midpoint in product-specific body bands anchors x = 50%: doll torso 40-55%, mug base below handle 94-98%, handbag body below handles 55-85% of silhouette height. Uniform CSS scale and translation only; consistent displayed height and floor contact per product, with at least 10% product margins.",
+  "method": "Known-material silhouette measurements register the doll torso, mug base below its handle and legacy handbag body. Uniform scaling/translation only; each product has one displayed body height and floor anchor with >=10% margins. These are photographic registration measurements, not proof that AI outputs share rigid geometry. Orientation-guide provenance/rig checks apply to the guides only.",
   "frames": [
     {
       "product": "linen-doll",
@@ -7,24 +7,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 291,
+        "left": 307,
         "right": 926,
-        "top": 37,
-        "bottom": 1202
+        "top": 67,
+        "bottom": 1188
       },
-      "bodyAxisX": 606.5,
+      "bodyAxisX": 614,
+      "bodyBand": [
+        0.4,
+        0.55
+      ],
       "output": "public/assets/angle-guides/front.jpg",
       "offset": {
-        "x": 130.846558,
-        "y": 120.211777,
-        "scale": 0.818060086
+        "x": 91.258983,
+        "y": 79.479661,
+        "scale": 0.872542373
       },
       "displayBounds": {
-        "left": 0.29418025759649125,
-        "right": 0.7084291847177033,
-        "top": 0.12000000014513557,
-        "bottom": 0.8800000002966508
-      }
+        "left": 359.1294915254237,
+        "right": 899.233220338983,
+        "top": 137.94000000000005,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "ceramic-mug",
@@ -32,24 +39,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 150,
-        "right": 1184,
-        "top": 201,
-        "bottom": 1092
+        "left": 221,
+        "right": 1183,
+        "top": 253,
+        "bottom": 1093
       },
-      "bodyAxisX": 511.5,
+      "bodyAxisX": 549.5,
+      "bodyBand": [
+        0.94,
+        0.98
+      ],
       "output": "public/assets/samples/ceramic-mug/front.jpg",
       "offset": {
-        "x": 262.210536,
-        "y": 165.931792,
-        "scale": 0.713175882
+        "x": 206.3028,
+        "y": 111.7512,
+        "scale": 0.7656
       },
       "displayBounds": {
-        "left": 0.29440743086124405,
-        "right": 0.8824647370717704,
-        "top": 0.2466348837974482,
-        "bottom": 0.7533651157448166
-      }
+        "left": 375.5004,
+        "right": 1112.0076,
+        "top": 305.4479999999999,
+        "bottom": 948.5519999999999
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.5128421052631579,
+      "groundFraction": 0.7564210526315789
     },
     {
       "product": "leather-handbag",
@@ -57,24 +71,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 97,
-        "right": 1150,
-        "top": 32,
-        "bottom": 1142
+        "left": 113,
+        "right": 1132,
+        "top": 51,
+        "bottom": 1125
       },
-      "bodyAxisX": 623,
+      "bodyAxisX": 624,
+      "bodyBand": [
+        0.55,
+        0.85
+      ],
       "output": "public/assets/samples/leather-handbag/front.jpg",
       "offset": {
-        "x": 134.324865,
-        "y": 162.794054,
-        "scale": 0.790810811
+        "x": 58.706816,
+        "y": 91.492961,
+        "scale": 0.910726257
       },
       "displayBounds": {
-        "left": 0.16828828841068577,
-        "right": 0.8323423426236043,
-        "top": 0.14999999996172247,
-        "bottom": 0.8500000001291865
-      }
+        "left": 161.61888268156423,
+        "right": 1089.648938547486,
+        "top": 137.93999999999988,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "linen-doll",
@@ -82,24 +103,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 338,
-        "right": 876,
-        "top": 51,
-        "bottom": 1175
+        "left": 393,
+        "right": 892,
+        "top": 84,
+        "bottom": 1168
       },
-      "bodyAxisX": 617,
+      "bodyAxisX": 633.5,
+      "bodyBand": [
+        0.4,
+        0.55
+      ],
       "output": "public/assets/angle-guides/back-right-three-quarter.jpg",
       "offset": {
-        "x": 103.84548,
-        "y": 107.237082,
-        "scale": 0.847900356
+        "x": 55.377288,
+        "y": 62.144723,
+        "scale": 0.902324723
       },
       "displayBounds": {
-        "left": 0.31135231286124404,
-        "right": 0.675124554909091,
-        "top": 0.12000000012440193,
-        "bottom": 0.8800000002392344
-      }
+        "left": 409.99090405904053,
+        "right": 860.2509409594096,
+        "top": 137.93999999999988,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "linen-doll",
@@ -107,24 +135,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 364,
-        "right": 876,
-        "top": 47,
-        "bottom": 1182
+        "left": 370,
+        "right": 890,
+        "top": 55,
+        "bottom": 1176
       },
-      "bodyAxisX": 619,
+      "bodyAxisX": 644.5,
+      "bodyBand": [
+        0.4,
+        0.55
+      ],
       "output": "public/assets/angle-guides/back-left-three-quarter.jpg",
       "offset": {
-        "x": 107.236335,
-        "y": 111.014907,
-        "scale": 0.839682819
+        "x": 64.646441,
+        "y": 89.950169,
+        "scale": 0.872542373
       },
       "displayBounds": {
-        "left": 0.32925110136842106,
-        "right": 0.6720881056172249,
-        "top": 0.11999999959569377,
-        "bottom": 0.8799999992488038
-      }
+        "left": 387.4871186440678,
+        "right": 841.2091525423729,
+        "top": 137.94000000000003,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "linen-doll",
@@ -132,24 +167,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 312,
-        "right": 928,
-        "top": 62,
-        "bottom": 1180
+        "left": 321,
+        "right": 934,
+        "top": 64,
+        "bottom": 1185
       },
-      "bodyAxisX": 620.5,
+      "bodyAxisX": 629,
+      "bodyBand": [
+        0.4,
+        0.55
+      ],
       "output": "public/assets/angle-guides/back.jpg",
       "offset": {
-        "x": 98.054275,
-        "y": 97.62805,
-        "scale": 0.852450805
+        "x": 78.170847,
+        "y": 82.097288,
+        "scale": 0.872542373
       },
       "displayBounds": {
-        "left": 0.2902862250079745,
-        "right": 0.7090339888676236,
-        "top": 0.11999999992822967,
-        "bottom": 0.8799999999202551
-      }
+        "left": 358.2569491525424,
+        "right": 893.1254237288135,
+        "top": 137.93999999999988,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "linen-doll",
@@ -157,24 +199,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 300,
-        "right": 864,
-        "top": 52,
-        "bottom": 1182
+        "left": 360,
+        "right": 896,
+        "top": 47,
+        "bottom": 1181
       },
-      "bodyAxisX": 623,
+      "bodyAxisX": 598,
+      "bodyBand": [
+        0.4,
+        0.55
+      ],
       "output": "public/assets/angle-guides/front-three-quarter.jpg",
       "offset": {
-        "x": 101.562903,
-        "y": 106.623292,
-        "scale": 0.84339823
+        "x": 111.20127,
+        "y": 97.400635,
+        "scale": 0.862539683
       },
       "displayBounds": {
-        "left": 0.282761062200957,
-        "right": 0.6620884957894737,
-        "top": 0.11999999996810208,
-        "bottom": 0.8799999998883573
-      }
+        "left": 421.71555555555557,
+        "right": 884.0368253968254,
+        "top": 137.94000000000003,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "linen-doll",
@@ -182,24 +231,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 374,
-        "right": 863,
-        "top": 75,
-        "bottom": 1174
+        "left": 435,
+        "right": 864,
+        "top": 54,
+        "bottom": 1173
       },
-      "bodyAxisX": 607.5,
+      "bodyAxisX": 655.5,
+      "bodyBand": [
+        0.4,
+        0.55
+      ],
       "output": "public/assets/angle-guides/left-profile.jpg",
       "offset": {
-        "x": 100.183076,
-        "y": 85.440874,
-        "scale": 0.867188353
+        "x": 54.02622,
+        "y": 90.738499,
+        "scale": 0.874101877
       },
       "displayBounds": {
-        "left": 0.33852593303189793,
-        "right": 0.6766878984362041,
-        "top": 0.12000000037878787,
-        "bottom": 0.880000000336523
-      }
+        "left": 434.2605361930295,
+        "right": 809.2502412868632,
+        "top": 137.93999999999986,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "linen-doll",
@@ -207,24 +263,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 418,
-        "right": 831,
-        "top": 47,
-        "bottom": 1186
+        "left": 426,
+        "right": 832,
+        "top": 73,
+        "bottom": 1160
       },
-      "bodyAxisX": 639.5,
+      "bodyAxisX": 617.5,
+      "bodyBand": [
+        0.4,
+        0.55
+      ],
       "output": "public/assets/angle-guides/right-profile.jpg",
       "offset": {
-        "x": 91.908622,
-        "y": 111.153503,
-        "scale": 0.836733977
+        "x": 71.352254,
+        "y": 72.252088,
+        "scale": 0.899834407
       },
       "displayBounds": {
-        "left": 0.35220368770813393,
-        "right": 0.6277787534984052,
-        "top": 0.11999999993540669,
-        "bottom": 0.8799999997783093
-      }
+        "left": 454.6817111315548,
+        "right": 820.0144802207911,
+        "top": 137.93999999999994,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "ceramic-mug",
@@ -232,24 +295,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 90,
-        "right": 1052,
-        "top": 200,
-        "bottom": 1044
+        "left": 96,
+        "right": 1022,
+        "top": 250,
+        "bottom": 1062
       },
-      "bodyAxisX": 719.5,
+      "bodyAxisX": 713.5,
+      "bodyBand": [
+        0.94,
+        0.98
+      ],
       "output": "public/assets/samples/ceramic-mug/back.jpg",
       "offset": {
-        "x": 85.295175,
-        "y": 158.702014,
-        "scale": 0.752890653
+        "x": 61.908,
+        "y": 107.448,
+        "scale": 0.792
       },
       "displayBounds": {
-        "left": 0.12205369519138756,
-        "right": 0.6996300972535885,
-        "top": 0.24663488405103667,
-        "bottom": 0.753365116213716
-      }
+        "left": 137.94,
+        "right": 871.332,
+        "top": 305.448,
+        "bottom": 948.5519999999999
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.5128421052631579,
+      "groundFraction": 0.7564210526315789
     },
     {
       "product": "ceramic-mug",
@@ -257,24 +327,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 217,
-        "right": 1084,
-        "top": 177,
-        "bottom": 1070
+        "left": 293,
+        "right": 1101,
+        "top": 256,
+        "bottom": 1063
       },
-      "bodyAxisX": 561,
+      "bodyAxisX": 605.5,
+      "bodyBand": [
+        0.94,
+        0.98
+      ],
       "output": "public/assets/samples/ceramic-mug/front-three-quarter.jpg",
       "offset": {
-        "x": 227.804392,
-        "y": 183.330728,
-        "scale": 0.711578624
+        "x": 144.472773,
+        "y": 101.439792,
+        "scale": 0.796907063
       },
       "displayBounds": {
-        "left": 0.30479820845933014,
-        "right": 0.7967748169186604,
-        "top": 0.24663488392982455,
-        "bottom": 0.7533651161722488
-      }
+        "left": 377.96654275092936,
+        "right": 1021.8674498141264,
+        "top": 305.44799999999987,
+        "bottom": 948.5519999999999
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.5128421052631579,
+      "groundFraction": 0.7564210526315789
     },
     {
       "product": "ceramic-mug",
@@ -282,24 +359,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 253,
-        "right": 991,
-        "top": 163,
-        "bottom": 1096
+        "left": 298,
+        "right": 956,
+        "top": 225,
+        "bottom": 1075
       },
-      "bodyAxisX": 623.5,
+      "bodyAxisX": 625,
+      "bodyBand": [
+        0.94,
+        0.98
+      ],
       "output": "public/assets/samples/ceramic-mug/left-profile.jpg",
       "offset": {
-        "x": 202.351919,
-        "y": 198.26549,
-        "scale": 0.681071502
+        "x": 154.129412,
+        "y": 135.214588,
+        "scale": 0.756592941
       },
       "displayBounds": {
-        "left": 0.2987743293508772,
-        "right": 0.6995963137814992,
-        "top": 0.24663488423125995,
-        "bottom": 0.7533651165805422
-      }
+        "left": 379.59410823529413,
+        "right": 877.4322635294118,
+        "top": 305.44800000000004,
+        "bottom": 948.5519999999999
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.5128421052631579,
+      "groundFraction": 0.7564210526315789
     },
     {
       "product": "ceramic-mug",
@@ -307,24 +391,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 268,
-        "right": 980,
-        "top": 158,
-        "bottom": 1094
+        "left": 290,
+        "right": 961,
+        "top": 234,
+        "bottom": 1096
       },
       "bodyAxisX": 626,
+      "bodyBand": [
+        0.94,
+        0.98
+      ],
       "output": "public/assets/samples/ceramic-mug/right-profile.jpg",
       "offset": {
-        "x": 202.015749,
-        "y": 202.015749,
-        "scale": 0.67888858
+        "x": 159.966237,
+        "y": 130.869884,
+        "scale": 0.746060325
       },
       "displayBounds": {
-        "left": 0.306186513907496,
-        "right": 0.6916479724082935,
-        "top": 0.2466348840829346,
-        "bottom": 0.7533651160446571
-      }
+        "left": 376.3237308584687,
+        "right": 876.9302088167053,
+        "top": 305.4480000000001,
+        "bottom": 948.5519999999999
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.5128421052631579,
+      "groundFraction": 0.7564210526315789
     },
     {
       "product": "ceramic-mug",
@@ -332,24 +423,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 191,
-        "right": 1096,
-        "top": 154,
-        "bottom": 1084
+        "left": 242,
+        "right": 1107,
+        "top": 181,
+        "bottom": 1105
       },
-      "bodyAxisX": 550,
+      "bodyAxisX": 603.5,
+      "bodyBand": [
+        0.94,
+        0.98
+      ],
       "output": "public/assets/samples/ceramic-mug/front-left-three-quarter.jpg",
       "offset": {
-        "x": 251.202321,
-        "y": 204.056794,
-        "scale": 0.683268507
+        "x": 206.964,
+        "y": 179.472,
+        "scale": 0.696
       },
       "displayBounds": {
-        "left": 0.3043912327248804,
-        "right": 0.7974996847464114,
-        "top": 0.2466348836347687,
-        "bottom": 0.7533651160988836
-      }
+        "left": 375.3960000000001,
+        "right": 977.436,
+        "top": 305.448,
+        "bottom": 948.5519999999999
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.5128421052631579,
+      "groundFraction": 0.7564210526315789
     },
     {
       "product": "leather-handbag",
@@ -357,24 +455,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 388,
-        "right": 851,
-        "top": 48,
-        "bottom": 1166
+        "left": 438,
+        "right": 817,
+        "top": 74,
+        "bottom": 1143
       },
-      "bodyAxisX": 630.5,
+      "bodyAxisX": 626.5,
+      "bodyBand": [
+        0.55,
+        0.85
+      ],
       "output": "public/assets/samples/leather-handbag/right-profile.jpg",
       "offset": {
-        "x": 131.961628,
-        "y": 150.412702,
-        "scale": 0.785152057
+        "x": 53.761291,
+        "y": 70.231038,
+        "scale": 0.914985968
       },
       "displayBounds": {
-        "left": 0.3481663685135566,
-        "right": 0.6380590338971291,
-        "top": 0.15000000058692184,
-        "bottom": 0.850000000368421
-      }
+        "left": 454.5251449953227,
+        "right": 801.3048269410664,
+        "top": 137.93999999999994,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "linen-doll",
@@ -382,24 +487,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 328,
-        "right": 910,
-        "top": 33,
-        "bottom": 1194
+        "left": 348,
+        "right": 886,
+        "top": 56,
+        "bottom": 1159
       },
-      "bodyAxisX": 588,
+      "bodyAxisX": 648.5,
+      "bodyBand": [
+        0.4,
+        0.55
+      ],
       "output": "public/assets/angle-guides/front-left-three-quarter.jpg",
       "offset": {
-        "x": 144.323411,
-        "y": 123.391008,
-        "scale": 0.820878553
+        "x": 51.922194,
+        "y": 88.280236,
+        "scale": 0.886781505
       },
       "displayBounds": {
-        "left": 0.3298018950430622,
-        "right": 0.7107838072009569,
-        "top": 0.12000000019856459,
-        "bottom": 0.8800000002248803
-      }
+        "left": 360.52215775158663,
+        "right": 837.6106074342703,
+        "top": 137.94,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "leather-handbag",
@@ -407,24 +519,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 139,
+        "left": 126,
         "right": 1115,
-        "top": 41,
-        "bottom": 1149
+        "top": 54,
+        "bottom": 1166
       },
-      "bodyAxisX": 630,
+      "bodyAxisX": 617,
+      "bodyBand": [
+        0.55,
+        0.85
+      ],
       "output": "public/assets/samples/leather-handbag/front-three-quarter.jpg",
       "offset": {
-        "x": 127.889892,
-        "y": 155.618231,
-        "scale": 0.792238267
+        "x": 84.284137,
+        "y": 90.441367,
+        "scale": 0.879604317
       },
       "displayBounds": {
-        "left": 0.18980144426874002,
-        "right": 0.8064079423484849,
-        "top": 0.14999999995773525,
-        "bottom": 0.8499999998269536
-      }
+        "left": 195.1142805755395,
+        "right": 1065.0429496402876,
+        "top": 137.93999999999994,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "leather-handbag",
@@ -432,24 +551,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 108,
-        "right": 1130,
-        "top": 52,
-        "bottom": 1132
+        "left": 136,
+        "right": 1106,
+        "top": 61,
+        "bottom": 1097
       },
-      "bodyAxisX": 620,
+      "bodyAxisX": 622,
+      "bodyBand": [
+        0.55,
+        0.85
+      ],
       "output": "public/assets/samples/leather-handbag/back.jpg",
       "offset": {
-        "x": 123.077778,
-        "y": 145.835555,
-        "scale": 0.812777778
+        "x": 39.750347,
+        "y": 80.347992,
+        "scale": 0.944131274
       },
       "displayBounds": {
-        "left": 0.1681481483444976,
-        "right": 0.8305555559330143,
-        "top": 0.1499999995661882,
-        "bottom": 0.8499999997575757
-      }
+        "left": 168.15220077220079,
+        "right": 1083.9595366795365,
+        "top": 137.94,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "ceramic-mug",
@@ -457,24 +583,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 146,
-        "right": 1028,
-        "top": 149,
-        "bottom": 1103
+        "left": 156,
+        "right": 1035,
+        "top": 210,
+        "bottom": 1061
       },
-      "bodyAxisX": 679,
+      "bodyAxisX": 695,
+      "bodyBand": [
+        0.94,
+        0.98
+      ],
       "output": "public/assets/samples/ceramic-mug/back-right-three-quarter.jpg",
       "offset": {
-        "x": 174.732113,
-        "y": 210.034319,
-        "scale": 0.666079362
+        "x": 101.785805,
+        "y": 146.750186,
+        "scale": 0.755703878
       },
       "displayBounds": {
-        "left": 0.21688971280063796,
-        "right": 0.685376154015949,
-        "top": 0.24663488352312601,
-        "bottom": 0.7533651158580542
-      }
+        "left": 219.6756098707403,
+        "right": 883.9393184488836,
+        "top": 305.448,
+        "bottom": 948.5519999999999
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.5128421052631579,
+      "groundFraction": 0.7564210526315789
     },
     {
       "product": "ceramic-mug",
@@ -482,24 +615,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 128,
-        "right": 1072,
-        "top": 159,
-        "bottom": 1085
+        "left": 154,
+        "right": 1029,
+        "top": 191,
+        "bottom": 1079
       },
-      "bodyAxisX": 715.5,
+      "bodyAxisX": 682,
+      "bodyBand": [
+        0.94,
+        0.98
+      ],
       "output": "public/assets/samples/ceramic-mug/back-left-three-quarter.jpg",
       "offset": {
-        "x": 136.009596,
-        "y": 200.171166,
-        "scale": 0.686219991
+        "x": 133.084541,
+        "y": 167.122703,
+        "scale": 0.724216216
       },
       "displayBounds": {
-        "left": 0.17850538664114832,
-        "right": 0.6950856669473684,
-        "top": 0.2466348840263158,
-        "bottom": 0.7533651166148325
-      }
+        "left": 244.61383783783788,
+        "right": 878.303027027027,
+        "top": 305.448,
+        "bottom": 948.5519999999999
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.5128421052631579,
+      "groundFraction": 0.7564210526315789
     },
     {
       "product": "leather-handbag",
@@ -507,24 +647,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 130,
-        "right": 1098,
-        "top": 40,
-        "bottom": 1156
+        "left": 179,
+        "right": 1076,
+        "top": 69,
+        "bottom": 1148
       },
-      "bodyAxisX": 606.5,
+      "bodyAxisX": 615.5,
+      "bodyBand": [
+        0.55,
+        0.85
+      ],
       "output": "public/assets/samples/leather-handbag/back-right-three-quarter.jpg",
       "offset": {
-        "x": 149.951882,
-        "y": 156.637634,
-        "scale": 0.78655914
+        "x": 69.045542,
+        "y": 75.391084,
+        "scale": 0.906506024
       },
       "displayBounds": {
-        "left": 0.2011200719298246,
-        "right": 0.808288530877193,
-        "top": 0.14999999968102073,
-        "bottom": 0.8499999998724083
-      }
+        "left": 231.31012048192764,
+        "right": 1044.4460240963854,
+        "top": 137.9399999999998,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "leather-handbag",
@@ -532,24 +679,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 130,
-        "right": 1134,
-        "top": 44,
-        "bottom": 1161
+        "left": 159,
+        "right": 1103,
+        "top": 62,
+        "bottom": 1153
       },
-      "bodyAxisX": 638,
+      "bodyAxisX": 637.5,
+      "bodyBand": [
+        0.55,
+        0.85
+      ],
       "output": "public/assets/samples/leather-handbag/back-left-three-quarter.jpg",
       "offset": {
-        "x": 125.62453,
-        "y": 153.522381,
-        "scale": 0.785854969
+        "x": 55.458753,
+        "y": 82.354812,
+        "scale": 0.896535289
       },
       "displayBounds": {
-        "left": 0.18164726951355661,
-        "right": 0.8108325875964911,
-        "top": 0.14999999970972888,
-        "bottom": 0.850000000007177
-      }
+        "left": 198.0078643446379,
+        "right": 1044.3371769019247,
+        "top": 137.93999999999997,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "leather-handbag",
@@ -557,24 +711,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 128,
-        "right": 1104,
-        "top": 45,
-        "bottom": 1162
+        "left": 165,
+        "right": 1107,
+        "top": 26,
+        "bottom": 1154
       },
-      "bodyAxisX": 608.5,
+      "bodyAxisX": 640.5,
+      "bodyBand": [
+        0.55,
+        0.85
+      ],
       "output": "public/assets/samples/leather-handbag/front-left-three-quarter.jpg",
       "offset": {
-        "x": 148.807251,
-        "y": 152.736526,
-        "scale": 0.785854969
+        "x": 71.604734,
+        "y": 115.394681,
+        "scale": 0.86712766
       },
       "displayBounds": {
-        "left": 0.1988809306475279,
-        "right": 0.8105192478277512,
-        "top": 0.14999999968500796,
-        "bottom": 0.849999999982456
-      }
+        "left": 214.68079787234035,
+        "right": 1031.5150531914892,
+        "top": 137.93999999999994,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     },
     {
       "product": "leather-handbag",
@@ -582,24 +743,31 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 413,
-        "right": 841,
-        "top": 52,
-        "bottom": 1159
+        "left": 438,
+        "right": 803,
+        "top": 57,
+        "bottom": 1135
       },
-      "bodyAxisX": 627,
+      "bodyAxisX": 623,
+      "bodyBand": [
+        0.55,
+        0.85
+      ],
       "output": "public/assets/samples/leather-handbag/left-profile.jpg",
       "offset": {
-        "x": 129.817886,
-        "y": 146.866395,
-        "scale": 0.79295393
+        "x": 61.722857,
+        "y": 86.221224,
+        "scale": 0.907346939
       },
       "displayBounds": {
-        "left": 0.36467931346889954,
-        "right": 0.6353206867065391,
-        "top": 0.1499999994896332,
-        "bottom": 0.8499999998963318
-      }
+        "left": 459.1408163265306,
+        "right": 790.3224489795919,
+        "top": 137.93999999999983,
+        "bottom": 1116.06
+      },
+      "registrationKind": "uniform-photo-registration-only",
+      "bodyHeightFraction": 0.78,
+      "groundFraction": 0.89
     }
   ]
 }

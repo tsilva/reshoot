@@ -1,0 +1,101 @@
+{
+  "purpose": "Approximate textureless orientation guide only; original photograph remains authoritative for materials, construction and physical proportions.",
+  "method": "Source-observed rotationally symmetric cup body with level circular rim and one generic loop handle. Replaces the inferred proxy whose tilted rim introduced changing elevation cues.",
+  "bodyProfile": [
+    [
+      0,
+      0
+    ],
+    [
+      0.31,
+      0
+    ],
+    [
+      0.38,
+      0.03
+    ],
+    [
+      0.42,
+      0.15
+    ],
+    [
+      0.46,
+      0.4
+    ],
+    [
+      0.46,
+      0.9
+    ],
+    [
+      0.455,
+      0.99
+    ],
+    [
+      0.44,
+      1
+    ],
+    [
+      0.415,
+      0.99
+    ],
+    [
+      0.4,
+      0.95
+    ],
+    [
+      0.405,
+      0.2
+    ],
+    [
+      0.34,
+      0.08
+    ],
+    [
+      0,
+      0.08
+    ]
+  ],
+  "handlePath": [
+    [
+      0.43,
+      0.86,
+      0
+    ],
+    [
+      0.68,
+      0.91,
+      0
+    ],
+    [
+      0.88,
+      0.78,
+      0
+    ],
+    [
+      0.94,
+      0.57,
+      0
+    ],
+    [
+      0.87,
+      0.34,
+      0
+    ],
+    [
+      0.66,
+      0.18,
+      0
+    ],
+    [
+      0.42,
+      0.2,
+      0
+    ]
+  ],
+  "handleRadius": 0.065,
+  "source": {
+    "path": "public/assets/samples/example-uploads/ceramic-mug.jpg",
+    "sha256": "142c0ab2998198aee5da6d691edd4933bfc5328a84d963a4906548a100efce9f",
+    "role": "authoritative-original"
+  }
+}

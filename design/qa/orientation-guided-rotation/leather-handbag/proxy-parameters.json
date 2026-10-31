@@ -1,0 +1,58 @@
+{
+  "purpose": "Textureless orientation-only scaffold; original is authoritative for leather texture, construction and physical dimensions.",
+  "source": {
+    "path": "public/assets/samples/example-uploads/leather-handbag.jpg",
+    "sha256": "766bb741c30c5cc38ad18618b579941baf7b54aa7e3967938fe93d14e950ff0d",
+    "role": "authoritative-original"
+  },
+  "body": {
+    "halfBaseWidth": 0.55,
+    "halfTopWidth": 0.4,
+    "height": 0.91,
+    "depth": 0.35,
+    "bevel": 0.04,
+    "verticalScale": 1.11
+  },
+  "handlePath": [
+    [
+      -0.25,
+      0.59,
+      0
+    ],
+    [
+      -0.29,
+      0.98,
+      0
+    ],
+    [
+      -0.23,
+      1.18,
+      0
+    ],
+    [
+      0,
+      1.32,
+      0
+    ],
+    [
+      0.23,
+      1.18,
+      0
+    ],
+    [
+      0.29,
+      0.98,
+      0
+    ],
+    [
+      0.25,
+      0.59,
+      0
+    ]
+  ],
+  "handleRadius": 0.032,
+  "handleDepths": [
+    0.2,
+    -0.2
+  ]
+}

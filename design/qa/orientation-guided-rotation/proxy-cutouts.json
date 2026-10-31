@@ -1,0 +1,16 @@
+[
+  {
+    "id": "other-cutout-linen-doll",
+    "prompt": "Use case: background-extraction. Perform a mask-only foreground extraction of the supplied product photograph. Remove ONLY the household setting, table, floor shadow and unrelated objects. Output one complete product cutout on a genuinely transparent alpha background. The exact standing linen doll: cream yarn hair in TWO low pigtails, round linen face with small dark embroidered eyes and smile and pink cheeks, short-sleeved linen dress with gathered waist, TWO arms in the original downward-outward pose, TWO straight separate legs and feet. Preserve every stitch, fabric texture, pigtail shape, limb length and the original pose. Keep original product colors, lighting, proportions, details and silhouette; do not redesign, straighten, change viewpoint, rotate, relight or reshape any part. Preserve transparency through gaps around and between product parts. No props, new decorations, text, watermark or cropped parts. The cutout is an identity input for one shared 3D reconstruction; fidelity to this exact original is essential.",
+    "references": [
+      {
+        "path": "public/assets/samples/example-uploads/linen-doll.jpg",
+        "sha256": "55701bbc74a7298dbaf9c79f5587d8104c4e8f91719bd7ece5ff9e46f3bfff46",
+        "role": "authoritative-original"
+      }
+    ],
+    "generatedFile": "/Users/tsilva/.codex/generated_images/01a18e8c-81c9-7e80-a6ea-fbd0988461dd/exec-519a2406-0774-48ba-92e4-fc6bfd8730f7.png",
+    "output": "design/qa/orientation-guided-rotation/linen-doll/source-cutout.png",
+    "outputSha256": "b0010ec8838f09f2b49f51571f734709a726137cf9ce358c3b3b36e219f92129"
+  }
+]

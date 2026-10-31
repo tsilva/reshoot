@@ -1,0 +1,47 @@
+{
+  "provider": "Public anonymous Tencent Hunyuan3D-2.1 demo",
+  "space": "https://huggingface.co/spaces/tencent/Hunyuan3D-2.1",
+  "spaceRevisionObserved": "61d23d8ce7d066d418ed501df7c3ee4329817f14",
+  "api": "/shape_generation",
+  "source": {
+    "path": "public/assets/samples/example-uploads/linen-doll.jpg",
+    "sha256": "55701bbc74a7298dbaf9c79f5587d8104c4e8f91719bd7ece5ff9e46f3bfff46",
+    "role": "authoritative-original"
+  },
+  "preparedInput": {
+    "path": "design/qa/orientation-guided-rotation/linen-doll/source-cutout.png",
+    "sha256": "b0010ec8838f09f2b49f51571f734709a726137cf9ce358c3b3b36e219f92129",
+    "role": "derived-foreground-cutout"
+  },
+  "elapsedSeconds": 21.896498918533325,
+  "originalExport": "/Users/tsilva/Documents/Codex/2026-10-31/reshoot-other-rotations/doll-shape/dc5babd17a60ed7f7b59cc9d36152df1d277a4c8cf8d8bca8d1db27bb43315ac/white_mesh.glb",
+  "stats": {
+    "model": {
+      "shapegen": "tencent/Hunyuan3D-2.1/hunyuan3d-dit-v2-1",
+      "texgen": "tencent/Hunyuan3D-2.1"
+    },
+    "params": {
+      "caption": null,
+      "steps": 30,
+      "guidance_scale": 5.0,
+      "seed": 1234,
+      "octree_resolution": 256,
+      "check_box_rembg": false,
+      "num_chunks": 8000
+    },
+    "number_of_faces": 288586,
+    "number_of_vertices": 144299,
+    "time": {
+      "shape generation": 17.100704193115234,
+      "export to trimesh": 0.07210874557495117,
+      "total": 17.175865650177002
+    }
+  },
+  "seed": 1234,
+  "inferredSurfaces": "Unseen surfaces and depth are single-image estimates, not measured product truth.",
+  "purpose": "Derived orientation proxy only; not photographic quality, identity evidence, or final artwork.",
+  "proxyMesh": {
+    "path": "design/qa/orientation-guided-rotation/linen-doll/proxy.glb",
+    "sha256": "5c83a4d5d8828f1492fc66b2eadf312ae32fb2dd01556da2dd2f93eb67125d28"
+  }
+}
