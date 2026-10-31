@@ -13,6 +13,7 @@ import {
 import { captureGeneration, releaseGeneration } from "@/lib/generation/accounting";
 import { actualImageMime, recoverGenerationOutput } from "@/lib/generation/recovery";
 import { buildImageRequest } from "@/lib/generation/request";
+import { createGenericOrientationGuide } from "@/lib/generation/orientation-guide";
 import {
   imageProviderConfig,
   requireImageProviderKey,
@@ -176,6 +177,7 @@ export async function executeGenerationJob(
       referenceImages: referenceBuffers.map(
         (buffer) => `data:image/webp;base64,${buffer.toString("base64")}`,
       ),
+      orientationGuide: await createGenericOrientationGuide(shot),
     });
     const providerKey = requireImageProviderKey();
 

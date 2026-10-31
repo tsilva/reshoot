@@ -42,7 +42,15 @@ describe("durable generation dispatch", () => {
     const body = JSON.parse(options.body);
     expect(body.model).toBe("openrouter/openai/gpt-image-2.5-sunburst");
     expect(body.prompt).toContain("RIGHT PROFILE view");
-    expect(body.input_references.map((item: { image_url: { url: string } }) => item.image_url.url)).toEqual(["primary", "supporting"].map((key) => `data:image/webp;base64,${Buffer.from(key).toString("base64")}`));
+    expect(body.input_references.slice(0, 2).map((item: { image_url: { url: string } }) => item.image_url.url)).toEqual(["primary", "supporting"].map((key) => `data:image/webp;base64,${Buffer.from(key).toString("base64")}`));
+    expect(body.input_references).toHaveLength(3);
+    expect(state.getObjectBuffer.mock.calls.map(([key]) => key)).toEqual(["primary", "supporting"]);
+    const guide = body.input_references[2].image_url.url;
+    expect(guide).toMatch(/^data:image\/png;base64,/);
+    expect(await sharp(Buffer.from(guide.split(",")[1], "base64")).metadata()).toMatchObject({ format: "png", width: 512, height: 512 });
+    expect(body.prompt).toContain("REFERENCE 2 is a supporting original");
+    expect(body.prompt).toContain("REFERENCE 3 is a GENERIC TEXTURELESS CUP");
+    expect(body.prompt).not.toContain("REFERENCE 3 is a supporting original");
     expect(state.updates).toContainEqual(expect.objectContaining({ providerRequestId: "request", usageCostMicros: 70000 }));
     expect(state.putObject).toHaveBeenCalledTimes(2);
     expect(state.capture).toHaveBeenCalledWith(expect.objectContaining({ usageCostMicros: 70000, providerRequestId: "request", output: expect.objectContaining({ ownerId: "owner", mimeType: "image/png", width: 16, height: 16 }) }));

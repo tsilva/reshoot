@@ -29,7 +29,17 @@ The exact [photographic prompts and original/guide roles](../design/qa/orientati
 
 The 2026-10-30 user review rejected the bag's visual rigidity despite these passing registration measurements. Independently generated views change apparent body dimensions, handle proportions and perspective. Registration tests must not be presented as geometric reconstruction or natural-rotation acceptance. Replacement artwork must pass a separate identity/geometry review; shared geometry and a fixed render rig, or a real turntable capture, provide a coherent basis for that review. See the follow-up in [design QA](../design-qa.md).
 
-## Capture textureless orientation hints
+## Temporary guides in user generation — 2026-10-31
+
+The durable application worker now applies the same separation of roles as the sample workflow. Frozen uploaded originals stay first, with the primary at reference 1 and supporting originals in their original order. `createGenericOrientationGuide` in `lib/generation/orientation-guide.ts` renders a neutral, textureless generic cup into a 512-pixel PNG and appends it as a separate orientation-only input to `buildImageRequest`. It receives only shot orientation, never a user's photograph or inferred geometry. The prompt forbids copying the cup body, handle, rim, material, proportions or framing; identity, construction and photographic detail come only from the selected originals. Final output remains a generated product photograph.
+
+This temporary generic scaffold is captured with an orthographic software renderer, a centered vertical pivot and fixed camera-relative diffuse light. It turns the cup to the exact requested azimuth and matches the requested camera elevation; standard presets remain level. Known legacy preset keys can supply a missing azimuth. A label-only legacy/custom shot without a known direction keeps the textual request without a fabricated front-view guide. Product-specific reconstruction, user-mesh uploads and per-product geometry remain deferred.
+
+The guide is created before the guarded transition that starts a provider request. It adds no reconstruction service or paid preprocessing call. Quote reference counts, frozen original inputs, credit holds, dispatch/recovery and the one-request replay protection keep their existing behavior. The auxiliary image is service overhead within that image request, whose actual usage is captured normally. Five originals plus the guide require six image inputs; the configured models' [Flare](https://openrouter.ai/api/v1/images/models/openai/gpt-image-2.5-flare/endpoints) and [Sunburst](https://openrouter.ai/api/v1/images/models/openai/gpt-image-2.5-sunburst/endpoints) endpoint catalogs reported a maximum of 16 on 2026-10-31.
+
+Tests exercise the actual generated raster's neutrality, opacity and changing pose, exact custom angles/elevations, input order and role labeling with five originals, mismatched-guide rejection, and the durable worker's outbound request/output/credit capture. These validate request construction and dispatch, not model adherence or natural rotation of newly generated customer outputs. The generic cue does not certify product geometry.
+
+## Capture sample-specific textureless orientation hints
 
 This local utility produces guide images only. It does not generate final product photographs, use application credits, or add Three.js to the website's runtime dependencies. Prepare a fresh tool directory, then open the printed loopback URL in Brave’s Agents profile:
 

@@ -57,6 +57,28 @@ describe("catalog photo requests", () => {
     expect(() => buildGenerationPrompt({ label: "Front" }, 5)).not.toThrow();
   });
 
+  it("keeps five originals ordered and labels a sixth image as direction-only guidance", () => {
+    const shot = { label: "Back", azimuth: 180, elevation: 0 };
+    const guide = { kind: "generic-cup-v1" as const, image: "generic-guide", azimuth: 180, elevation: 0 };
+    const originals = ["primary", "detail-1", "detail-2", "detail-3", "detail-4"];
+    const body = buildImageRequest({ model: "pinned-model", shot, referenceImages: originals, orientationGuide: guide });
+    expect(body.input_references.map((r) => r.image_url.url)).toEqual([...originals, guide.image]);
+    expect(body.prompt).toContain("REFERENCE 5 is a supporting original");
+    expect(body.prompt).toContain("REFERENCE 6 is a GENERIC TEXTURELESS CUP");
+    expect(body.prompt).toContain("NOT a reconstruction of it");
+    expect(body.prompt).toContain("Ignore the guide's cup shape, handle, rim");
+    expect(body.prompt).not.toContain("REFERENCE 6 is a supporting original");
+    expect(() => buildImageRequest({ model: "pinned-model", shot, referenceImages: [...originals, "extra-original"], orientationGuide: guide })).toThrow(RangeError);
+  });
+
+  it("rejects a guide with a different yaw or camera elevation before dispatch", () => {
+    const shot = { label: "Right", azimuth: 90, elevation: 0 };
+    for (const orientation of [{ azimuth: 0, elevation: 0 }, { azimuth: 90, elevation: 8 }]) {
+      expect(() => buildImageRequest({ model: "pinned-model", shot, referenceImages: ["primary"],
+        orientationGuide: { kind: "generic-cup-v1", image: "guide", ...orientation } })).toThrow(RangeError);
+    }
+  });
+
   it("allows only the two requested models for new attempts", () => {
     expect(selectImageModel("")).toBe(supportedImageModels[0]);
     for (const model of supportedImageModels) expect(selectImageModel(model)).toBe(model);
