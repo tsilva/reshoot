@@ -4,7 +4,7 @@ Preserve Reshoot’s product-photography workspace, generation/credit accounting
 
 ## Product rotation artwork
 
-Use [$reshoot_generate-rotation-images](.codex/skills/reshoot_generate-rotation-images/SKILL.md) when creating or replacing product-angle sample photographs. Generate final photographic artwork from the authoritative original; textureless mesh captures are orientation hints only. Do not publish direct proxy-mesh renders as final photos. Review source fidelity, dimensions, orientation, fixed-camera/light targets and desktop/phone playback separately from numeric center/base registration; a consistent hint mesh does not certify final AI geometry.
+Use [$reshoot_generate-rotation-images](.codex/skills/reshoot_generate-rotation-images/SKILL.md) when creating or replacing product-angle sample photographs. Generate final photographic artwork from the authoritative original; textureless mesh captures are orientation hints only. Do not publish direct proxy-mesh renders as final photos. Review source fidelity, dimensions, orientation, fixed-camera/light targets and desktop/phone playback separately from numeric center/base registration; a consistent hint mesh does not certify final AI geometry. After authorized deployment, verify all product rotations in the actual live carousel on desktop and phone against the exact READY production commit; HTTP/framing checks alone do not complete visual verification.
 
 ## Secrets
 

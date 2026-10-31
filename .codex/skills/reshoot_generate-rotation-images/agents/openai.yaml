@@ -1,4 +1,4 @@
 interface:
   display_name: "Reshoot Rotation Images"
-  short_description: "Generate centered product rotations from a source photo"
-  default_prompt: "Use $reshoot_generate-rotation-images to generate and verify product rotation photos from this source image."
+  short_description: "Original detail, textureless pose hints, live rotation checks"
+  default_prompt: "Use $reshoot_generate-rotation-images to generate product photos from the original's detail with textureless mesh orientation hints, then verify every rotation on the live site after authorized deployment."
