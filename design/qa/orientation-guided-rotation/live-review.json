@@ -1,0 +1,102 @@
+{
+  "reviewedCommit": "a7e6ed1b883ab11f57b1f5d20172d6564ccd306d",
+  "deploymentId": "dpl_6Ao1obJU4uEHVwVwL4hufJfV8uBv",
+  "url": "https://reshoot.tsilva.eu/",
+  "checkedAt": "2026-10-31T16:17:33.878Z",
+  "browser": "Brave Stable, browser extension",
+  "desktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 960
+    },
+    "loadedViews": 24,
+    "contactSheet": "live-desktop.png"
+  },
+  "phone": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "loadedViews": 24,
+    "horizontalOverflow": false,
+    "wholeProductVisible": true,
+    "contactSheet": "live-phone.png"
+  },
+  "autoplay": {
+    "phoneObservedIndices": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "desktopObservedIndices": [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      0,
+      1
+    ],
+    "allObservedFramesLoaded": true,
+    "adjacentIndicesAdvanceModulo24": true
+  },
+  "controls": {
+    "manualForwardFullCycle": true,
+    "reverseWrap": true,
+    "pauseHoldsFrame": true,
+    "originalPausesPlayback": true,
+    "originalDialogs": [
+      "Linen doll",
+      "Ceramic mug",
+      "Leather handbag"
+    ],
+    "desktopBagOriginalFits": true
+  },
+  "browserErrors": [],
+  "visualReview": {
+    "verdict": "accepted",
+    "subjects": [
+      "linen-doll",
+      "ceramic-mug",
+      "leather-handbag"
+    ],
+    "observations": "All eight views per subject reviewed in order on desktop and phone, including rear quarters. Product height and ground contact appear stable, profile foreshortening and handle/face occlusions follow the turn, and no obvious dimension jump or camera orbit was observed. Photographic detail is retained."
+  },
+  "limits": [
+    "Visual acceptance is not proof of identical 3D geometry in AI-generated photographs.",
+    "Unseen surfaces are inferred from one original.",
+    "No separate hover or emulated reduced-motion review in this run."
+  ],
+  "browserConnectionDiagnosis": {
+    "braveRunning": true,
+    "extensionInstalledAndEnabled": true,
+    "nativeHostManifestValid": true,
+    "discovery": "Brave was initially omitted, then registered with a fresh browser binding during diagnostics. Tab control subsequently worked.",
+    "causeOfEarlierOmission": "unconfirmed",
+    "settingsChanged": false
+  }
+}
