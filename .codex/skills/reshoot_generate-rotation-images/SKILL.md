@@ -1,6 +1,6 @@
 ---
 name: reshoot_generate-rotation-images
-description: Generate and verify photographic Reshoot product rotations from an original photo, using textureless mesh views only as orientation guides.
+description: Generate photographic Reshoot rotations from original detail and textureless orientation hints, then verify the actual rotations on the live site after authorized deployment.
 ---
 
 # Generate Reshoot rotation photographs
@@ -11,7 +11,7 @@ This follows the user's 2026-10-31 correction: direct mesh renders were rejected
 
 Resolve this checkout from the skill location and follow its current `AGENTS.md`. Read `lib/generation/request.ts`, `lib/client/sample-products.ts`, `docs/image-generation-evaluation.md`, and the current manifests under `design/qa/original-rotation/`. Keep previous selected assets until replacement photographs pass review.
 
-## Source and orientation guides
+## 1. Prepare the original and orientation guides
 
 Inspect the original with `view_image` and preserve its bytes/SHA-256. Establish the front and source-specific identity details, including relative component sizes and positions. Supporting originals require the user's selection. Never chain generated angles as new identity references.
 
@@ -21,7 +21,7 @@ Create one approximate source-derived proxy if a suitable mesh is unavailable. K
 
 Capture each requested proxy angle with a uniform neutral-gray material and simple diffuse shading, or a clear wireframe if that better communicates orientation. Remove textures, colored materials, decorative backgrounds and distracting cast shadows. Keep one camera, elevation, scale and ground pivot; rotate only the proxy about its center vertical axis. Save the guide images, yaw angles and rig. The guide capture utility and current artifacts are documented in the evaluation reference.
 
-## Generate photographs from the original
+## 2. Generate photographs from the original
 
 Pass exactly the intended inputs explicitly:
 
@@ -38,7 +38,7 @@ Keep one square white studio, neutral camera-left key light, gentle fill and sof
 
 Test a three-quarter view and a discriminating profile before expanding the batch. Check original material detail and actual guide orientation. A retained source pose, plastic/sculpted proxy appearance, changed proportions, invented components or wrong handle/face occlusion is a failed candidate. Refine the specific failure using the original plus the same appropriate guide; do not repair it by feeding a rejected photograph into later views. Use the native image tool for raster edits and never invoke the application's paid generation or credit accounting for these illustrative assets.
 
-## Review, registration and delivery
+## 3. Review photographs and register the sequence
 
 Inspect every photograph against the original and the full ordered sequence, including adjacent rear views and the 315-to-0 wrap. Compare component count, pose, body height/width/depth cues, head/handle size, attachment locations, seams, texture scale, perspective, light direction and photographic quality. Foreshortening is expected; changing physical construction or proportions is not. Guide-rig consistency proves the hints are consistent, not that the generated photographs obey them.
 
@@ -46,4 +46,14 @@ Measure body-axis and floor registration separately from geometry/photographic r
 
 For accepted replacements, update the existing generation/framing manifests with exact prompts, original and guide roles/paths/hashes, final output hashes, selected generation artifacts and rejected attempts. Preserve historical evidence. Verify source/guide/output provenance and measured framing; report those checks separately from visual coherence. Do not use direct-render mesh/camera checks to certify AI-generated final photographs.
 
-Run the relevant framing check, lint, type check, tests and build. Review the actual carousel in Brave's Agents profile on desktop and phone: confirm each expected loaded image before capture, let scrolling settle, keep the whole product visible below sticky headers, and inspect playback, product changes and wraps. Update authoritative docs and `design-qa.md` with observations and limits. Publish only within the user's deployment authorization, then repeat rotation review on the exact READY commit at the live domain. Report accepted views and remaining failures honestly.
+Run the relevant framing check, lint, type check, tests and build. Review the local carousel on desktop and phone before delivery when available. Update authoritative docs and `design-qa.md` with observations and limits.
+
+## 4. Deploy within scope and verify the live rotations
+
+A generation request alone does not authorize publication. When deployment is authorized, follow the repository's commit/push and production-delivery procedure. Require successful checks and verify that the intended live domain is assigned to a READY production deployment for the exact published commit.
+
+Use Brave's Agents profile to inspect the actual live carousel at desktop and phone sizes. For every product, visit all eight views in order, confirm the expected image is fully loaded before each capture, let scrolling settle, and keep the whole product visible below sticky headers. Compare each sequence with its original: material detail, body dimensions, fixed camera/perspective, center vertical axis, floor contact, component attachments, near/far occlusions, adjacent rear views and the last-to-first transition. A dimension jump, camera orbit or changed construction is a failed candidate even when centering metrics pass.
+
+Check autoplay through every product, pause/play, forward and reverse navigation, product boundaries and wraps, original-photo dialogs and browser errors. Retain labeled desktop/phone captures and a review record identifying the live URL, exact commit/deployment, loaded views, observed behavior, photographic/coherence verdict and remaining limits. Use `design/qa/orientation-guided-rotation/live-review.json` and `design-qa.md` as the existing evidence format; keep historical verdicts tied to their reviewed assets and commit.
+
+HTTP image hashes, framing values and deployment READY status verify delivery, not natural rotation or working playback. Do not report the live visual review as passed without inspecting the carousel. If Brave discovery or tab control fails, inspect the available-browser inventory and follow the bundled browser troubleshooting/Brave extension and native-host diagnostics before asking the user to reconnect; an enabled extension can coexist with missing browser discovery. Stay with Brave, preserve browser settings and report the unverified portion honestly. A later explicit deployment instruction may authorize publication while that review remains pending; it does not count as a visual pass.
