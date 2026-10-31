@@ -29,7 +29,21 @@ overrides:
   'brace-expansion@>=4': 5.0.12
   source-map-js: 1.2.2
   'zod@>=4 <4.6.6': 4.6.7
+  minimatch: 11.0.1
+  glob: 14.0.2
+  '@isaacs/nonrecursive-glob-match': 1.0.1
+  path-scurry: 3.0.0
 
 # Approved security-patch exception; all other packages retain the seven-day hold.
 minimumReleaseAgeExclude:
   - source-map-js@1.2.2
+  # Approved on 2026-10-31 for GHSA-g3hv-75wg-m249 / GHSA-3g3m-2fjr-6pw4.
+  # pnpm 10.17 supports name-only exclusions; exact overrides above bind them
+  # to the four approved versions, rather than permitting future fresh releases.
+  - minimatch
+  - glob
+  - '@isaacs/nonrecursive-glob-match'
+  - path-scurry
+
+patchedDependencies:
+  minimatch@11.0.1: patches/minimatch@11.0.1.patch
