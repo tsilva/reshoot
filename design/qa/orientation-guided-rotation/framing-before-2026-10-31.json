@@ -1,0 +1,605 @@
+{
+  "method": "Sample-specific color silhouette bounds; row/column support >= 0.3%. Doll/mug: chroma > 15 and minimum channel < 240. Bag: R>70, G>35, R-G>25, R-B>45, excluding its brown floor shadow. Median full-silhouette row midpoint in product-specific body bands anchors x = 50%: doll torso 40-55%, mug base below handle 94-98%, handbag body below handles 55-85% of silhouette height. Uniform CSS scale and translation only; consistent displayed height and floor contact per product, with at least 10% product margins.",
+  "frames": [
+    {
+      "product": "linen-doll",
+      "id": "front",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 291,
+        "right": 926,
+        "top": 37,
+        "bottom": 1202
+      },
+      "bodyAxisX": 606.5,
+      "output": "public/assets/angle-guides/front.jpg",
+      "offset": {
+        "x": 130.846558,
+        "y": 120.211777,
+        "scale": 0.818060086
+      },
+      "displayBounds": {
+        "left": 0.29418025759649125,
+        "right": 0.7084291847177033,
+        "top": 0.12000000014513557,
+        "bottom": 0.8800000002966508
+      }
+    },
+    {
+      "product": "ceramic-mug",
+      "id": "front",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 150,
+        "right": 1184,
+        "top": 201,
+        "bottom": 1092
+      },
+      "bodyAxisX": 511.5,
+      "output": "public/assets/samples/ceramic-mug/front.jpg",
+      "offset": {
+        "x": 262.210536,
+        "y": 165.931792,
+        "scale": 0.713175882
+      },
+      "displayBounds": {
+        "left": 0.29440743086124405,
+        "right": 0.8824647370717704,
+        "top": 0.2466348837974482,
+        "bottom": 0.7533651157448166
+      }
+    },
+    {
+      "product": "leather-handbag",
+      "id": "front",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 97,
+        "right": 1150,
+        "top": 32,
+        "bottom": 1142
+      },
+      "bodyAxisX": 623,
+      "output": "public/assets/samples/leather-handbag/front.jpg",
+      "offset": {
+        "x": 134.324865,
+        "y": 162.794054,
+        "scale": 0.790810811
+      },
+      "displayBounds": {
+        "left": 0.16828828841068577,
+        "right": 0.8323423426236043,
+        "top": 0.14999999996172247,
+        "bottom": 0.8500000001291865
+      }
+    },
+    {
+      "product": "linen-doll",
+      "id": "back-right-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 338,
+        "right": 876,
+        "top": 51,
+        "bottom": 1175
+      },
+      "bodyAxisX": 617,
+      "output": "public/assets/angle-guides/back-right-three-quarter.jpg",
+      "offset": {
+        "x": 103.84548,
+        "y": 107.237082,
+        "scale": 0.847900356
+      },
+      "displayBounds": {
+        "left": 0.31135231286124404,
+        "right": 0.675124554909091,
+        "top": 0.12000000012440193,
+        "bottom": 0.8800000002392344
+      }
+    },
+    {
+      "product": "linen-doll",
+      "id": "back-left-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 364,
+        "right": 876,
+        "top": 47,
+        "bottom": 1182
+      },
+      "bodyAxisX": 619,
+      "output": "public/assets/angle-guides/back-left-three-quarter.jpg",
+      "offset": {
+        "x": 107.236335,
+        "y": 111.014907,
+        "scale": 0.839682819
+      },
+      "displayBounds": {
+        "left": 0.32925110136842106,
+        "right": 0.6720881056172249,
+        "top": 0.11999999959569377,
+        "bottom": 0.8799999992488038
+      }
+    },
+    {
+      "product": "linen-doll",
+      "id": "back",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 312,
+        "right": 928,
+        "top": 62,
+        "bottom": 1180
+      },
+      "bodyAxisX": 620.5,
+      "output": "public/assets/angle-guides/back.jpg",
+      "offset": {
+        "x": 98.054275,
+        "y": 97.62805,
+        "scale": 0.852450805
+      },
+      "displayBounds": {
+        "left": 0.2902862250079745,
+        "right": 0.7090339888676236,
+        "top": 0.11999999992822967,
+        "bottom": 0.8799999999202551
+      }
+    },
+    {
+      "product": "linen-doll",
+      "id": "front-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 300,
+        "right": 864,
+        "top": 52,
+        "bottom": 1182
+      },
+      "bodyAxisX": 623,
+      "output": "public/assets/angle-guides/front-three-quarter.jpg",
+      "offset": {
+        "x": 101.562903,
+        "y": 106.623292,
+        "scale": 0.84339823
+      },
+      "displayBounds": {
+        "left": 0.282761062200957,
+        "right": 0.6620884957894737,
+        "top": 0.11999999996810208,
+        "bottom": 0.8799999998883573
+      }
+    },
+    {
+      "product": "linen-doll",
+      "id": "left-profile",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 374,
+        "right": 863,
+        "top": 75,
+        "bottom": 1174
+      },
+      "bodyAxisX": 607.5,
+      "output": "public/assets/angle-guides/left-profile.jpg",
+      "offset": {
+        "x": 100.183076,
+        "y": 85.440874,
+        "scale": 0.867188353
+      },
+      "displayBounds": {
+        "left": 0.33852593303189793,
+        "right": 0.6766878984362041,
+        "top": 0.12000000037878787,
+        "bottom": 0.880000000336523
+      }
+    },
+    {
+      "product": "linen-doll",
+      "id": "right-profile",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 418,
+        "right": 831,
+        "top": 47,
+        "bottom": 1186
+      },
+      "bodyAxisX": 639.5,
+      "output": "public/assets/angle-guides/right-profile.jpg",
+      "offset": {
+        "x": 91.908622,
+        "y": 111.153503,
+        "scale": 0.836733977
+      },
+      "displayBounds": {
+        "left": 0.35220368770813393,
+        "right": 0.6277787534984052,
+        "top": 0.11999999993540669,
+        "bottom": 0.8799999997783093
+      }
+    },
+    {
+      "product": "ceramic-mug",
+      "id": "back",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 90,
+        "right": 1052,
+        "top": 200,
+        "bottom": 1044
+      },
+      "bodyAxisX": 719.5,
+      "output": "public/assets/samples/ceramic-mug/back.jpg",
+      "offset": {
+        "x": 85.295175,
+        "y": 158.702014,
+        "scale": 0.752890653
+      },
+      "displayBounds": {
+        "left": 0.12205369519138756,
+        "right": 0.6996300972535885,
+        "top": 0.24663488405103667,
+        "bottom": 0.753365116213716
+      }
+    },
+    {
+      "product": "ceramic-mug",
+      "id": "front-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 217,
+        "right": 1084,
+        "top": 177,
+        "bottom": 1070
+      },
+      "bodyAxisX": 561,
+      "output": "public/assets/samples/ceramic-mug/front-three-quarter.jpg",
+      "offset": {
+        "x": 227.804392,
+        "y": 183.330728,
+        "scale": 0.711578624
+      },
+      "displayBounds": {
+        "left": 0.30479820845933014,
+        "right": 0.7967748169186604,
+        "top": 0.24663488392982455,
+        "bottom": 0.7533651161722488
+      }
+    },
+    {
+      "product": "ceramic-mug",
+      "id": "left-profile",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 253,
+        "right": 991,
+        "top": 163,
+        "bottom": 1096
+      },
+      "bodyAxisX": 623.5,
+      "output": "public/assets/samples/ceramic-mug/left-profile.jpg",
+      "offset": {
+        "x": 202.351919,
+        "y": 198.26549,
+        "scale": 0.681071502
+      },
+      "displayBounds": {
+        "left": 0.2987743293508772,
+        "right": 0.6995963137814992,
+        "top": 0.24663488423125995,
+        "bottom": 0.7533651165805422
+      }
+    },
+    {
+      "product": "ceramic-mug",
+      "id": "right-profile",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 268,
+        "right": 980,
+        "top": 158,
+        "bottom": 1094
+      },
+      "bodyAxisX": 626,
+      "output": "public/assets/samples/ceramic-mug/right-profile.jpg",
+      "offset": {
+        "x": 202.015749,
+        "y": 202.015749,
+        "scale": 0.67888858
+      },
+      "displayBounds": {
+        "left": 0.306186513907496,
+        "right": 0.6916479724082935,
+        "top": 0.2466348840829346,
+        "bottom": 0.7533651160446571
+      }
+    },
+    {
+      "product": "ceramic-mug",
+      "id": "front-left-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 191,
+        "right": 1096,
+        "top": 154,
+        "bottom": 1084
+      },
+      "bodyAxisX": 550,
+      "output": "public/assets/samples/ceramic-mug/front-left-three-quarter.jpg",
+      "offset": {
+        "x": 251.202321,
+        "y": 204.056794,
+        "scale": 0.683268507
+      },
+      "displayBounds": {
+        "left": 0.3043912327248804,
+        "right": 0.7974996847464114,
+        "top": 0.2466348836347687,
+        "bottom": 0.7533651160988836
+      }
+    },
+    {
+      "product": "leather-handbag",
+      "id": "right-profile",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 388,
+        "right": 851,
+        "top": 48,
+        "bottom": 1166
+      },
+      "bodyAxisX": 630.5,
+      "output": "public/assets/samples/leather-handbag/right-profile.jpg",
+      "offset": {
+        "x": 131.961628,
+        "y": 150.412702,
+        "scale": 0.785152057
+      },
+      "displayBounds": {
+        "left": 0.3481663685135566,
+        "right": 0.6380590338971291,
+        "top": 0.15000000058692184,
+        "bottom": 0.850000000368421
+      }
+    },
+    {
+      "product": "linen-doll",
+      "id": "front-left-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 328,
+        "right": 910,
+        "top": 33,
+        "bottom": 1194
+      },
+      "bodyAxisX": 588,
+      "output": "public/assets/angle-guides/front-left-three-quarter.jpg",
+      "offset": {
+        "x": 144.323411,
+        "y": 123.391008,
+        "scale": 0.820878553
+      },
+      "displayBounds": {
+        "left": 0.3298018950430622,
+        "right": 0.7107838072009569,
+        "top": 0.12000000019856459,
+        "bottom": 0.8800000002248803
+      }
+    },
+    {
+      "product": "leather-handbag",
+      "id": "front-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 139,
+        "right": 1115,
+        "top": 41,
+        "bottom": 1149
+      },
+      "bodyAxisX": 630,
+      "output": "public/assets/samples/leather-handbag/front-three-quarter.jpg",
+      "offset": {
+        "x": 127.889892,
+        "y": 155.618231,
+        "scale": 0.792238267
+      },
+      "displayBounds": {
+        "left": 0.18980144426874002,
+        "right": 0.8064079423484849,
+        "top": 0.14999999995773525,
+        "bottom": 0.8499999998269536
+      }
+    },
+    {
+      "product": "leather-handbag",
+      "id": "back",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 108,
+        "right": 1130,
+        "top": 52,
+        "bottom": 1132
+      },
+      "bodyAxisX": 620,
+      "output": "public/assets/samples/leather-handbag/back.jpg",
+      "offset": {
+        "x": 123.077778,
+        "y": 145.835555,
+        "scale": 0.812777778
+      },
+      "displayBounds": {
+        "left": 0.1681481483444976,
+        "right": 0.8305555559330143,
+        "top": 0.1499999995661882,
+        "bottom": 0.8499999997575757
+      }
+    },
+    {
+      "product": "ceramic-mug",
+      "id": "back-right-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 146,
+        "right": 1028,
+        "top": 149,
+        "bottom": 1103
+      },
+      "bodyAxisX": 679,
+      "output": "public/assets/samples/ceramic-mug/back-right-three-quarter.jpg",
+      "offset": {
+        "x": 174.732113,
+        "y": 210.034319,
+        "scale": 0.666079362
+      },
+      "displayBounds": {
+        "left": 0.21688971280063796,
+        "right": 0.685376154015949,
+        "top": 0.24663488352312601,
+        "bottom": 0.7533651158580542
+      }
+    },
+    {
+      "product": "ceramic-mug",
+      "id": "back-left-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 128,
+        "right": 1072,
+        "top": 159,
+        "bottom": 1085
+      },
+      "bodyAxisX": 715.5,
+      "output": "public/assets/samples/ceramic-mug/back-left-three-quarter.jpg",
+      "offset": {
+        "x": 136.009596,
+        "y": 200.171166,
+        "scale": 0.686219991
+      },
+      "displayBounds": {
+        "left": 0.17850538664114832,
+        "right": 0.6950856669473684,
+        "top": 0.2466348840263158,
+        "bottom": 0.7533651166148325
+      }
+    },
+    {
+      "product": "leather-handbag",
+      "id": "back-right-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 130,
+        "right": 1098,
+        "top": 40,
+        "bottom": 1156
+      },
+      "bodyAxisX": 606.5,
+      "output": "public/assets/samples/leather-handbag/back-right-three-quarter.jpg",
+      "offset": {
+        "x": 149.951882,
+        "y": 156.637634,
+        "scale": 0.78655914
+      },
+      "displayBounds": {
+        "left": 0.2011200719298246,
+        "right": 0.808288530877193,
+        "top": 0.14999999968102073,
+        "bottom": 0.8499999998724083
+      }
+    },
+    {
+      "product": "leather-handbag",
+      "id": "back-left-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 130,
+        "right": 1134,
+        "top": 44,
+        "bottom": 1161
+      },
+      "bodyAxisX": 638,
+      "output": "public/assets/samples/leather-handbag/back-left-three-quarter.jpg",
+      "offset": {
+        "x": 125.62453,
+        "y": 153.522381,
+        "scale": 0.785854969
+      },
+      "displayBounds": {
+        "left": 0.18164726951355661,
+        "right": 0.8108325875964911,
+        "top": 0.14999999970972888,
+        "bottom": 0.850000000007177
+      }
+    },
+    {
+      "product": "leather-handbag",
+      "id": "front-left-three-quarter",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 128,
+        "right": 1104,
+        "top": 45,
+        "bottom": 1162
+      },
+      "bodyAxisX": 608.5,
+      "output": "public/assets/samples/leather-handbag/front-left-three-quarter.jpg",
+      "offset": {
+        "x": 148.807251,
+        "y": 152.736526,
+        "scale": 0.785854969
+      },
+      "displayBounds": {
+        "left": 0.1988809306475279,
+        "right": 0.8105192478277512,
+        "top": 0.14999999968500796,
+        "bottom": 0.849999999982456
+      }
+    },
+    {
+      "product": "leather-handbag",
+      "id": "left-profile",
+      "width": 1254,
+      "height": 1254,
+      "bounds": {
+        "left": 413,
+        "right": 841,
+        "top": 52,
+        "bottom": 1159
+      },
+      "bodyAxisX": 627,
+      "output": "public/assets/samples/leather-handbag/left-profile.jpg",
+      "offset": {
+        "x": 129.817886,
+        "y": 146.866395,
+        "scale": 0.79295393
+      },
+      "displayBounds": {
+        "left": 0.36467931346889954,
+        "right": 0.6353206867065391,
+        "top": 0.1499999994896332,
+        "bottom": 0.8499999998963318
+      }
+    }
+  ]
+}

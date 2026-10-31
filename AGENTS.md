@@ -4,7 +4,7 @@ Preserve Reshoot’s product-photography workspace, generation/credit accounting
 
 ## Product rotation artwork
 
-Use [$reshoot_generate-rotation-images](.codex/skills/reshoot_generate-rotation-images/SKILL.md) when creating or replacing product-angle sample photographs from an original image. A rigid turntable needs consistent shared geometry or an actual photographic sequence, source-identity review, a fixed camera/light rig, and desktop/phone playback verification. Center/base registration alone does not establish consistent dimensions or a natural rotation.
+Use [$reshoot_generate-rotation-images](.codex/skills/reshoot_generate-rotation-images/SKILL.md) when creating or replacing product-angle sample photographs. Generate final photographic artwork from the authoritative original; textureless mesh captures are orientation hints only. Do not publish direct proxy-mesh renders as final photos. Review source fidelity, dimensions, orientation, fixed-camera/light targets and desktop/phone playback separately from numeric center/base registration; a consistent hint mesh does not certify final AI geometry.
 
 ## Secrets
 

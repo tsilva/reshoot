@@ -1,0 +1,44 @@
+{
+  "method": "Remove disconnected components under 200 vertices; one shared rigid alignment and body-axis translation before all views. No angle-specific geometry or scaling.",
+  "sourceSha256": "dc5babd17a60ed7f7b59cc9d36152df1d277a4c8cf8d8bca8d1db27bb43315ac",
+  "cleanSha256": "5c83a4d5d8828f1492fc66b2eadf312ae32fb2dd01556da2dd2f93eb67125d28",
+  "inputVertices": 144299,
+  "retainedVertices": 144079,
+  "removedComponents": 16,
+  "alignment": [
+    [
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "initialUpAxis": null,
+  "centerXZ": [
+    0.011789883486926556,
+    -0.15629348903894424
+  ],
+  "height": 1.987024962902069,
+  "radius": 0.6022504676264742,
+  "bounds": [
+    [
+      -0.600911165587604,
+      0.0,
+      -0.34198450297117233
+    ],
+    [
+      0.5632511721923947,
+      1.987024962902069,
+      0.37903694063425064
+    ]
+  ]
+}

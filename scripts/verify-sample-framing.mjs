@@ -9,6 +9,7 @@ const offsets = await readJson("../lib/client/sample-framing.json");
 const viewOrder = ["front", "front-three-quarter", "right-profile", "back-right-three-quarter", "back", "back-left-three-quarter", "left-profile", "front-left-three-quarter"];
 const seen = new Set();
 const baselines = new Map();
+const checkedGuides = new Set();
 
 assert.equal(manifest.assets.length, 24, "Expected eight studio views for each of three products");
 
@@ -20,6 +21,34 @@ for (const asset of manifest.assets) {
   assert.equal(createHash("sha256").update(bytes).digest("hex"), asset.outputSha256, `Sample provenance changed: ${key}`);
   const source = await readFile(new URL(`../${asset.input}`, import.meta.url));
   assert.equal(createHash("sha256").update(source).digest("hex"), asset.inputSha256, `Original changed: ${key}`);
+  if (asset.orientationGuide) {
+    assert.equal(asset.generation, "native-imagegen-original-plus-textureless-orientation-guide");
+    assert.deepEqual(asset.referenceRoles, ["authoritative-original", "orientation-only"]);
+    const guide = asset.orientationGuide;
+    assert.equal(guide.role, "orientation-only");
+    assert.equal(guide.degrees, asset.degrees);
+    const guideBytes = await readFile(new URL(`../${guide.path}`, import.meta.url));
+    assert.equal(createHash("sha256").update(guideBytes).digest("hex"), guide.sha256, `Orientation hint changed: ${key}`);
+    assert.notEqual(guide.sha256, asset.conversion.sourcePngSha256, "A guide capture cannot be a final photograph");
+    if (!checkedGuides.has(guide.rig)) {
+      const rig = await readJson(`../${guide.rig}`);
+      assert.equal(rig.purpose, "orientation-only");
+      assert.equal(rig.frames.length, 8);
+      const captureSource = await readFile(new URL(`../${rig.capture.renderer}`, import.meta.url));
+      assert.equal(createHash("sha256").update(captureSource).digest("hex"), rig.capture.rendererSha256);
+      for (const [path, hash] of Object.entries(rig.capture.assets)) {
+        assert.equal(createHash("sha256").update(await readFile(new URL(`../${path}`, import.meta.url))).digest("hex"), hash);
+      }
+      for (const [index, frame] of rig.frames.entries()) {
+        assert.equal(frame.degrees, index * 45);
+        assert.deepEqual(frame.cameraMatrix, rig.frames[0].cameraMatrix, "Guide camera moved");
+        assert.deepEqual(frame.projectionMatrix, rig.frames[0].projectionMatrix, "Guide projection changed");
+        const hint = await readFile(new URL(`../design/qa/orientation-guided-rotation/${asset.product}/guides/${frame.id}.png`, import.meta.url));
+        assert.equal(createHash("sha256").update(hint).digest("hex"), frame.outputPngSha256);
+      }
+      checkedGuides.add(guide.rig);
+    }
+  }
   const info = await measureSample(bytes, asset.product);
   assert.equal(info.width, info.height, `Sample must be square: ${key}`);
   const framing = offsets[asset.product]?.[viewOrder.indexOf(asset.id)];
@@ -42,4 +71,4 @@ for (const product of ["linen-doll", "ceramic-mug", "leather-handbag"]) {
   for (const view of viewOrder) assert(seen.has(`${product}:${view}`), `Missing ${product}:${view}`);
 }
 
-console.log("Sample framing: all 24 studio views retain 10% margins, a centered body axis and a fixed floor contact.");
+console.log("Sample framing: 24 photographs retain 10% margins, centered measured body axes, fixed per-product floor contact and source/output provenance. All original-plus-orientation-guide roles and hint rigs verified. These checks do not certify photographic geometry or visual quality.");
