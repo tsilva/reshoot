@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdir, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -83,6 +83,8 @@ describe("dependency security boundaries", () => {
       "esbuild": { "0": "0.25.12" },
       "fast-uri": { "3": "3.1.8" },
       "js-yaml": { "4": "4.3.2" },
+      "glob": { "14": "14.0.2" },
+      "minimatch": { "11": "11.0.1" },
       "nanoid": { "3": "3.3.18", "5": "5.1.16" },
       "next": { "16": "16.4.1" },
       "undici": { "7": "7.29.1" },
@@ -93,6 +95,79 @@ describe("dependency security boundaries", () => {
     };
     for (const [name, floors] of Object.entries(patchedBranches)) {
       assertPatchedVersions(name, lockedVersions(name), floors);
+    }
+  });
+
+  it("preserves legacy callable and modern named minimatch APIs without unbounded pattern amplification", () => {
+    const require = createRequire(import.meta.url);
+    const eslintRequire = createRequire(require.resolve("eslint/package.json"));
+    type Options = { dot?: boolean; matchBase?: boolean; nocase?: boolean; optimizationLevel?: number; braceExpandMax?: number };
+    type Matcher = ((file: string, pattern: string, options?: Options) => boolean) & {
+      minimatch: Matcher;
+      defaults(options: Options): Matcher;
+      Minimatch: new (pattern: string, options?: Options) => { match(file: string): boolean; globParts: string[][] };
+    };
+    const matcher = eslintRequire("minimatch") as Matcher;
+    expect(typeof matcher).toBe("function");
+    expect(matcher.minimatch).toBe(matcher);
+    const cases: [string, string, Options, boolean][] = [
+      ["components/Card.tsx", "**/*.tsx", {}, true],
+      [".hidden/file.ts", "**/*.ts", { dot: true }, true],
+      ["a/b.ts", "*.ts", { matchBase: true }, true],
+      ["a.test.ts", "!*.test.ts", {}, false],
+      ["a.ts", "!*.test.ts", {}, true],
+      ["src/a.ts", "{src,lib}/**/*.ts", {}, true],
+      ["src/Card.TSX", "**/*.tsx", { nocase: true }, true],
+      ["a.ts", "#comment", {}, false],
+      ["a.ts", "+(a|b).ts", {}, true],
+    ];
+    for (const [file, pattern, options, expected] of cases) {
+      expect(matcher(file, pattern, options)).toBe(expected);
+      expect(new matcher.Minimatch(pattern, options).match(file)).toBe(expected);
+    }
+    expect(matcher.defaults({ dot: true })(".hidden/a.ts", "**/*.ts")).toBe(true);
+    const expanded = new matcher.Minimatch(`a/${"**/../b/c/".repeat(18)}end`, {
+      optimizationLevel: 2,
+      braceExpandMax: 16,
+    });
+    expect(expanded.globParts.length).toBeLessThanOrEqual(16);
+  });
+
+  it("stops glob traversal when aborted before or during its first directory read", async () => {
+    const require = createRequire(import.meta.url);
+    const sentryRequire = createRequire(require.resolve("@sentry/nextjs"));
+    const bundlerRequire = createRequire(sentryRequire.resolve("@sentry/bundler-plugins/package.json"));
+    const { glob } = bundlerRequire("glob") as {
+      glob(pattern: string, options: Record<string, unknown>): Promise<string[]>;
+    };
+    const directory = mkdtempSync(join(tmpdir(), "reshoot-glob-abort-"));
+    try {
+      mkdirSync(join(directory, "sub"));
+      writeFileSync(join(directory, "a.txt"), "a");
+      writeFileSync(join(directory, "sub", "b.txt"), "b");
+      expect((await glob("**/*.txt", { cwd: directory })).sort()).toEqual(["a.txt", "sub/b.txt"]);
+
+      for (const alreadyAborted of [false, true]) {
+        const controller = new AbortController();
+        const reason = new Error("fixture traversal canceled");
+        let reads = 0;
+        if (alreadyAborted) controller.abort(reason);
+        const fs = {
+          readdir(path: string, _options: unknown, callback: (error: NodeJS.ErrnoException | null, entries: unknown[]) => void) {
+            reads++;
+            readdir(path, { withFileTypes: true }, (error, entries) => {
+              controller.abort(reason);
+              callback(error, entries);
+            });
+          },
+        };
+        await expect(glob("**/*.txt", { cwd: directory, signal: controller.signal, fs })).rejects.toBe(reason);
+        await new Promise<void>((resolve) => setImmediate(resolve));
+        await new Promise<void>((resolve) => setImmediate(resolve));
+        expect(reads).toBe(alreadyAborted ? 0 : 1);
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
     }
   });
 

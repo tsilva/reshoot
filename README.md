@@ -76,6 +76,8 @@ Sentry 11 uses the `@sentry/nextjs/config` build entry point and enables logs by
 Dependency regression tests accept newer patched versions within reviewed release branches, reject vulnerable downgrades and unknown branches, and audit the complete locked graph.
 The CI baseline includes Next.js 16.4.2, Vitest 4.1.12, Vite 8.2.4 and Zod 4.6.7; the seven-day package-age rule and vulnerability audit remain enabled. Failed CI holds Production delivery before credential sync or deployment.
 
+The approved October 31, 2026 security exception pins `minimatch` 11.0.1, `glob` 14.0.2, `@isaacs/nonrecursive-glob-match` 1.0.1 and `path-scurry` 3.0.0. pnpm 10.17 needs name-based age exclusions, so exact overrides restrict those exclusions to the approved releases. A small CommonJS export patch routes legacy callable `minimatch` imports and modern named imports to the same patched matcher. Regression checks cover ordinary matching, bounded globstar preprocessing and cancellation before/during directory traversal; the complete dependency audit remains enforced.
+
 - Neon stores users, projects, immutable generation history, pricing, and credit accounting.
 - Active generation batches use Neon Realtime instead of the previous two-second status poll. The private subscription carries only a batch revision; changes coalesce into a status read, and outputs are limited to that batch. Connections pause in hidden tabs and close when the batch finishes. Reconnect resumes a saved batch without creating another credit hold.
 - A private Cloudflare R2 bucket stores originals, normalized references, previews, and generated outputs. Browser uploads use short-lived signed URLs.
