@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import {
-  ArrowRight, Aperture, Coins, Plus, SpinnerGap, X,
+  ArrowRight, Aperture, Coins, Plus, SpinnerGap, User, X,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProjectsClient } from "@/components/projects/ProjectsClient";
@@ -137,18 +137,17 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
     url.searchParams.delete("project");
     url.hash = "shoots";
     window.history.replaceState(null, "", url);
-    document.getElementById("shoots")?.scrollIntoView({ behavior: "smooth" });
+    requestAnimationFrame(() => document.getElementById("shoots")?.scrollIntoView({ behavior: "smooth" }));
   }
 
   return (
-    <div className="one-page-studio">
+    <div className={`one-page-studio${activeProject ? " has-studio" : ""}`}>
       <header className="home-header">
         <div className="home-header-inner">
-          <a href="#" className="home-brand" aria-label="Reshoot home"><Aperture size={24} weight="light" aria-hidden="true" />reshoot.</a>
-          <button className="home-wallet-button" onClick={() => void openWallet()} disabled={busy !== null}>
-            {busy === "wallet" ? <SpinnerGap className="spin" size={17} /> : <Coins size={17} />}
-            <span>{credits ? `${credits.availableCredits.toLocaleString()} test credits` : "Your wallet"}</span>
-            <Plus size={14} />
+          <a href="#" className="home-brand" aria-label="Reshoot home" onClick={activeProject ? (event) => { event.preventDefault(); closeProject(); } : undefined}>{!activeProject ? <Aperture size={24} weight="light" aria-hidden="true" /> : null}reshoot.</a>
+          <button className={`home-wallet-button${activeProject ? " is-quiet" : ""}`} aria-label={activeProject ? `Open wallet, ${credits?.availableCredits.toLocaleString() ?? 0} test credits` : undefined} onClick={() => void openWallet()} disabled={busy !== null}>
+            {busy === "wallet" ? <SpinnerGap className="spin" size={17} /> : activeProject ? <User size={26} weight="light" /> : <Coins size={17} />}
+            {!activeProject ? <><span>{credits ? `${credits.availableCredits.toLocaleString()} test credits` : "Your wallet"}</span><Plus size={14} /></> : null}
           </button>
         </div>
       </header>
@@ -156,15 +155,14 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
       <main className="home-content">
         {error ? <div className="home-error" role="alert"><span>{error}</span><button className="icon-button" onClick={() => setError(null)} aria-label="Dismiss error"><X size={18} /></button></div> : null}
 
-        <div className={`home-hero${activeProject ? " has-project" : ""}`}>
+        {!activeProject ? <div className="home-hero">
           <section className="home-intro" aria-labelledby="home-title">
-            <p className="home-eyebrow home-product-category">AI PRODUCT PHOTOGRAPHY</p>
             <h1 id="home-title">Your photos.<br />{" "}<em>Professional 360° views.</em></h1>
             <div className="home-intro-copy">
-              <p>Turn an everyday product photo into clean, studio-quality views from every angle. AI removes distracting backgrounds and creates a consistent look for your shop or catalog.</p>
+              <p>Add your product photos. Get clean studio views, automatically.</p>
               <div className="home-start-row">
                 <button className="home-primary-button" onClick={() => void startShoot()} disabled={busy !== null}>
-                  <span>{busy === "shoot" ? "Opening upload…" : "Create professional 360° views"}</span>
+                  <span>{busy === "shoot" ? "Opening upload…" : "Add photos"}</span>
                   {busy === "shoot" ? <SpinnerGap className="spin" size={20} /> : <ArrowRight size={20} />}
                 </button>
                 <p className="home-start-note">1,000 test credits included. No payment required.</p>
@@ -172,8 +170,8 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
             </div>
           </section>
 
-          {!activeProject ? <SampleCarousel /> : null}
-        </div>
+          <SampleCarousel />
+        </div> : null}
 
         {activeProject ? <section className="home-active-studio" ref={studioRef} id="studio">
           <ProjectStudioClient key={activeProject.id} initialProject={activeProject} checkoutAvailable={credits?.demoCheckoutAvailable ?? false} onBack={closeProject} onOpenWallet={() => void openWallet()} onBalanceChange={refreshBalance} walletRevision={walletRevision} />
@@ -186,9 +184,9 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
 
         {busy === "project" ? <p className="home-loading" role="status"><SpinnerGap className="spin" /> Opening your shoot…</p> : null}
 
-        {credits ? <ProjectsClient key={projects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={projects} onOpenProject={openProject} createOpen={createOpen} onCreateClose={() => setCreateOpen(false)} /> : <section className="home-saved-empty" id="shoots"><h2>Your shoots</h2><p>Your product photos will be saved here.</p></section>}
+        {!activeProject && credits ? <ProjectsClient key={projects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={projects} onOpenProject={openProject} createOpen={createOpen} onCreateClose={() => setCreateOpen(false)} /> : null}
       </main>
-      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span></footer>
+      {!activeProject ? <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span></footer> : null}
     </div>
   );
 }

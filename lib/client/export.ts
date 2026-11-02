@@ -1,5 +1,5 @@
 import { zipSync } from "fflate";
-import type { ProjectShot } from "@/lib/api/types";
+import type { ProjectShot, ShotVersion } from "@/lib/api/types";
 import { shotDownloadFilename } from "@/lib/projects/downloads";
 
 export async function exportApprovedShots(shots: ProjectShot[], fetchFile = fetch) {
@@ -11,10 +11,23 @@ export async function exportApprovedShots(shots: ProjectShot[], fetchFile = fetc
         filename: shotDownloadFilename({ label: shot.label, ...version }),
       })),
   );
-  if (!approved.length) return null;
+  return exportFiles(approved, fetchFile);
+}
+
+// Export the same versions shown in the canvas, without changing saved approvals.
+export async function exportVisibleShots(shots: ProjectShot[], visibleVersions: Record<string, string> = {}, fetchFile = fetch) {
+  const visible = shots.flatMap((shot) => {
+    const version = shot.versions.find((item) => item.outputId === visibleVersions[shot.id]) ?? shot.versions.at(-1);
+    return version ? [{ version, filename: shotDownloadFilename({ label: shot.label, ...version }) }] : [];
+  });
+  return exportFiles(visible, fetchFile);
+}
+
+async function exportFiles(outputs: Array<{ version: ShotVersion; filename: string }>, fetchFile: typeof fetch) {
+  if (!outputs.length) return null;
 
   const files: Record<string, Uint8Array> = {};
-  for (const { version, filename } of approved) {
+  for (const { version, filename } of outputs) {
     try {
       // The authenticated download route signs a fresh private-storage URL per request.
       const response = await fetchFile(version.downloadUrl, { cache: "no-store" });

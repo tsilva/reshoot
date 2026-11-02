@@ -1,7 +1,7 @@
 import { unzipSync } from "fflate";
 import { describe, expect, it, vi } from "vitest";
 import type { ProjectShot, ShotVersion } from "../lib/api/types";
-import { exportApprovedShots } from "../lib/client/export";
+import { exportApprovedShots, exportVisibleShots } from "../lib/client/export";
 
 function shot(id: string, mimeType = "image/png", approved = true): ProjectShot {
   const version: ShotVersion = {
@@ -46,5 +46,33 @@ describe("approved output export", () => {
     const fetchFile = vi.fn<typeof fetch>();
     expect(await exportApprovedShots([shot("one", "image/png", false)], fetchFile)).toBeNull();
     expect(fetchFile).not.toHaveBeenCalled();
+  });
+});
+
+describe("canvas output export", () => {
+  it("downloads the latest view without requiring or changing approval", async () => {
+    const original = shot("one");
+    const latest = { ...original.versions[0], outputId: "output-new", version: 2, approvedAt: null, downloadUrl: "/new" };
+    original.versions.push(latest);
+    const before = structuredClone(original);
+    const fetchFile = vi.fn<typeof fetch>().mockResolvedValue(new Response("latest"));
+    const archive = await exportVisibleShots([original], {}, fetchFile);
+    expect(Object.keys(unzipSync(archive!))).toEqual(["front-v2-output-new.png"]);
+    expect(fetchFile).toHaveBeenCalledWith("/new", { cache: "no-store" });
+    expect(original).toEqual(before);
+  });
+
+  it("exports the historical version being viewed and skips unfinished shots", async () => {
+    const original = shot("one", "image/jpeg", false);
+    original.versions.push({ ...original.versions[0], outputId: "output-new", version: 2 });
+    const fetchFile = vi.fn<typeof fetch>().mockResolvedValue(new Response("older"));
+    const archive = await exportVisibleShots([original, { ...shot("pending"), versions: [] }], { one: "output-one" }, fetchFile);
+    expect(Object.keys(unzipSync(archive!))).toEqual(["front-v1-output-one.jpg"]);
+    expect(fetchFile).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not produce a partial canvas export on failure", async () => {
+    const fetchFile = vi.fn<typeof fetch>().mockResolvedValue(new Response("unavailable", { status: 403 }));
+    await expect(exportVisibleShots([shot("one")], {}, fetchFile)).rejects.toThrow("No ZIP was exported");
   });
 });

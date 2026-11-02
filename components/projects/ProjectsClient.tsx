@@ -293,7 +293,7 @@ export function ProjectsClient({
           <h2>Your shoots</h2>
         </div>
         {projects.length ? <button className="button primary-button" onClick={() => setModalOpen(true)}>
-          <Plus size={18} weight="bold" /> New project
+          <Plus size={18} weight="bold" /> New shoot
         </button> : null}
       </div>
 
@@ -318,7 +318,6 @@ export function ProjectsClient({
                 placeholder="Search projects"
               />
             </label>
-            <span>{projects.length} product project{projects.length === 1 ? "" : "s"}</span>
           </div>
           {visibleProjects.length ? (
             <div className="project-grid">
@@ -386,18 +385,16 @@ export function ProjectsClient({
           <section className="project-modal">
             <header className="modal-header">
               <div>
-                <div className="page-kicker">New product project</div>
-                <h2 id="new-project-title">Start with every photo you have</h2>
+                <h2 id="new-project-title">New shoot</h2>
               </div>
               <button className="icon-button" onClick={resetModal} aria-label="Close" disabled={submitting}>
                 <X size={20} />
               </button>
             </header>
             <div className="modal-content">
-              <p className="upload-name-hint">We’ll name your shoot from your first product photo.</p>
               <label className="upload-dropzone">
                 <UploadSimple size={28} weight="thin" />
-                <strong>Add product photos</strong>
+                <strong>Add reference photos</strong>
                 <span>JPG, PNG or WebP · up to 25 files · 20 MB each</span>
                 <input
                   type="file"
@@ -456,7 +453,7 @@ export function ProjectsClient({
               ) : null}
             </div>
             <footer className="modal-footer">
-              <span>{uploads.length}/25 photos · max 500 MB</span>
+              <span>{uploads.length}/25 photos</span>
               {createdProject ? (
                 <button className="button secondary-button" disabled={submitting} onClick={() => {
                   void openProject(createdProject.id).catch(() => {});
@@ -468,7 +465,7 @@ export function ProjectsClient({
               ) : null}
               <button className="button primary-button" onClick={() => void createProject()} disabled={submitting || !uploads.length}>
                 {submitting ? <SpinnerGap className="spin" size={18} /> : null}
-                {submitting ? "Saving photos…" : createdProject ? "Retry failed uploads" : "Create project"}
+                {submitting ? "Saving photos…" : createdProject ? "Retry failed uploads" : "Continue"}
               </button>
             </footer>
           </section>
