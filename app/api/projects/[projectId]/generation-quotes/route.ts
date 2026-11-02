@@ -58,6 +58,12 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
+    const [existingShot] = await db.select({ id: shots.id }).from(shots)
+      .where(and(eq(shots.projectId, projectId), eq(shots.ownerId, user.id))).limit(1);
+    if (existingShot || parsed.data.shots.some((shot) => shot.shotId)) {
+      throw new ApiError(409, "regeneration_not_allowed", "Each shoot can be generated once. Start a new shoot to generate more views.");
+    }
+
     const additionalIds = [
       ...new Set(
         parsed.data.shots.flatMap((shot) => shot.additionalReferenceAssetIds),
@@ -90,29 +96,6 @@ export async function POST(request: Request, context: RouteContext) {
         "invalid_reference",
         "Every reference must be a ready original from this project.",
       );
-    }
-
-    const regenerationIds = parsed.data.shots
-      .map((shot) => shot.shotId)
-      .filter((id): id is string => Boolean(id));
-    if (regenerationIds.length) {
-      const ownedShots = await db
-        .select({ id: shots.id })
-        .from(shots)
-        .where(
-          and(
-            inArray(shots.id, regenerationIds),
-            eq(shots.projectId, projectId),
-            eq(shots.ownerId, user.id),
-          ),
-        );
-      if (ownedShots.length !== new Set(regenerationIds).size) {
-        throw new ApiError(
-          400,
-          "invalid_shot_version",
-          "The requested shot version does not belong to this project.",
-        );
-      }
     }
 
     const [version] = await db

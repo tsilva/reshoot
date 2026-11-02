@@ -18,8 +18,8 @@ export async function maintainGenerationBatch(batchId: string, ownerId: string):
       eq(generationJobs.status, "running"), lt(generationJobs.leaseExpiresAt, now),
       eq(generationAttempts.state, "started")));
   for (const { job, attempt } of stale) {
-    // Expiry ends this attempt; it never sends another paid request. A user can
-    // explicitly Regenerate a failed shot after the existing hold is released.
+    // Expiry ends this attempt; it never sends another paid request. Another
+    // generation requires a new shoot after the existing hold is released.
     await releaseGeneration({ jobId: job.id, attemptId: attempt.id,
       attemptState: "ambiguous",
       failureCode: "stalled_provider_call",

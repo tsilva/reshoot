@@ -76,6 +76,13 @@ export async function createGenerationBatch(input: {
     await tx.execute(
       sql`select id from ${creditAccounts} where ${creditAccounts.userId} = ${input.userId}::uuid for update`,
     );
+    // The account lock serializes confirmations across tabs and quotes. Check
+    // after acquiring it, before creating jobs or reserving any more credits.
+    const [existingShot] = await tx.select({ id: shots.id }).from(shots)
+      .where(and(eq(shots.projectId, input.projectId), eq(shots.ownerId, input.userId))).limit(1);
+    if (existingShot || quote.shots.some((shot) => shot.shotId)) {
+      throw new ApiError(409, "regeneration_not_allowed", "Each shoot can be generated once. Start a new shoot to generate more views.");
+    }
     const [account] = await tx
       .select()
       .from(creditAccounts)

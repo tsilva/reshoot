@@ -36,17 +36,6 @@ import { automaticShotRequests, shootReferences } from "@/lib/client/shoot-plan"
 import { usePhotoPlayback } from "@/lib/client/use-photo-playback";
 import { SlideshowControls } from "@/components/SlideshowControls";
 
-type ShotRequest = {
-  clientId: string;
-  shotId?: string;
-  label: string;
-  presetKey?: string;
-  prompt?: string;
-  azimuth?: number;
-  elevation?: number;
-  additionalReferenceAssetIds: string[];
-};
-
 function batchIsTerminal(status: GenerationBatchStatus["status"]) {
   return ["partial", "succeeded", "failed"].includes(status);
 }
@@ -68,7 +57,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   const [storedQuote, setQuote] = useState<GenerationQuote | null>(null);
   const [quotedWalletRevision, setQuotedWalletRevision] = useState(walletRevision);
   const quote = quotedWalletRevision === walletRevision ? storedQuote : null;
-  const [quotedRequests, setQuotedRequests] = useState<ShotRequest[]>([]);
   const [quoting, setQuoting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -83,7 +71,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   const [liveError, setLiveError] = useState<string | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [liveRetry, setLiveRetry] = useState(0);
-  const actionRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDetailsElement>(null);
   const quoteRevision = useRef(0);
@@ -100,11 +87,11 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   const references = shootReferences(project.assets);
   const primary = references[0];
   const hasPrimary = Boolean(primary);
-  const additionalReferences = references.slice(1).map((asset) => asset.id);
   const referenceKey = references.map((asset) => asset.id).join(",");
   const readyOriginals = project.assets.filter(
     (asset) => asset.kind === "original" && asset.status === "ready",
   );
+  const generationStarted = project.shots.length > 0 || Boolean(batch) || Boolean(initialProject.activeBatchId);
   const busy = submitting || uploading.length > 0;
   const generating = Boolean(batch && !batchIsTerminal(batch.status)) || Boolean(initialProject.activeBatchId && !batch);
 
@@ -228,7 +215,9 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
     }
   }
 
-  const requestQuote = useCallback(async (requests: ShotRequest[] = automaticShotRequests(project.assets)) => {
+  const requestQuote = useCallback(async () => {
+    if (generationStarted) return;
+    const requests = automaticShotRequests(project.assets);
     if (!hasPrimary) {
       setError("Add a product photo to start.");
       return;
@@ -248,7 +237,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
         { method: "POST", body: JSON.stringify({ shots: requests }) },
       );
       if (revision !== quoteRevision.current) return;
-      setQuotedRequests(requests);
       setQuotedWalletRevision(walletRevision);
       setQuote(response.quote);
     } catch (quoteError) {
@@ -256,18 +244,18 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
     } finally {
       if (revision === quoteRevision.current) setQuoting(false);
     }
-  }, [busy, generating, hasPrimary, photosStale, project.assets, project.id, quoting, walletRevision]);
+  }, [busy, generating, generationStarted, hasPrimary, photosStale, project.assets, project.id, quoting, walletRevision]);
 
   useEffect(() => {
-    if (!referenceKey || busy || generating || quoting || photosStale) return;
+    if (generationStarted || !referenceKey || busy || generating || quoting || photosStale) return;
     const key = `${project.id}:${referenceKey}:${walletRevision}`;
     if (automaticQuoteKey.current === key) return;
     automaticQuoteKey.current = key;
     void requestQuote();
-  }, [referenceKey, project.id, walletRevision, busy, generating, quoting, photosStale, requestQuote]);
+  }, [referenceKey, project.id, walletRevision, busy, generating, generationStarted, quoting, photosStale, requestQuote]);
 
   async function confirmBatch() {
-    if (!quote || busy || generating) return;
+    if (!quote || busy || generating || generationStarted) return;
     if (Date.now() >= new Date(quote.expiresAt).getTime()) {
       invalidateQuote();
       setError("This price expired. Check the cost again to continue.");
@@ -301,24 +289,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
     } finally {
       setSubmitting(false);
     }
-  }
-
-  async function prepareRegeneration(shot: ProjectShot) {
-    const latest = shot.versions.at(-1);
-    const requests: ShotRequest[] = [
-      {
-        clientId: `${shot.id}-v${(latest?.version ?? 0) + 1}`,
-        shotId: shot.id,
-        label: shot.label,
-        presetKey: shot.presetKey ?? undefined,
-        azimuth: shot.azimuth ?? undefined,
-        elevation: shot.elevation ?? undefined,
-        prompt: "Improve fidelity while preserving the requested shot.",
-        additionalReferenceAssetIds: additionalReferences,
-      },
-    ];
-    actionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    await requestQuote(requests);
   }
 
   async function reviewOutput(outputId: string, approved: boolean) {
@@ -362,7 +332,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   }
   const activeVersion = activeShot ? visibleVersion(activeShot) : null;
   const canvasImage = activeVersion?.previewUrl ?? primary?.previewUrl;
-  const retryQuote = quotedRequests.length === 1;
   const advance = useCallback(() => {
     setActiveShotId((current) => {
       const index = Math.max(0, completedShots.findIndex((shot) => shot.id === current));
@@ -386,13 +355,34 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   }
 
   return (
-    <section className="studio-main quiet-studio" aria-label="Product studio">
+    <section className={`studio-main quiet-studio${generationStarted ? " is-gallery" : ""}`} aria-label="Product studio">
       <header className="quiet-studio-heading">
         {onBack ? <button className="quiet-back" onClick={onBack} aria-label="All shoots"><ArrowLeft size={22} /></button> : <Link href="/" className="quiet-back" aria-label="All shoots"><ArrowLeft size={22} /></Link>}
         <h2>{project.title}</h2>
         {completedShots.length ? <button className="studio-download" onClick={() => void downloadViews()} disabled={exporting}>
           {exporting ? <SpinnerGap className="spin" size={18} /> : null}{exporting ? "Downloading…" : "Download"}
         </button> : null}
+        {activeShot && activeVersion ? <details className="studio-view-tools" ref={toolsRef} onToggle={(event) => { if (event.currentTarget.open) playback.pause(); }} onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.currentTarget.open = false;
+            event.currentTarget.querySelector("summary")?.focus();
+          }
+        }}>
+          <summary aria-label="View actions" title="View actions"><DotsThree size={24} /></summary>
+          <div className="studio-view-menu">
+            <a href={activeVersion.downloadUrl} download>Download this view</a>
+            <button onClick={() => void reviewOutput(activeVersion.outputId, !(activeVersion.approvedAt || activeVersion.selectedAt))}>
+              {activeVersion.approvedAt || activeVersion.selectedAt ? "Undo approval" : "Approve this version"}
+            </button>
+            {activeShot.versions.length > 1 ? <label>Version
+              <select aria-label="View version" value={activeVersion.outputId} onChange={(event) => {
+                setVisibleVersions((current) => ({ ...current, [activeShot.id]: event.target.value }));
+              }}>
+                {activeShot.versions.toReversed().map((version) => <option key={version.outputId} value={version.outputId}>Version {version.version}</option>)}
+              </select>
+            </label> : null}
+          </div>
+        </details> : null}
       </header>
 
       {notice ? (
@@ -419,7 +409,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
             const shot = project.shots.find((item) => item.id === job.shotId);
             return <div className="studio-notice error-notice" role="alert" key={job.id}>
               <WarningCircle size={18} /><span>{shot?.label ?? "View"}: {job.publicError || "Could not generate this view."}</span>
-              {shot ? <button className="text-button" disabled={busy || generating || quoting || photosStale} onClick={() => void prepareRegeneration(shot)}>Retry</button> : null}
             </div>;
           })}
         </div>
@@ -450,31 +439,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
               <input type="file" aria-label="Add reference photos" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadMore} disabled={busy || generating} />
             </label>
           )}
-          {activeShot && activeVersion ? <details className="studio-view-tools" ref={toolsRef} onToggle={(event) => { if (event.currentTarget.open) playback.pause(); }} onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              event.currentTarget.open = false;
-              event.currentTarget.querySelector("summary")?.focus();
-            }
-          }}>
-            <summary aria-label="View actions" title="View actions"><DotsThree size={24} /></summary>
-            <div className="studio-view-menu">
-              <a href={activeVersion.downloadUrl} download>Download this view</a>
-              <button disabled={busy || generating || quoting || photosStale} onClick={() => {
-                if (toolsRef.current) toolsRef.current.open = false;
-                void prepareRegeneration(activeShot);
-              }}>Regenerate this view</button>
-              <button onClick={() => void reviewOutput(activeVersion.outputId, !(activeVersion.approvedAt || activeVersion.selectedAt))}>
-                {activeVersion.approvedAt || activeVersion.selectedAt ? "Undo approval" : "Approve this version"}
-              </button>
-              {activeShot.versions.length > 1 ? <label>Version
-                <select aria-label="View version" value={activeVersion.outputId} onChange={(event) => {
-                  setVisibleVersions((current) => ({ ...current, [activeShot.id]: event.target.value }));
-                }}>
-                  {activeShot.versions.toReversed().map((version) => <option key={version.outputId} value={version.outputId}>Version {version.version}</option>)}
-                </select>
-              </label> : null}
-            </div>
-          </details> : null}
           {generating ? <div className="studio-canvas-status" role="status"><SpinnerGap className="spin" size={18} />
             {batch ? `${batch.completedJobs} of ${batch.jobs.length} views ready` : "Resuming generation…"}
           </div> : null}
@@ -486,36 +450,38 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
         <p className="sr-only" aria-live={playback.enabled && completedShots.length > 1 ? "off" : "polite"}>{activeShot && activeVersion ? `${activeShot.label}, version ${activeVersion.version}` : "Reference photo. Generate studio views when your photos are ready."}</p>
       </div>
 
-      <div className="studio-utility-row" ref={actionRef}>
-        <div className="studio-reference-row" role="group" aria-label="Reference photos">
-          <div className="studio-reference-thumbnails">
-            {readyOriginals.map((asset) => <div className="studio-reference-thumbnail" key={asset.id} title={asset.filename}>
-              {asset.previewUrl ? <Image unoptimized src={asset.previewUrl} fill sizes="60px" alt={asset.filename} /> : <ImageSquare size={24} aria-label={asset.filename} />}
-            </div>)}
+      {!generationStarted ? <>
+        <div className="studio-utility-row">
+          <div className="studio-reference-row" role="group" aria-label="Reference photos">
+            <div className="studio-reference-thumbnails">
+              {readyOriginals.map((asset) => <div className="studio-reference-thumbnail" key={asset.id} title={asset.filename}>
+                {asset.previewUrl ? <Image unoptimized src={asset.previewUrl} fill sizes="60px" alt={asset.filename} /> : <ImageSquare size={24} aria-label={asset.filename} />}
+              </div>)}
+            </div>
+            <label className={`studio-add-reference${busy || generating ? " is-disabled" : ""}`}>
+              <Plus size={22} weight="light" /><span>Add photos</span>
+              <input type="file" aria-label="Add photos" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadMore} disabled={busy || generating} />
+            </label>
           </div>
-          <label className={`studio-add-reference${busy || generating ? " is-disabled" : ""}`}>
-            <Plus size={22} weight="light" /><span>Add photos</span>
-            <input type="file" aria-label="Add photos" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadMore} disabled={busy || generating} />
-          </label>
+          <div className="studio-generate-actions" aria-live="polite">
+            {quote ? (
+              <>
+                {quote.affordable ? <button className="button primary-button" onClick={() => void confirmBatch()} disabled={busy}>
+                  {submitting ? <SpinnerGap className="spin" size={18} /> : null}
+                  {submitting ? "Starting…" : `Generate · ${quote.totalCredits} credits`}
+                </button> : checkoutAvailable ? (
+                  onOpenWallet ? <button className="button primary-button" onClick={onOpenWallet}>Add credits</button> : <Link href="/?wallet=open#wallet" className="button primary-button">Add credits</Link>
+                ) : <button className="button primary-button" disabled>Generate · {quote.totalCredits} credits</button>}
+              </>
+            ) : <button className="button primary-button" onClick={() => void requestQuote()} disabled={quoting || busy || !primary || photosStale}>
+              {quoting ? <SpinnerGap className="spin" size={18} /> : null}{quoting ? "Calculating…" : "Check cost"}
+            </button>}
+          </div>
         </div>
-        <div className="studio-generate-actions" aria-live="polite">
-          {generating ? <button className="button primary-button" disabled><SpinnerGap className="spin" size={18} /> Generating…</button> : quote ? (
-            <>
-              {retryQuote ? <button className="text-button" onClick={() => void requestQuote()} disabled={submitting}>Cancel</button> : null}
-              {quote.affordable ? <button className="button primary-button" onClick={() => void confirmBatch()} disabled={busy} aria-label={retryQuote ? `Regenerate ${quotedRequests[0].label} for ${quote.totalCredits} credits` : undefined}>
-                {submitting ? <SpinnerGap className="spin" size={18} /> : null}
-                {submitting ? "Starting…" : `${retryQuote ? "Regenerate" : "Generate"} · ${quote.totalCredits} credits`}
-              </button> : checkoutAvailable ? (
-                onOpenWallet ? <button className="button primary-button" onClick={onOpenWallet}>Add credits</button> : <Link href="/?wallet=open#wallet" className="button primary-button">Add credits</Link>
-              ) : <button className="button primary-button" disabled>Generate · {quote.totalCredits} credits</button>}
-            </>
-          ) : <button className="button primary-button" onClick={() => void requestQuote()} disabled={quoting || busy || !primary || photosStale}>
-            {quoting ? <SpinnerGap className="spin" size={18} /> : null}{quoting ? "Calculating…" : "Check cost"}
-          </button>}
-        </div>
-      </div>
-      {quote && !quote.affordable ? <p className="studio-helper-text" role="status">You need {quote.totalCredits - quote.availableCredits} more credits.{!checkoutAvailable ? " Top-ups are unavailable in this workspace." : ""}</p> : null}
-      {readyOriginals.length > references.length && primary ? <p className="studio-helper-text">Up to {references.length} photos are used per view. All {readyOriginals.length} stay saved.</p> : null}
+        {quote && !quote.affordable ? <p className="studio-helper-text" role="status">You need {quote.totalCredits - quote.availableCredits} more credits.{!checkoutAvailable ? " Top-ups are unavailable in this workspace." : ""}</p> : null}
+        {readyOriginals.length > references.length && primary ? <p className="studio-helper-text">Up to {references.length} photos are used per view. All {readyOriginals.length} stay saved.</p> : null}
+      </> : null}
+      {generationStarted && !completedShots.length && !generating && !resumeError ? <p className="studio-helper-text" role="status">No views were generated. Start a new shoot to try again.</p> : null}
       {uploading.length ? <div className="inline-upload-progress" role="status" aria-label="Uploading photos">
         {uploading.map((upload, index) => <div key={`${upload.name}-${index}`}>
           <SpinnerGap className="spin" /><span>{upload.name}</span>
