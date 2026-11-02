@@ -9,15 +9,13 @@ import {
   CheckCircle,
   CloudSlash,
   ImageSquare,
-  MagnifyingGlass,
-  Plus,
   SpinnerGap,
   Trash,
   UploadSimple,
   WarningCircle,
   X,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
 import type { ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
 import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
@@ -92,7 +90,6 @@ export function ProjectsClient({
 }) {
   const router = useRouter();
   const [projects, setProjects] = useState(initialProjects);
-  const [search, setSearch] = useState("");
   const [internalModalOpen, setInternalModalOpen] = useState(false);
   const modalOpen = createOpen || internalModalOpen;
   function setModalOpen(open: boolean) {
@@ -157,13 +154,6 @@ export function ProjectsClient({
       }
     })();
   }, [router]);
-
-  const visibleProjects = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return query
-      ? projects.filter((project) => project.title.toLowerCase().includes(query))
-      : projects;
-  }, [projects, search]);
 
   function resetModal() {
     if (submitting) return;
@@ -292,9 +282,6 @@ export function ProjectsClient({
         <div>
           <h2>Your shoots</h2>
         </div>
-        {projects.length ? <button className="button primary-button" onClick={() => setModalOpen(true)}>
-          <Plus size={18} weight="bold" /> New shoot
-        </button> : null}
       </div>
 
       {importNotice ? (
@@ -307,69 +294,52 @@ export function ProjectsClient({
       ) : null}
 
       {projects.length ? (
-        <>
-          <div className="library-toolbar">
-            <label className="search-field">
-              <MagnifyingGlass size={18} />
-              <span className="sr-only">Search projects</span>
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search projects"
-              />
-            </label>
-          </div>
-          {visibleProjects.length ? (
-            <div className="project-grid">
-              {visibleProjects.map((project) => (
-                <article className="project-card" key={project.id}>
-                  <Link href={`/projects/${project.id}`} className="project-image-link" onClick={onOpenProject ? (event) => { event.preventDefault(); void openProject(project.id).catch(() => {}); } : undefined}>
-                    <div className="project-image-frame">
-                      {project.primaryPreviewUrl ? (
-                        <Image
-                          unoptimized
-                          src={project.primaryPreviewUrl}
-                          fill
-                          sizes="(max-width: 720px) 100vw, 33vw"
-                          alt=""
-                        />
-                      ) : (
-                        <ImageSquare size={36} weight="thin" />
-                      )}
-                      <span className={`status-label status-${project.status}`}>
-                        {project.status}
-                      </span>
-                    </div>
+        <div className="project-grid">
+          {projects.map((project) => (
+            <article className="project-card" key={project.id}>
+              <Link href={`/projects/${project.id}`} className="project-image-link" onClick={onOpenProject ? (event) => { event.preventDefault(); void openProject(project.id).catch(() => {}); } : undefined}>
+                <div className="project-image-frame">
+                  {project.primaryPreviewUrl ? (
+                    <Image
+                      unoptimized
+                      src={project.primaryPreviewUrl}
+                      fill
+                      sizes="(max-width: 720px) 100vw, 33vw"
+                      alt=""
+                    />
+                  ) : (
+                    <ImageSquare size={36} weight="thin" />
+                  )}
+                  <span className={`status-label status-${project.status}`}>
+                    {project.status}
+                  </span>
+                </div>
+              </Link>
+              <div className="project-card-body">
+                <div>
+                  <h2>{project.title}</h2>
+                  <p>
+                    {project.originalCount} original{project.originalCount === 1 ? "" : "s"}
+                    <span aria-hidden="true"> · </span>
+                    {project.generatedCount} generated
+                  </p>
+                </div>
+                <div className="project-card-actions">
+                  <Link href={`/projects/${project.id}`} aria-label={`Open ${project.title}`} onClick={onOpenProject ? (event) => { event.preventDefault(); void openProject(project.id).catch(() => {}); } : undefined}>
+                    <ArrowRight size={20} />
                   </Link>
-                  <div className="project-card-body">
-                    <div>
-                      <h2>{project.title}</h2>
-                      <p>
-                        {project.originalCount} original{project.originalCount === 1 ? "" : "s"}
-                        <span aria-hidden="true"> · </span>
-                        {project.generatedCount} generated
-                      </p>
-                    </div>
-                    <div className="project-card-actions">
-                      <Link href={`/projects/${project.id}`} aria-label={`Open ${project.title}`} onClick={onOpenProject ? (event) => { event.preventDefault(); void openProject(project.id).catch(() => {}); } : undefined}>
-                        <ArrowRight size={20} />
-                      </Link>
-                      <button
-                        className="icon-button"
-                        onClick={() => void deleteProject(project)}
-                        aria-label={`Delete ${project.title}`}
-                      >
-                        <Trash size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="compact-empty">No projects match “{search}”.</div>
-          )}
-        </>
+                  <button
+                    className="icon-button"
+                    onClick={() => void deleteProject(project)}
+                    aria-label={`Delete ${project.title}`}
+                  >
+                    <Trash size={18} />
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
       ) : (
         <p className="library-empty-message">Your product photos will be saved here.</p>
       )}
