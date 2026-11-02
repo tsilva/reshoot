@@ -17,6 +17,7 @@ import {
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -32,6 +33,8 @@ import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
 import { exportVisibleShots } from "@/lib/client/export";
 import { useBatchRealtime } from "@/lib/client/use-batch-realtime";
 import { automaticShotRequests, shootReferences } from "@/lib/client/shoot-plan";
+import { usePhotoPlayback } from "@/lib/client/use-photo-playback";
+import { SlideshowControls } from "@/components/SlideshowControls";
 
 type ShotRequest = {
   clientId: string;
@@ -71,6 +74,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   const [exporting, setExporting] = useState(false);
   const [activeShotId, setActiveShotId] = useState<string | null>(null);
   const [visibleVersions, setVisibleVersions] = useState<Record<string, string>>({});
+  const [loadedPhotos, setLoadedPhotos] = useState<Set<string>>(() => new Set());
   const [batch, setBatch] = useState<GenerationBatchStatus | null>(null);
   const [uploading, setUploading] = useState<Array<{ name: string; progress: number }>>([]);
   const [photosStale, setPhotosStale] = useState(false);
@@ -351,7 +355,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
     }
   }
 
-  const completedShots = project.shots.filter((shot) => shot.versions.length > 0);
+  const completedShots = useMemo(() => project.shots.filter((shot) => shot.versions.length > 0), [project.shots]);
   const activeShot = completedShots.find((shot) => shot.id === activeShotId) ?? completedShots[0];
   function visibleVersion(shot: ProjectShot) {
     return shot.versions.find((version) => version.outputId === visibleVersions[shot.id]) ?? shot.versions.at(-1)!;
@@ -359,6 +363,27 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   const activeVersion = activeShot ? visibleVersion(activeShot) : null;
   const canvasImage = activeVersion?.previewUrl ?? primary?.previewUrl;
   const retryQuote = quotedRequests.length === 1;
+  const advance = useCallback(() => {
+    setActiveShotId((current) => {
+      const index = Math.max(0, completedShots.findIndex((shot) => shot.id === current));
+      return completedShots[(index + 1) % completedShots.length]?.id ?? null;
+    });
+  }, [completedShots]);
+  const playback = usePhotoPlayback({
+    containerRef: canvasRef,
+    frameKey: activeVersion?.outputId ?? "reference",
+    ready: completedShots.length > 1 && completedShots.every((shot) => loadedPhotos.has(visibleVersion(shot).previewUrl)),
+    blocked: busy || generating,
+    onAdvance: advance,
+  });
+
+  function cycleView(direction: -1 | 1) {
+    if (!activeShot) return;
+    playback.pause();
+    const index = completedShots.findIndex((shot) => shot.id === activeShot.id);
+    setActiveShotId(completedShots[(index + direction + completedShots.length) % completedShots.length].id);
+    if (toolsRef.current) toolsRef.current.open = false;
+  }
 
   return (
     <section className="studio-main quiet-studio" aria-label="Product studio">
@@ -400,17 +425,32 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
         </div>
       ) : null}
 
-      <div className="studio-photo-canvas" ref={canvasRef}>
+      <div className="studio-photo-canvas" ref={canvasRef} role="region" aria-label="Product photos" aria-roledescription="carousel"
+        onFocusCapture={playback.onFocusCapture} onBlurCapture={playback.onBlurCapture}
+        onKeyDown={(event) => {
+          if (toolsRef.current?.open || (event.target instanceof HTMLElement && event.target.closest("input, select, textarea, [contenteditable='true']"))) return;
+          if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+          event.preventDefault();
+          cycleView(event.key === "ArrowLeft" ? -1 : 1);
+        }}
+      >
         <div className="studio-photo-stage" aria-busy={generating}>
-          {canvasImage ? (
-            <Image unoptimized src={canvasImage} fill sizes="(max-width: 720px) 95vw, 640px" alt={activeShot && activeVersion ? `${project.title}, ${activeShot.label.toLowerCase()}, version ${activeVersion.version}` : `${project.title}, reference photo`} />
+          {completedShots.length ? completedShots.map((shot) => {
+            const version = visibleVersion(shot);
+            return <Image key={version.outputId} unoptimized src={version.previewUrl} fill sizes="(max-width: 720px) 95vw, 640px" loading="eager"
+              hidden={shot.id !== activeShot?.id}
+              alt={`${project.title}, ${shot.label.toLowerCase()}, version ${version.version}`}
+              onLoad={() => setLoadedPhotos((loaded) => loaded.has(version.previewUrl) ? loaded : new Set(loaded).add(version.previewUrl))}
+            />;
+          }) : canvasImage ? (
+            <Image unoptimized src={canvasImage} fill sizes="(max-width: 720px) 95vw, 640px" alt={`${project.title}, reference photo`} />
           ) : (
             <label className="studio-canvas-empty">
               <UploadSimple size={30} weight="light" /><span>Add reference photos</span>
               <input type="file" aria-label="Add reference photos" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadMore} disabled={busy || generating} />
             </label>
           )}
-          {activeShot && activeVersion ? <details className="studio-view-tools" ref={toolsRef} onKeyDown={(event) => {
+          {activeShot && activeVersion ? <details className="studio-view-tools" ref={toolsRef} onToggle={(event) => { if (event.currentTarget.open) playback.pause(); }} onKeyDown={(event) => {
             if (event.key === "Escape") {
               event.currentTarget.open = false;
               event.currentTarget.querySelector("summary")?.focus();
@@ -439,24 +479,11 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
             {batch ? `${batch.completedJobs} of ${batch.jobs.length} views ready` : "Resuming generation…"}
           </div> : null}
         </div>
-        {completedShots.length ? <div className="studio-filmstrip" role="group" aria-label="Generated views" onKeyDown={(event) => {
-          const offset = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
-          if (!offset || !activeShot) return;
-          event.preventDefault();
-          const index = completedShots.findIndex((shot) => shot.id === activeShot.id);
-          const nextIndex = (index + offset + completedShots.length) % completedShots.length;
-          setActiveShotId(completedShots[nextIndex].id);
+        {completedShots.length ? <SlideshowControls playing={playback.enabled && completedShots.length > 1} disabled={completedShots.length < 2} onPrevious={() => cycleView(-1)} onNext={() => cycleView(1)} onTogglePlayback={() => {
           if (toolsRef.current) toolsRef.current.open = false;
-          event.currentTarget.querySelectorAll("button")[nextIndex]?.focus();
-        }}>
-          {completedShots.map((shot) => <button key={shot.id} className={`studio-filmstrip-photo${shot.id === activeShot?.id ? " is-active" : ""}`} aria-label={`Show ${shot.label.toLowerCase()} view`} aria-pressed={shot.id === activeShot?.id} onClick={() => {
-            setActiveShotId(shot.id);
-            if (toolsRef.current) toolsRef.current.open = false;
-          }}>
-            <Image unoptimized src={visibleVersion(shot).previewUrl} fill sizes="100px" alt="" />
-          </button>)}
-        </div> : null}
-        <p className="sr-only" aria-live="polite">{activeShot && activeVersion ? `${activeShot.label}, version ${activeVersion.version}` : "Reference photo. Generate studio views when your photos are ready."}</p>
+          playback.toggle();
+        }} /> : null}
+        <p className="sr-only" aria-live={playback.enabled && completedShots.length > 1 ? "off" : "polite"}>{activeShot && activeVersion ? `${activeShot.label}, version ${activeVersion.version}` : "Reference photo. Generate studio views when your photos are ready."}</p>
       </div>
 
       <div className="studio-utility-row" ref={actionRef}>

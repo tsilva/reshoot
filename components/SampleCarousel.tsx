@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { CaretLeft, CaretRight, Pause, Play, X } from "@phosphor-icons/react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { X } from "@phosphor-icons/react";
+import { useCallback, useRef, useState } from "react";
 import { sampleProducts } from "@/lib/client/sample-products";
 import { Dialog } from "@/components/Dialog";
-
-const ROTATION_INTERVAL_MS = 900;
+import { SlideshowControls } from "@/components/SlideshowControls";
+import { usePhotoPlayback } from "@/lib/client/use-photo-playback";
 
 type SampleView = { productIndex: number; angleIndex: number };
 
@@ -19,72 +19,28 @@ function nextView(current: SampleView, direction: -1 | 1): SampleView {
   return { productIndex, angleIndex: direction === 1 ? 0 : sampleProducts[productIndex].angles.length - 1 };
 }
 
-function subscribeToMotionPreference(onChange: () => void) {
-  const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-  preference.addEventListener("change", onChange);
-  return () => preference.removeEventListener("change", onChange);
-}
-
-function getReducedMotion() {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function subscribeToVisibility(onChange: () => void) {
-  document.addEventListener("visibilitychange", onChange);
-  return () => document.removeEventListener("visibilitychange", onChange);
-}
-
-function getPageVisible() {
-  return document.visibilityState === "visible";
-}
-
-function getServerReducedMotion() { return true; }
-function getServerVisible() { return false; }
-
 export function SampleCarousel() {
   const [{ productIndex, angleIndex }, setView] = useState<SampleView>({ productIndex: 0, angleIndex: 0 });
   const product = sampleProducts[productIndex];
   const sampleAngles = product.angles;
   const [originalOpen, setOriginalOpen] = useState(false);
-  const [rotationOverride, setRotationOverride] = useState<boolean | null>(null);
-  const [focusPaused, setFocusPaused] = useState(false);
-  const [inView, setInView] = useState(false);
   const [loadedViews, setLoadedViews] = useState<Set<string>>(() => new Set());
   const sampleRef = useRef<HTMLElement>(null);
-  const reducedMotion = useSyncExternalStore(subscribeToMotionPreference, getReducedMotion, getServerReducedMotion);
-  const pageVisible = useSyncExternalStore(subscribeToVisibility, getPageVisible, getServerVisible);
-  const rotationEnabled = rotationOverride ?? !reducedMotion;
   const productLoaded = sampleAngles.every((angle) => loadedViews.has(`${product.id}:${angle.id}`));
-  const rotating = rotationEnabled && !originalOpen && !focusPaused && inView && pageVisible && productLoaded;
   const angle = sampleAngles[angleIndex];
-
-  useEffect(() => {
-    const sample = sampleRef.current;
-    if (!sample) return;
-    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting && entry.intersectionRatio >= 0.25), { threshold: 0.25 });
-    observer.observe(sample);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!rotating) return;
-    const timer = window.setTimeout(() => {
-      setView((current) => nextView(current, 1));
-    }, ROTATION_INTERVAL_MS);
-    return () => window.clearTimeout(timer);
-  }, [rotating, product.id, angle.id]);
+  const advance = useCallback(() => setView((current) => nextView(current, 1)), []);
+  const playback = usePhotoPlayback({ containerRef: sampleRef, frameKey: `${product.id}:${angle.id}`, ready: productLoaded, blocked: originalOpen, onAdvance: advance });
+  const rotationEnabled = playback.enabled;
 
   function cycleSample(direction: -1 | 1) {
-    setRotationOverride(false);
+    playback.pause();
     setOriginalOpen(false);
     setView((current) => nextView(current, direction));
   }
 
   function togglePlayback() {
-    setRotationOverride(!rotationEnabled);
+    playback.toggle();
     setOriginalOpen(false);
-    // Explicit playback also resumes while a keyboard control retains focus.
-    setFocusPaused(false);
   }
 
   return (
@@ -94,8 +50,8 @@ export function SampleCarousel() {
       ref={sampleRef}
       aria-label="Product photo example"
       aria-roledescription="carousel"
-      onFocusCapture={(event) => { if (event.target.matches(":focus-visible")) setFocusPaused(true); }}
-      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocusPaused(false); }}
+      onFocusCapture={playback.onFocusCapture}
+      onBlurCapture={playback.onBlurCapture}
       onKeyDown={(event) => {
         if (originalOpen) return;
         if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -127,13 +83,7 @@ export function SampleCarousel() {
         </div>
       </div>
       <div className="sample-toolbar">
-        <div className="sample-playback" role="group" aria-label="Slideshow controls">
-          <button className="sample-previous" type="button" aria-label="Previous view" onClick={() => cycleSample(-1)}><CaretLeft size={22} aria-hidden="true" /></button>
-          <button className="sample-rotation-toggle" type="button" aria-label={rotationEnabled ? "Pause rotation" : "Play rotation"} title={rotationEnabled ? "Pause rotation" : "Play rotation"} onClick={togglePlayback}>
-            {rotationEnabled ? <Pause size={17} weight="fill" aria-hidden="true" /> : <Play size={17} weight="fill" aria-hidden="true" />}
-          </button>
-          <button className="sample-next" type="button" aria-label="Next view" onClick={() => cycleSample(1)}><CaretRight size={22} aria-hidden="true" /></button>
-        </div>
+        <SlideshowControls playing={rotationEnabled} onPrevious={() => cycleSample(-1)} onNext={() => cycleSample(1)} onTogglePlayback={togglePlayback} />
         <button className="sample-original-preview" type="button" aria-haspopup="dialog" aria-controls="sample-original-modal" title="View illustrative original photo" onClick={() => setOriginalOpen(true)}>
           <Image src={product.upload} alt="" width={44} height={44} sizes="(hover: hover) 120px, 44px" loading="eager" />
           <span>Show original</span>

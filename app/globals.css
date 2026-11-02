@@ -4561,7 +4561,8 @@ body:has(.one-page-studio) { padding: 0; background: var(--surface); }
 .sample-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; margin-top: 16px; }
 .sample-playback { grid-column: 2; display: flex; align-items: center; justify-content: center; gap: 12px; }
 .sample-playback > button { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 1px solid var(--home-rule); border-radius: 50%; background: #fff; color: var(--ink); cursor: pointer; transition: background .15s, border-color .15s; }
-.sample-playback > button:hover { background: #f5f5f2; border-color: var(--coral); }
+.sample-playback > button:hover:not(:disabled) { background: #f5f5f2; border-color: var(--coral); }
+.sample-playback > button:disabled { opacity: .4; cursor: default; }
 .sample-playback > button:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
 .sample-original-preview { grid-column: 3; justify-self: end; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin: 0; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--text-soft); font: inherit; font-size: 11px; font-weight: 400; line-height: 1.4; text-align: right; cursor: pointer; }
 .sample-original-preview > img { display: block; width: 44px; height: 44px; object-fit: cover; border-radius: 4px; transform-origin: bottom right; transition: transform 220ms cubic-bezier(.2, .8, .2, 1); }
@@ -4698,13 +4699,11 @@ dialog.native-modal:has(> .sample-original-modal) { align-items: center; justify
 .studio-photo-canvas { min-width: 0; display: grid; gap: 8px; justify-items: center; }
 .studio-photo-stage { position: relative; width: 100%; height: clamp(292px, calc(100svh - 400px), 640px); margin-top: -52px; }
 .studio-photo-stage > img { object-fit: contain; }
+.studio-photo-stage > img[hidden] { display: none; }
+.studio-photo-canvas > .sample-playback { grid-column: 1; margin: 8px 0 12px; }
 .studio-canvas-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-soft); font-size: 16px; cursor: pointer; }
 .studio-canvas-empty input, .studio-add-reference input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: inherit; }
-.studio-canvas-empty:focus-within, .studio-add-reference:focus-within, .quiet-back:focus-visible, .studio-download:focus-visible, .studio-filmstrip-photo:focus-visible, .studio-view-tools summary:focus-visible { outline: 2px solid var(--coral); outline-offset: 4px; }
-.studio-filmstrip { display: flex; justify-content: safe center; gap: 18px; width: 100%; overflow-x: auto; padding: 0 4px 6px; }
-.studio-filmstrip-photo { position: relative; width: 114px; height: 114px; flex: none; padding: 0; border: 0; border-bottom: 3px solid transparent; background: #fff; cursor: pointer; }
-.studio-filmstrip-photo > img { object-fit: contain; padding-bottom: 8px; }
-.studio-filmstrip-photo.is-active { border-bottom-color: var(--coral); }
+.studio-canvas-empty:focus-within, .studio-add-reference:focus-within, .quiet-back:focus-visible, .studio-download:focus-visible, .studio-view-tools summary:focus-visible { outline: 2px solid var(--coral); outline-offset: 4px; }
 .studio-view-tools { position: absolute; top: 64px; right: 8px; z-index: 3; }
 .studio-view-tools > summary { display: grid; place-items: center; width: 44px; height: 44px; list-style: none; color: var(--text-soft); cursor: pointer; }
 .studio-view-tools > summary::-webkit-details-marker { display: none; }
@@ -4751,8 +4750,6 @@ dialog.native-modal:has(> .sample-original-modal) { align-items: center; justify
   .studio-download { font-size: 14px; padding-left: 6px; }
   .studio-photo-stage { height: min(92vw, 410px); margin-top: 0; }
   .studio-view-tools { top: 0; }
-  .studio-filmstrip { gap: 10px; }
-  .studio-filmstrip-photo { width: 64px; height: 64px; border-bottom-width: 2px; }
   .studio-utility-row { flex-wrap: wrap; gap: 16px; padding: 20px 0; margin-top: 4px; }
   .studio-reference-row { flex: 1 1 100%; justify-content: space-between; gap: 12px; }
   .studio-reference-thumbnails { max-width: calc(100% - 116px); gap: 8px; }
