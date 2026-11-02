@@ -4,13 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   Camera,
   CheckCircle,
   CloudSlash,
   ImageSquare,
   SpinnerGap,
-  Trash,
   UploadSimple,
   WarningCircle,
   X,
@@ -266,16 +264,6 @@ export function ProjectsClient({
     }
   }
 
-  async function deleteProject(project: ProjectSummary) {
-    if (!window.confirm(`Move “${project.title}” to deleted projects?`)) return;
-    try {
-      await apiRequest(`/api/projects/${project.id}`, { method: "DELETE" });
-      setProjects((current) => current.filter((item) => item.id !== project.id));
-    } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Could not delete project.");
-    }
-  }
-
   return (
     <section className="product-main" id="shoots" aria-label="Your shoots">
       <div className="page-heading-row">
@@ -296,48 +284,36 @@ export function ProjectsClient({
       {projects.length ? (
         <div className="project-grid">
           {projects.map((project) => (
-            <article className="project-card" key={project.id}>
-              <Link href={`/projects/${project.id}`} className="project-image-link" onClick={onOpenProject ? (event) => { event.preventDefault(); void openProject(project.id).catch(() => {}); } : undefined}>
-                <div className="project-image-frame">
-                  {project.primaryPreviewUrl ? (
-                    <Image
-                      unoptimized
-                      src={project.primaryPreviewUrl}
-                      fill
-                      sizes="(max-width: 720px) 100vw, 33vw"
-                      alt=""
-                    />
-                  ) : (
-                    <ImageSquare size={36} weight="thin" />
-                  )}
-                  <span className={`status-label status-${project.status}`}>
-                    {project.status}
-                  </span>
-                </div>
-              </Link>
-              <div className="project-card-body">
-                <div>
-                  <h2>{project.title}</h2>
-                  <p>
-                    {project.originalCount} original{project.originalCount === 1 ? "" : "s"}
-                    <span aria-hidden="true"> · </span>
-                    {project.generatedCount} generated
-                  </p>
-                </div>
-                <div className="project-card-actions">
-                  <Link href={`/projects/${project.id}`} aria-label={`Open ${project.title}`} onClick={onOpenProject ? (event) => { event.preventDefault(); void openProject(project.id).catch(() => {}); } : undefined}>
-                    <ArrowRight size={20} />
-                  </Link>
-                  <button
-                    className="icon-button"
-                    onClick={() => void deleteProject(project)}
-                    aria-label={`Delete ${project.title}`}
-                  >
-                    <Trash size={18} />
-                  </button>
-                </div>
+            <Link
+              href={`/projects/${project.id}`}
+              className="project-card"
+              key={project.id}
+              aria-label={`Open ${project.title}`}
+              onNavigate={onOpenProject ? (event) => {
+                event.preventDefault();
+                void openProject(project.id).catch(() => {});
+              } : undefined}
+            >
+              <div className="project-image-frame">
+                {project.primaryPreviewUrl ? (
+                  <Image
+                    unoptimized
+                    src={project.primaryPreviewUrl}
+                    fill
+                    sizes="(max-width: 720px) 100vw, 33vw"
+                    alt=""
+                  />
+                ) : (
+                  <ImageSquare size={36} weight="thin" />
+                )}
+                <span className={`status-label status-${project.status}`}>
+                  {project.status}
+                </span>
               </div>
-            </article>
+              <div className="project-card-body">
+                <h2>{project.title}</h2>
+              </div>
+            </Link>
           ))}
         </div>
       ) : (
