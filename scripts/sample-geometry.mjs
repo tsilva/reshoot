@@ -10,13 +10,14 @@ const bodyBands = {
 };
 
 export async function measureSample(bytes, product) {
-  const { data, info } = await sharp(bytes).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { data, info } = await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const rows = new Uint32Array(info.height);
   const columns = new Uint32Array(info.width);
   const left = new Int32Array(info.height).fill(info.width);
   const right = new Int32Array(info.height).fill(-1);
   for (let y = 0; y < info.height; y++) for (let x = 0; x < info.width; x++) {
     const index = (y * info.width + x) * info.channels;
+    if (data[index + 3] < 128) continue;
     const low = Math.min(data[index], data[index + 1], data[index + 2]);
     const high = Math.max(data[index], data[index + 1], data[index + 2]);
     // The bag also casts a faint brown shadow: require leather saturation so

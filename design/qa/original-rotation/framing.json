@@ -39,26 +39,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 221,
-        "right": 1183,
-        "top": 253,
-        "bottom": 1093
+        "left": 173,
+        "right": 1153,
+        "top": 201,
+        "bottom": 1051
       },
-      "bodyAxisX": 549.5,
+      "bodyAxisX": 511,
       "bodyBand": [
         0.94,
         0.98
       ],
-      "output": "public/assets/samples/ceramic-mug/front.jpg",
+      "output": "public/assets/samples/ceramic-mug/front.png",
       "offset": {
-        "x": 206.3028,
-        "y": 111.7512,
-        "scale": 0.7656
+        "x": 240.38100705882357,
+        "y": 153.37281882352943,
+        "scale": 0.7565929411764705
       },
       "displayBounds": {
-        "left": 375.5004,
-        "right": 1112.0076,
-        "top": 305.4479999999999,
+        "left": 371.27158588235295,
+        "right": 1112.732668235294,
+        "top": 305.448,
         "bottom": 948.5519999999999
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -295,25 +295,25 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 96,
-        "right": 1022,
-        "top": 250,
-        "bottom": 1062
+        "left": 143,
+        "right": 1056,
+        "top": 232,
+        "bottom": 1019
       },
-      "bodyAxisX": 713.5,
+      "bodyAxisX": 739,
       "bodyBand": [
         0.94,
         0.98
       ],
-      "output": "public/assets/samples/ceramic-mug/back.jpg",
+      "output": "public/assets/samples/ceramic-mug/back.png",
       "offset": {
-        "x": 61.908,
-        "y": 107.448,
-        "scale": 0.792
+        "x": 23.119623888183014,
+        "y": 115.86715120711563,
+        "scale": 0.8171588310038118
       },
       "displayBounds": {
-        "left": 137.94,
-        "right": 871.332,
+        "left": 139.97333672172812,
+        "right": 886.0393494282083,
         "top": 305.448,
         "bottom": 948.5519999999999
       },
@@ -327,26 +327,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 293,
-        "right": 1101,
-        "top": 256,
-        "bottom": 1063
+        "left": 228,
+        "right": 1116,
+        "top": 234,
+        "bottom": 1087
       },
-      "bodyAxisX": 605.5,
+      "bodyAxisX": 566,
       "bodyBand": [
         0.94,
         0.98
       ],
-      "output": "public/assets/samples/ceramic-mug/front-three-quarter.jpg",
+      "output": "public/assets/samples/ceramic-mug/front-three-quarter.png",
       "offset": {
-        "x": 144.472773,
-        "y": 101.439792,
-        "scale": 0.796907063
+        "x": 200.2744853458383,
+        "y": 129.02791090269636,
+        "scale": 0.7539320046893316
       },
       "displayBounds": {
-        "left": 377.96654275092936,
-        "right": 1021.8674498141264,
-        "top": 305.44799999999987,
+        "left": 372.17098241500594,
+        "right": 1041.6626025791325,
+        "top": 305.448,
         "bottom": 948.5519999999999
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -359,26 +359,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 298,
-        "right": 956,
-        "top": 225,
-        "bottom": 1075
+        "left": 319,
+        "right": 932,
+        "top": 273,
+        "bottom": 1058
       },
-      "bodyAxisX": 625,
+      "bodyAxisX": 625.5,
       "bodyBand": [
         0.94,
         0.98
       ],
-      "output": "public/assets/samples/ceramic-mug/left-profile.jpg",
+      "output": "public/assets/samples/ceramic-mug/left-profile.png",
       "offset": {
-        "x": 154.129412,
-        "y": 135.214588,
-        "scale": 0.756592941
+        "x": 114.5649019108281,
+        "y": 81.7952713375796,
+        "scale": 0.8192407643312101
       },
       "displayBounds": {
-        "left": 379.59410823529413,
-        "right": 877.4322635294118,
-        "top": 305.44800000000004,
+        "left": 375.9027057324841,
+        "right": 878.0972942675158,
+        "top": 305.448,
         "bottom": 948.5519999999999
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -391,25 +391,25 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 290,
-        "right": 961,
-        "top": 234,
-        "bottom": 1096
+        "left": 305,
+        "right": 945,
+        "top": 262,
+        "bottom": 1031
       },
-      "bodyAxisX": 626,
+      "bodyAxisX": 624.5,
       "bodyBand": [
         0.94,
         0.98
       ],
-      "output": "public/assets/samples/ceramic-mug/right-profile.jpg",
+      "output": "public/assets/samples/ceramic-mug/right-profile.png",
       "offset": {
-        "x": 159.966237,
-        "y": 130.869884,
-        "scale": 0.746060325
+        "x": 104.73933940182064,
+        "y": 86.3410455136542,
+        "scale": 0.8362860858257476
       },
       "displayBounds": {
-        "left": 376.3237308584687,
-        "right": 876.9302088167053,
+        "left": 359.80659557867364,
+        "right": 895.0296905071522,
         "top": 305.4480000000001,
         "bottom": 948.5519999999999
       },
@@ -423,26 +423,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 242,
-        "right": 1107,
-        "top": 181,
-        "bottom": 1105
+        "left": 289,
+        "right": 1021,
+        "top": 256,
+        "bottom": 1065
       },
-      "bodyAxisX": 603.5,
+      "bodyAxisX": 599,
       "bodyBand": [
         0.94,
         0.98
       ],
-      "output": "public/assets/samples/ceramic-mug/front-left-three-quarter.jpg",
+      "output": "public/assets/samples/ceramic-mug/front-left-three-quarter.png",
       "offset": {
-        "x": 206.964,
-        "y": 179.472,
-        "scale": 0.696
+        "x": 150.832761433869,
+        "y": 101.94413844252153,
+        "scale": 0.7949369592088998
       },
       "displayBounds": {
-        "left": 375.3960000000001,
-        "right": 977.436,
-        "top": 305.448,
+        "left": 380.5695426452411,
+        "right": 962.4633967861557,
+        "top": 305.44799999999987,
         "bottom": 948.5519999999999
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -583,25 +583,25 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 156,
-        "right": 1035,
-        "top": 210,
-        "bottom": 1061
+        "left": 157,
+        "right": 1012,
+        "top": 213,
+        "bottom": 1045
       },
-      "bodyAxisX": 695,
+      "bodyAxisX": 678.5,
       "bodyBand": [
         0.94,
         0.98
       ],
-      "output": "public/assets/samples/ceramic-mug/back-right-three-quarter.jpg",
+      "output": "public/assets/samples/ceramic-mug/back-right-three-quarter.png",
       "offset": {
-        "x": 101.785805,
-        "y": 146.750186,
-        "scale": 0.755703878
+        "x": 102.54559615384619,
+        "y": 140.80719230769228,
+        "scale": 0.7729615384615384
       },
       "displayBounds": {
-        "left": 219.6756098707403,
-        "right": 883.9393184488836,
+        "left": 223.9005576923077,
+        "right": 884.7826730769231,
         "top": 305.448,
         "bottom": 948.5519999999999
       },
@@ -615,26 +615,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 154,
-        "right": 1029,
-        "top": 191,
-        "bottom": 1079
+        "left": 249,
+        "right": 938,
+        "top": 298,
+        "bottom": 1044
       },
-      "bodyAxisX": 682,
+      "bodyAxisX": 645,
       "bodyBand": [
         0.94,
         0.98
       ],
-      "output": "public/assets/samples/ceramic-mug/back-left-three-quarter.jpg",
+      "output": "public/assets/samples/ceramic-mug/back-left-three-quarter.png",
       "offset": {
-        "x": 133.084541,
-        "y": 167.122703,
-        "scale": 0.724216216
+        "x": 70.9650402144772,
+        "y": 48.55122788203744,
+        "scale": 0.8620697050938337
       },
       "displayBounds": {
-        "left": 244.61383783783788,
-        "right": 878.303027027027,
-        "top": 305.448,
+        "left": 285.6203967828418,
+        "right": 879.5864235924932,
+        "top": 305.44799999999987,
         "bottom": 948.5519999999999
       },
       "registrationKind": "uniform-photo-registration-only",
