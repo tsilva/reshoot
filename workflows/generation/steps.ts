@@ -8,12 +8,14 @@ import {
   generationBatches,
   generationInputs,
   generationJobs,
+  generationQuotes,
   shots,
 } from "@/lib/db/schema";
 import { captureGeneration, releaseGeneration } from "@/lib/generation/accounting";
 import { actualImageMime, recoverGenerationOutput } from "@/lib/generation/recovery";
 import { buildImageRequest } from "@/lib/generation/request";
-import { createGenericOrientationGuide } from "@/lib/generation/orientation-guide";
+import { MAX_PHONE_LEAN_DEGREES, phoneLeanDegrees } from "@/lib/generation/phone-alignment";
+import { createOrientationGuide } from "@/lib/generation/orientation-guide";
 import {
   imageProviderConfig,
   requireImageProviderKey,
@@ -122,7 +124,7 @@ export async function executeGenerationJob(
 ) {
   "use step";
   console.info("Executing generation job", { jobId, attemptId });
-  const [job, attempt, shot, inputs] = await Promise.all([
+  const [job, attempt, shotRecord, inputs] = await Promise.all([
     db.query.generationJobs.findFirst({
       where: and(eq(generationJobs.id, jobId), eq(generationJobs.leaseOwner, leaseOwner)),
     }),
@@ -133,19 +135,23 @@ export async function executeGenerationJob(
       ),
     }),
     db
-      .select({ shot: shots })
+      .select({ shot: shots, quoteShots: generationQuotes.shots })
       .from(shots)
       .innerJoin(generationJobs, eq(generationJobs.shotId, shots.id))
+      .innerJoin(generationBatches, eq(generationBatches.id, generationJobs.batchId))
+      .innerJoin(generationQuotes, eq(generationQuotes.id, generationBatches.quoteId))
       .where(eq(generationJobs.id, jobId))
       .limit(1)
-      .then((rows) => rows[0]?.shot),
+      .then((rows) => rows[0]),
     db
       .select()
       .from(generationInputs)
       .where(eq(generationInputs.jobId, jobId))
       .orderBy(generationInputs.ordinal),
   ]);
-  if (!job || !attempt || !shot) return { status: "duplicate" as const };
+  if (!job || !attempt || !shotRecord) return { status: "duplicate" as const };
+  const { shot, quoteShots } = shotRecord;
+  const guideKind = quoteShots[0]?.orientationGuideKind;
   if (job.status === "succeeded" || job.status === "failed") {
     return { status: "terminal" as const };
   }
@@ -177,7 +183,7 @@ export async function executeGenerationJob(
       referenceImages: referenceBuffers.map(
         (buffer) => `data:image/webp;base64,${buffer.toString("base64")}`,
       ),
-      orientationGuide: await createGenericOrientationGuide(shot),
+      orientationGuide: await createOrientationGuide(shot, guideKind),
     });
     const providerKey = requireImageProviderKey();
 
@@ -256,6 +262,23 @@ export async function executeGenerationJob(
       });
       return { status: "failed" as const };
     }
+    if (guideKind === "upright-phone-v1" && (shot.elevation ?? 0) === 0) {
+      const lean = await phoneLeanDegrees(image);
+      if (lean !== undefined && Math.abs(lean) > MAX_PHONE_LEAN_DEGREES) {
+        await releaseGeneration({
+          jobId,
+          attemptId,
+          attemptState: "failed",
+          failureCode: "invalid_upright_output",
+          publicError: "This phone view was tilted. Credits were released.",
+          privateError: `The phone silhouette leaned ${lean.toFixed(1)} degrees.`,
+          providerRequestId,
+          usageCostMicros,
+        });
+        return { status: "failed" as const };
+      }
+    }
+
     await db.update(generationAttempts).set({
       providerRequestId,
       usageCostMicros,

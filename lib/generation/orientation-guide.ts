@@ -1,9 +1,9 @@
 import "server-only";
 import sharp from "sharp";
-import { shotOrientation, type GenerationShot, type OrientationGuide } from "./request";
+import { shotOrientation, type GenerationShot, type OrientationGuide, type OrientationGuideKind } from "./request";
 
 type Point = [number, number, number];
-type Triangle = [Point, Point, Point];
+type Triangle = [Point, Point, Point, gray?: number];
 
 // Generic direction cue, never geometry inferred from a user's product.
 // Keep this version deterministic; a future product-specific guide replaces
@@ -31,12 +31,37 @@ function cupTriangles(): Triangle[] {
   return triangles;
 }
 
-const triangles = cupTriangles();
+function phoneTriangles(): Triangle[] {
+  const radius = .055, halfWidth = .25, halfDepth = .025;
+  const rim = [[halfWidth - radius, 1 - radius], [-halfWidth + radius, 1 - radius],
+    [-halfWidth + radius, radius], [halfWidth - radius, radius]]
+    .flatMap(([x, y], corner) => Array.from({ length: 9 }, (_, step) => {
+      const angle = (corner + step / 8) * Math.PI / 2;
+      return [x + radius * Math.cos(angle), y + radius * Math.sin(angle)];
+    }));
+  const front = rim.map(([x, y]): Point => [x, y, halfDepth]);
+  const back = rim.map(([x, y]): Point => [x, y, -halfDepth]);
+  return front.flatMap((point, i): Triangle[] => {
+    const next = (i + 1) % front.length;
+    return [
+      [[0, .5, halfDepth], point, front[next], 75],
+      [[0, .5, -halfDepth], back[next], back[i], 183],
+      [point, back[i], back[next], 127],
+      [point, back[next], front[next], 127],
+    ];
+  });
+}
+
+const cup = cupTriangles();
+const phone = phoneTriangles();
 const SIZE = 512;
 
 // Orthographic software capture: one centered vertical pivot, no textures,
 // no cast shadows, no browser/WebGL or external reconstruction dependency.
-function renderCup(azimuth: number, elevation: number) {
+function renderGuide(kind: OrientationGuideKind, azimuth: number, elevation: number) {
+  const isPhone = kind === "upright-phone-v1";
+  const triangles = isPhone ? phone : cup;
+  const scale = isPhone ? SIZE * .8 : SIZE / 2.7;
   const yaw = azimuth * Math.PI / 180, tilt = elevation * Math.PI / 180;
   function transform([x, y, z]: Point): Point {
     const rotatedX = x * Math.cos(yaw) - z * Math.sin(yaw);
@@ -45,24 +70,24 @@ function renderCup(azimuth: number, elevation: number) {
       (y - .5) * Math.sin(tilt) + rotatedZ * Math.cos(tilt)];
   }
   const faces = triangles.flatMap((triangle) => {
-    const [a, b, c] = triangle.map(transform);
+    const [a, b, c] = [transform(triangle[0]), transform(triangle[1]), transform(triangle[2])];
     const u = b.map((v, i) => v - a[i]), v = c.map((n, i) => n - a[i]);
     const normal = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
     const length = Math.hypot(...normal);
     if (length < 1e-10 || normal[2] <= 0) return [];
     const light = Math.max(0, (-3 * normal[0] + 7 * normal[1] + 4 * normal[2]) / (Math.sqrt(74) * length));
-    const gray = Math.round(140 + 65 * light);
-    const points = [a, b, c].map(([x, y]) => `${(SIZE / 2 + x * SIZE / 2.7).toFixed(2)},${(SIZE / 2 - y * SIZE / 2.7).toFixed(2)}`).join(" ");
+    const gray = (triangle[3] ?? 140) + Math.round((isPhone ? 28 : 65) * light);
+    const points = [a, b, c].map(([x, y]) => `${(SIZE / 2 + x * scale).toFixed(2)},${(SIZE / 2 - y * scale).toFixed(2)}`).join(" ");
     return [{ depth: (a[2] + b[2] + c[2]) / 3, svg: `<polygon points="${points}" fill="rgb(${gray},${gray},${gray})" stroke="rgb(${gray},${gray},${gray})" stroke-width="0.35"/>` }];
   });
   faces.sort((a, b) => a.depth - b.depth);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}"><rect width="100%" height="100%" fill="white"/>${faces.map((f) => f.svg).join("")}</svg>`;
 }
 
-export async function createGenericOrientationGuide(shot: GenerationShot): Promise<OrientationGuide | undefined> {
+export async function createOrientationGuide(shot: GenerationShot, kind: OrientationGuideKind = "generic-cup-v1"): Promise<OrientationGuide | undefined> {
   const orientation = shotOrientation(shot);
   // Legacy label-only shots have no reliable yaw: do not invent a front cue.
   if (!orientation) return undefined;
-  const png = await sharp(Buffer.from(renderCup(orientation.azimuth, orientation.elevation))).png().toBuffer();
-  return { kind: "generic-cup-v1", ...orientation, image: `data:image/png;base64,${png.toString("base64")}` };
+  const png = await sharp(Buffer.from(renderGuide(kind, orientation.azimuth, orientation.elevation))).png().toBuffer();
+  return { kind, ...orientation, image: `data:image/png;base64,${png.toString("base64")}` };
 }

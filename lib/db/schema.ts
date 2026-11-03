@@ -1,3 +1,4 @@
+import type { OrientationGuideKind } from "@/lib/generation/request";
 import { sql } from "drizzle-orm";
 import {
   bigint,
@@ -254,6 +255,7 @@ export type QuoteShotInput = {
   azimuth?: number;
   elevation?: number;
   referenceAssetIds: string[];
+  orientationGuideKind?: OrientationGuideKind;
 };
 
 export const generationQuotes = pgTable(

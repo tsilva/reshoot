@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import sharp from "sharp";
 const state = vi.hoisted(() => ({
   attemptState: "claimed", transitionWon: true, inputs: ["primary", "supporting"],
+  quoteShots: [] as Array<{ orientationGuideKind: "upright-phone-v1" }>,
   getObjectBuffer: vi.fn(), headObject: vi.fn(), putObject: vi.fn(),
   capture: vi.fn(), release: vi.fn(), fetch: vi.fn(), updates: [] as unknown[],
 }));
@@ -16,7 +17,12 @@ vi.mock("@/lib/db", () => ({ db: {
     generationAttempts: { findFirst: async () => ({ id: "attempt", state: state.attemptState, providerModel: "openai/gpt-image-2.5-sunburst", providerEndpoint: "https://pinned.example/images", outputR2Key: "output", previewR2Key: "preview" }) },
   },
   select: (selection?: unknown) => ({ from: () => ({
-    innerJoin: () => ({ where: () => ({ limit: async () => [{ shot: { id: "shot", projectId: "project", label: "Right profile", azimuth: 90, elevation: 0 } }] }) }),
+    innerJoin: () => ({ innerJoin: () => ({ innerJoin: () => ({
+      where: () => ({ limit: async () => [{
+        shot: { id: "shot", projectId: "project", label: "Right profile", azimuth: 90, elevation: 0 },
+        quoteShots: state.quoteShots,
+      }] }),
+    }) }) }),
     where: () => ({ orderBy: async () => selection ? [] : state.inputs.map((frozenR2Key) => ({ frozenR2Key })) }),
   }) }),
   update: () => ({ set: (values: unknown) => { state.updates.push(values); return { where: () => ({ then: (resolve: (value: undefined) => void) => resolve(undefined), returning: async () => state.transitionWon ? [{ id: "attempt" }] : [] }) }; } }),
@@ -25,7 +31,7 @@ import { executeGenerationJob } from "../workflows/generation/steps";
 
 describe("durable generation dispatch", () => {
   beforeEach(() => {
-    state.attemptState = "claimed"; state.transitionWon = true; state.inputs = ["primary", "supporting"]; state.updates = [];
+    state.attemptState = "claimed"; state.transitionWon = true; state.inputs = ["primary", "supporting"]; state.updates = []; state.quoteShots = [];
     vi.clearAllMocks();
     state.headObject.mockRejectedValue({ $metadata: { httpStatusCode: 404 } });
     state.getObjectBuffer.mockImplementation(async (key) => Buffer.from(key));
@@ -64,6 +70,24 @@ describe("durable generation dispatch", () => {
     expect((await sharp(preview).stats()).isOpaque).toBe(false);
     expect(state.capture).toHaveBeenCalledWith(expect.objectContaining({ usageCostMicros: 70000, providerRequestId: "request", output: expect.objectContaining({ ownerId: "owner", mimeType: "image/png", width: 16, height: 16 }) }));
     expect(state.release).not.toHaveBeenCalled();
+  });
+
+  it.each([0, 8])("uses the frozen phone guide and checks the silhouette's lean (%s degrees)", async (lean) => {
+    state.quoteShots = [{ orientationGuideKind: "upright-phone-v1" }];
+    const png = await sharp(Buffer.from(`<svg width="256" height="256">
+      <rect x="78" y="28" width="100" height="200" rx="10" fill="#111"
+        transform="rotate(${lean} 128 128)"/>
+    </svg>`)).png().toBuffer();
+    state.fetch.mockResolvedValue(new Response(JSON.stringify({ data: [{ b64_json: png.toString("base64") }] })));
+
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: lean ? "failed" : "succeeded" });
+    expect(JSON.parse(state.fetch.mock.calls[0][1].body).prompt).toContain("is an upright phone-shaped scaffold");
+    if (lean) {
+      expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ failureCode: "invalid_upright_output" }));
+      expect(state.putObject).not.toHaveBeenCalled();
+    } else {
+      expect(state.capture).toHaveBeenCalledOnce();
+    }
   });
 
   it("releases the held credit when the provider returns an opaque output", async () => {

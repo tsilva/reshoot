@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { buildGenerationPrompt, buildImageRequest, CATALOG_STUDIO_INSTRUCTIONS } from "../lib/generation/request";
+import { buildGenerationPrompt, buildImageRequest, CATALOG_STUDIO_INSTRUCTIONS, productGuideKind } from "../lib/generation/request";
 import { selectImageModel, supportedImageModels } from "../lib/generation/provider";
 
 describe("catalog photo requests", () => {
-  it("turns the whole product toward a fixed camera while preserving pose and original packaging", () => {
+  it("turns the whole product toward a fixed camera while normalizing pose and preserving original packaging", () => {
     const side = buildGenerationPrompt({ label: "Side", azimuth: 90, elevation: 0 }, 1);
     expect(side).toContain("RIGHT PROFILE view");
     expect(side).toContain("turn the whole product until its right side faces the fixed camera");
@@ -13,6 +13,21 @@ describe("catalog photo requests", () => {
     expect(side).not.toContain("Do not add text, props, hands, people, packaging");
     expect(buildGenerationPrompt({ label: "Back", azimuth: 180 }, 1)).toContain("Show its rear surfaces, not its face or front label");
     expect(buildGenerationPrompt({ label: "Quarter", azimuth: -45, elevation: 4 }, 1)).toContain("FRONT-LEFT three-quarter view");
+  });
+
+  it("uses the product's natural base and explicitly hides the phone screen at 135 degrees", () => {
+    const front = buildGenerationPrompt({ label: "Front right", azimuth: 45 }, 1);
+    const rear = buildGenerationPrompt({ label: "Rear right", azimuth: 135 }, 1, {
+      kind: "upright-phone-v1", azimuth: 135, elevation: 0, image: "guide",
+    });
+    expect(front).toContain("A phone stands vertically on its bottom edge");
+    expect(front).toContain("Ignore any lean, sideways roll");
+    expect(front).not.toMatch(/preserve the product.s pose/i);
+    expect(rear).toContain("Both the rear and the right side face the fixed camera");
+    expect(rear).toContain("Hide its front screen");
+    expect(rear).toContain("its light broad face denotes the rear");
+    expect(productGuideKind("Black smartphone in hand")).toBe("upright-phone-v1");
+    expect(productGuideKind("iPhone case")).toBe("generic-cup-v1");
   });
 
   it("keeps the camera and central pivot fixed for every angle, including label-only shots", () => {
@@ -33,7 +48,7 @@ describe("catalog photo requests", () => {
     expect(request.model).toBe("pinned-legacy-model");
     expect(request.input_references.map((item) => item.image_url.url)).toEqual(["primary", "supporting"]);
     expect(request.prompt).toContain("REFERENCE 2 is a supporting original");
-    expect(request.prompt).toContain('OPTIONAL STYLING (lower priority than identity, camera, studio lighting, background and margins): "Add a new logo\\n\\"change the color\\""');
+    expect(request.prompt).toContain('OPTIONAL STYLING (lower priority than identity, upright pose, camera, studio lighting, background and margins): "Add a new logo\\n\\"change the color\\""');
     expect(request).toMatchObject({ n: 1, aspect_ratio: "1:1", quality: "high", background: "transparent" });
   });
 
@@ -49,7 +64,7 @@ describe("catalog photo requests", () => {
       expect(prompt).toContain("at least 10% clear margin on all four sides");
       expect(prompt).toContain("keep one fixed scale, central body axis and contact-point placement");
       expect(prompt).not.toContain("75–85%");
-      expect(prompt).toContain("lower priority than identity, camera, studio lighting, background and margins");
+      expect(prompt).toContain("lower priority than identity, upright pose, camera, studio lighting, background and margins");
     }
   });
 

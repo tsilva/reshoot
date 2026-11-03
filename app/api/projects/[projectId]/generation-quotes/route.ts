@@ -13,6 +13,7 @@ import {
   shots,
   type QuoteShotInput,
 } from "@/lib/db/schema";
+import { productGuideKind } from "@/lib/generation/request";
 import { MAX_BATCH_SHOTS } from "@/lib/projects/limits";
 import { requireOwnedProject } from "@/lib/projects/service";
 
@@ -112,8 +113,10 @@ export async function POST(request: Request, context: RouteContext) {
       bands.map((band) => [band.referenceCount, band.creditsPerShot]),
     );
 
+    const orientationGuideKind = productGuideKind(project.title);
     const frozenShots: QuoteShotInput[] = parsed.data.shots.map((shot) => ({
       clientId: shot.clientId,
+      orientationGuideKind,
       ...(shot.shotId ? { shotId: shot.shotId } : {}),
       label: shot.label,
       ...(shot.presetKey ? { presetKey: shot.presetKey } : {}),
