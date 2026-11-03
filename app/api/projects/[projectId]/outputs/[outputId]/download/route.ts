@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { generationOutputs, shots } from "@/lib/db/schema";
 import { shotDownloadFilename } from "@/lib/projects/downloads";
 import { requireOwnedProject } from "@/lib/projects/service";
-import { signDownload } from "@/lib/storage/r2";
+import { getObjectStream } from "@/lib/storage/r2";
 
 type RouteContext = { params: Promise<{ projectId: string; outputId: string }> };
 
@@ -32,11 +32,12 @@ export async function GET(_request: Request, context: RouteContext) {
       version: row.output.version,
       mimeType: row.output.mimeType,
     });
-    return new Response(null, {
-      status: 302,
+    return new Response(await getObjectStream(row.output.r2Key), {
       headers: {
-        Location: await signDownload(row.output.r2Key, filename),
+        "Content-Type": row.output.mimeType,
+        "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (error) {

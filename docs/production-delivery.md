@@ -36,9 +36,10 @@ Configured and verified on 2026-10-14:
 Both tokens permit Object Read & Write only on their named bucket and expire
 on October 14, 2027. Rotate before expiry. Development's bucket allows signed
 browser requests from any origin to support automatic local ports; its public
-development URL and custom domains remain disabled. CORS does not grant object
-access: private files still require a valid signed URL. Production CORS and
-existing object keys were retained.
+development URL and custom domains remain disabled. Direct browser requests to
+private storage use signed URLs. ZIP exports and individual view downloads
+stream originals from R2 through Reshoot after checking workspace ownership.
+Those downloads use the app's origin and require no bucket CORS rule.
 
 Preview uses the working Development database source so its asset references
 match the Development bucket. Existing Development-referenced objects were

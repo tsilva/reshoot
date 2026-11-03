@@ -73,30 +73,28 @@ export async function signRead(key: string, expiresIn = 600) {
   );
 }
 
-export async function signDownload(key: string, filename: string) {
-  return getSignedUrl(
-    r2,
-    new GetObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      ResponseContentDisposition: `attachment; filename="${filename}"`,
-    }),
-    { expiresIn: 600 },
-  );
-}
-
 export async function headObject(key: string) {
   return r2.send(
     new HeadObjectCommand({ Bucket: bucket, Key: key, ChecksumMode: "ENABLED" }),
   );
 }
 
-export async function getObjectBuffer(key: string) {
+async function getObjectBody(key: string) {
   const response = await r2.send(
     new GetObjectCommand({ Bucket: bucket, Key: key, ChecksumMode: "ENABLED" }),
   );
   if (!response.Body) throw new Error("Stored object has no body.");
-  return Buffer.from(await response.Body.transformToByteArray());
+  return response.Body;
+}
+
+export async function getObjectBuffer(key: string) {
+  const body = await getObjectBody(key);
+  return Buffer.from(await body.transformToByteArray());
+}
+
+export async function getObjectStream(key: string) {
+  const body = await getObjectBody(key);
+  return body.transformToWebStream();
 }
 
 export async function putObject(input: {

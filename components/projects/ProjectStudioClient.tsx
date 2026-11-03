@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CheckCircle,
-  DotsThree,
   ImageSquare,
   SpinnerGap,
   Plus,
@@ -61,7 +60,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   const [submitting, setSubmitting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [activeShotId, setActiveShotId] = useState<string | null>(null);
-  const [visibleVersions, setVisibleVersions] = useState<Record<string, string>>({});
   const [loadedPhotos, setLoadedPhotos] = useState<Set<string>>(() => new Set());
   const [batch, setBatch] = useState<GenerationBatchStatus | null>(null);
   const [uploading, setUploading] = useState<Array<{ name: string; progress: number }>>([]);
@@ -72,7 +70,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [liveRetry, setLiveRetry] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
-  const toolsRef = useRef<HTMLDetailsElement>(null);
   const quoteRevision = useRef(0);
   const automaticQuoteKey = useRef<string | null>(null);
   const batchConfirmation = useRef<{ quoteId: string; key: string } | null>(null);
@@ -291,23 +288,11 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
     }
   }
 
-  async function reviewOutput(outputId: string, approved: boolean) {
-    try {
-      await apiRequest(`/api/projects/${project.id}/outputs/${outputId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ approved, selected: approved }),
-      });
-      await refreshProject();
-    } catch (reviewError) {
-      setError(reviewError instanceof Error ? reviewError.message : "Could not save the review.");
-    }
-  }
-
   async function downloadViews() {
     setExporting(true);
     setError(null);
     try {
-      const archive = await exportVisibleShots(project.shots, visibleVersions);
+      const archive = await exportVisibleShots(project.shots);
       if (!archive) {
         setNotice("Your views will be available to download once generation finishes.");
         return;
@@ -327,10 +312,10 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
 
   const completedShots = useMemo(() => project.shots.filter((shot) => shot.versions.length > 0), [project.shots]);
   const activeShot = completedShots.find((shot) => shot.id === activeShotId) ?? completedShots[0];
-  function visibleVersion(shot: ProjectShot) {
-    return shot.versions.find((version) => version.outputId === visibleVersions[shot.id]) ?? shot.versions.at(-1)!;
+  function latestVersion(shot: ProjectShot) {
+    return shot.versions.at(-1)!;
   }
-  const activeVersion = activeShot ? visibleVersion(activeShot) : null;
+  const activeVersion = activeShot ? latestVersion(activeShot) : null;
   const canvasImage = activeVersion?.previewUrl ?? primary?.previewUrl;
   const advance = useCallback(() => {
     setActiveShotId((current) => {
@@ -341,7 +326,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   const playback = usePhotoPlayback({
     containerRef: canvasRef,
     frameKey: activeVersion?.outputId ?? "reference",
-    ready: completedShots.length > 1 && completedShots.every((shot) => loadedPhotos.has(visibleVersion(shot).previewUrl)),
+    ready: completedShots.length > 1 && completedShots.every((shot) => loadedPhotos.has(latestVersion(shot).previewUrl)),
     blocked: busy || generating,
     onAdvance: advance,
   });
@@ -351,7 +336,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
     playback.pause();
     const index = completedShots.findIndex((shot) => shot.id === activeShot.id);
     setActiveShotId(completedShots[(index + direction + completedShots.length) % completedShots.length].id);
-    if (toolsRef.current) toolsRef.current.open = false;
   }
 
   return (
@@ -362,27 +346,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
         {completedShots.length ? <button className="studio-download" onClick={() => void downloadViews()} disabled={exporting}>
           {exporting ? <SpinnerGap className="spin" size={18} /> : null}{exporting ? "Downloading…" : "Download"}
         </button> : null}
-        {activeShot && activeVersion ? <details className="studio-view-tools" ref={toolsRef} onToggle={(event) => { if (event.currentTarget.open) playback.pause(); }} onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            event.currentTarget.open = false;
-            event.currentTarget.querySelector("summary")?.focus();
-          }
-        }}>
-          <summary aria-label="View actions" title="View actions"><DotsThree size={24} /></summary>
-          <div className="studio-view-menu">
-            <a href={activeVersion.downloadUrl} download>Download this view</a>
-            <button onClick={() => void reviewOutput(activeVersion.outputId, !(activeVersion.approvedAt || activeVersion.selectedAt))}>
-              {activeVersion.approvedAt || activeVersion.selectedAt ? "Undo approval" : "Approve this version"}
-            </button>
-            {activeShot.versions.length > 1 ? <label>Version
-              <select aria-label="View version" value={activeVersion.outputId} onChange={(event) => {
-                setVisibleVersions((current) => ({ ...current, [activeShot.id]: event.target.value }));
-              }}>
-                {activeShot.versions.toReversed().map((version) => <option key={version.outputId} value={version.outputId}>Version {version.version}</option>)}
-              </select>
-            </label> : null}
-          </div>
-        </details> : null}
       </header>
 
       {notice ? (
@@ -417,7 +380,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
       <div className="studio-photo-canvas" ref={canvasRef} role="region" aria-label="Product photos" aria-roledescription="carousel"
         onFocusCapture={playback.onFocusCapture} onBlurCapture={playback.onBlurCapture}
         onKeyDown={(event) => {
-          if (toolsRef.current?.open || (event.target instanceof HTMLElement && event.target.closest("input, select, textarea, [contenteditable='true']"))) return;
+          if (event.target instanceof HTMLElement && event.target.closest("input, select, textarea, [contenteditable='true']")) return;
           if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
           event.preventDefault();
           cycleView(event.key === "ArrowLeft" ? -1 : 1);
@@ -425,7 +388,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
       >
         <div className="studio-photo-stage" aria-busy={generating}>
           {completedShots.length ? completedShots.map((shot) => {
-            const version = visibleVersion(shot);
+            const version = latestVersion(shot);
             return <Image key={version.outputId} unoptimized src={version.previewUrl} fill sizes="(max-width: 720px) 95vw, 640px" loading="eager"
               hidden={shot.id !== activeShot?.id}
               alt={`${project.title}, ${shot.label.toLowerCase()}, version ${version.version}`}
@@ -443,10 +406,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
             {batch ? `${batch.completedJobs} of ${batch.jobs.length} views ready` : "Resuming generation…"}
           </div> : null}
         </div>
-        {completedShots.length ? <SlideshowControls playing={playback.enabled && completedShots.length > 1} disabled={completedShots.length < 2} onPrevious={() => cycleView(-1)} onNext={() => cycleView(1)} onTogglePlayback={() => {
-          if (toolsRef.current) toolsRef.current.open = false;
-          playback.toggle();
-        }} /> : null}
+        {completedShots.length ? <SlideshowControls playing={playback.enabled && completedShots.length > 1} disabled={completedShots.length < 2} onPrevious={() => cycleView(-1)} onNext={() => cycleView(1)} onTogglePlayback={playback.toggle} /> : null}
         <p className="sr-only" aria-live={playback.enabled && completedShots.length > 1 ? "off" : "polite"}>{activeShot && activeVersion ? `${activeShot.label}, version ${activeVersion.version}` : "Reference photo. Generate studio views when your photos are ready."}</p>
       </div>
 

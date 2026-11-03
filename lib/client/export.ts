@@ -29,7 +29,6 @@ async function exportFiles(outputs: Array<{ version: ShotVersion; filename: stri
   const files: Record<string, Uint8Array> = {};
   for (const { version, filename } of outputs) {
     try {
-      // The authenticated download route signs a fresh private-storage URL per request.
       const response = await fetchFile(version.downloadUrl, { cache: "no-store" });
       if (!response.ok) throw new Error(`Download failed (${response.status}).`);
       files[filename] = new Uint8Array(await response.arrayBuffer());
