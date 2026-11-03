@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  CheckCircle,
   ImageSquare,
   SpinnerGap,
   Plus,
@@ -31,7 +30,6 @@ import type {
 } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
 import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
-import { exportVisibleShots } from "@/lib/client/export";
 import { useBatchRealtime } from "@/lib/client/use-batch-realtime";
 import { automaticShotRequests, shootReferences } from "@/lib/client/shoot-plan";
 import { usePhotoPlayback } from "@/lib/client/use-photo-playback";
@@ -41,8 +39,32 @@ function batchIsTerminal(status: GenerationBatchStatus["status"]) {
   return ["partial", "succeeded", "failed"].includes(status);
 }
 
-function slugify(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+function ProjectDownload({ projectId }: { projectId: string }) {
+  const [archive, setArchive] = useState<{ downloadUrl: string } | "failed" | null>(null);
+  const [retry, setRetry] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void apiRequest<{ downloadUrl: string }>(`/api/projects/${projectId}/download`, {
+      method: "POST",
+      signal: controller.signal,
+    }).then((result) => {
+      if (!controller.signal.aborted) setArchive(result);
+    }).catch(() => {
+      if (!controller.signal.aborted) setArchive("failed");
+    });
+    return () => controller.abort();
+  }, [projectId, retry]);
+
+  if (archive === "failed") {
+    return <button type="button" className="studio-download" onClick={() => {
+      setArchive(null);
+      setRetry((attempt) => attempt + 1);
+    }}>Retry ZIP</button>;
+  }
+  return archive
+    ? <a className="studio-download" href={archive.downloadUrl} download>Download</a>
+    : <span className="studio-download" role="status">Preparing ZIP…</span>;
 }
 
 export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenWallet, onBalanceChange, walletRevision = 0, walletButton, pageError, children }: {
@@ -62,13 +84,11 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
   const quote = quotedWalletRevision === walletRevision ? storedQuote : null;
   const [quoting, setQuoting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [activeShotId, setActiveShotId] = useState<string | null>(null);
   const [loadedPhotos, setLoadedPhotos] = useState<Set<string>>(() => new Set());
   const [batch, setBatch] = useState<GenerationBatchStatus | null>(null);
   const [uploading, setUploading] = useState<Array<{ name: string; progress: number }>>([]);
   const [photosStale, setPhotosStale] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
@@ -292,28 +312,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     }
   }
 
-  async function downloadViews() {
-    setExporting(true);
-    setError(null);
-    try {
-      const archive = await exportVisibleShots(project.shots);
-      if (!archive) {
-        setNotice("Your views will be available to download once generation finishes.");
-        return;
-      }
-      const url = URL.createObjectURL(new Blob([new Uint8Array(archive)], { type: "application/zip" }));
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = `${slugify(project.title) || "project"}-reshoot.zip`;
-      anchor.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
-    } catch (exportError) {
-      setError(exportError instanceof Error ? exportError.message : "Export failed. Please retry.");
-    } finally {
-      setExporting(false);
-    }
-  }
-
   const completedShots = useMemo(() => project.shots
     .filter((shot) => shot.versions.length > 0)
     .sort((a, b) => (a.azimuth ?? 360) - (b.azimuth ?? 360)), [project.shots]);
@@ -353,12 +351,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
 
   const studioContent = (
     <section id="studio" className={`home-active-studio studio-main quiet-studio${generationStarted ? " is-gallery" : ""}`} aria-label="Product studio">
-      {notice ? (
-        <div className="studio-notice" role="status">
-          <CheckCircle size={18} /> {notice}
-          <button className="icon-button" onClick={() => setNotice(null)} aria-label="Dismiss"><X size={16} /></button>
-        </div>
-      ) : null}
       {error ? (
         <div className="studio-notice error-notice" role="alert">
           <WarningCircle size={18} /> {error}
@@ -468,9 +460,9 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
                 previousLabel="Rotate left" nextLabel="Rotate right"
                 onPrevious={() => cycleView(1)} onNext={() => cycleView(-1)} onTogglePlayback={playback.toggle} />
             </div>
-            <button type="button" className="studio-download" onClick={() => void downloadViews()} disabled={exporting}>
-              {exporting ? <SpinnerGap className="spin" size={18} /> : null}{exporting ? "Downloading…" : "Download"}
-            </button>
+            {!project.activeBatchId && !generating
+              ? <ProjectDownload key={project.id} projectId={project.id} />
+              : null}
           </> : null}
           {walletButton}
         </div>

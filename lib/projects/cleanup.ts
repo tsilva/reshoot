@@ -10,6 +10,7 @@ import {
   projects,
 } from "@/lib/db/schema";
 import { deleteObject } from "@/lib/storage/r2";
+import { projectArchiveKey } from "@/lib/projects/downloads";
 
 export async function cleanupExpiredProjectObjects(limit = 100) {
   const expiredProjects = await db
@@ -69,6 +70,11 @@ export async function cleanupExpiredProjectObjects(limit = 100) {
       deletedObjects += 2;
     }
     if (outputRows.length) {
+      await Promise.all([
+        deleteObject(projectArchiveKey(project.id, false)),
+        deleteObject(projectArchiveKey(project.id, true)),
+      ]);
+      deletedObjects += 2;
       await db
         .delete(generationOutputs)
         .where(

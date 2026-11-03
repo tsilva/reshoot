@@ -1,4 +1,5 @@
 import { claimGenerationJob, executeGenerationJob } from "./steps";
+import { prepareGenerationArchive } from "./archive-step";
 
 export async function generationJobWorkflow(jobId: string) {
   "use workflow";
@@ -12,6 +13,7 @@ export async function generationJobWorkflow(jobId: string) {
     return { status: claim.kind };
   }
   const result = await executeGenerationJob(jobId, claim.attemptId, claim.leaseOwner);
+  await prepareGenerationArchive({ jobId });
   console.info("Generation workflow completed", { jobId, status: result.status });
   return result;
 }

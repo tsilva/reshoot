@@ -18,3 +18,8 @@ export function shotDownloadFilename(input: {
 export function outputDownloadUrl(projectId: string, outputId: string) {
   return `/api/projects/${projectId}/outputs/${outputId}/download`;
 }
+
+export function projectArchiveKey(projectId: string, turntable: boolean) {
+  // Bump the relevant ZIP version if its view bytes or filenames change.
+  return `projects/${projectId}/exports/${turntable ? "turntable" : "views"}-v1.zip`;
+}
