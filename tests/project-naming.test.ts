@@ -30,6 +30,16 @@ describe("photo-based shoot names", () => {
     expect(body.max_tokens).toBe(80);
   });
 
+  it.each([
+    ["Black smartphone in hand", "Black smartphone"],
+    ["Black smartphone held in a person's hand", "Black smartphone"],
+    ["Ceramic mug on a wooden table", "Ceramic mug"],
+    ["Wall-mounted lamp with shade", "Wall-mounted lamp with shade"],
+  ])("keeps product details and removes scene wording from %s", async (title, expected) => {
+    fetchMock.mockResolvedValue(Response.json({ choices: [{ message: { content: JSON.stringify({ title }) } }] }));
+    expect(await suggestPhotoTitle(preview)).toBe(expected);
+  });
+
   it("routes hosted naming directly through the production provider", async () => {
     vi.stubEnv("VERCEL_ENV", "production");
     vi.stubEnv("OPENROUTER_API_KEY", "production-test-key");

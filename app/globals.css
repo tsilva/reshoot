@@ -4686,15 +4686,16 @@ dialog.native-modal:has(> .sample-original-modal) { align-items: center; justify
 /* Quiet photo canvas: the generated image is the working surface. */
 .has-studio { --studio-bar-height: 64px; }
 .has-studio .studio-topbar {
+  --studio-title-size: clamp(22px, 3vw, 32px);
   min-height: var(--studio-bar-height);
   grid-template-columns: 44px auto minmax(0, 1fr) auto auto 44px;
   grid-template-areas: "back brand title rotation download wallet";
   gap: 12px;
 }
-.studio-topbar .home-brand { grid-area: brand; font-size: 32px; letter-spacing: -1.2px; }
+.studio-topbar .home-brand { grid-area: brand; padding-bottom: 0; font-size: var(--studio-title-size); line-height: 1.15; letter-spacing: -1.2px; }
 .studio-topbar .quiet-back { grid-area: back; }
 .studio-topbar .home-wallet-button { grid-area: wallet; }
-.studio-title { grid-area: title; min-width: 0; overflow: hidden; margin: 0; font-size: clamp(20px, 3vw, 32px); font-weight: 400; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.studio-title { grid-area: title; min-width: 0; overflow: hidden; margin: 0; font-size: var(--studio-title-size); font-weight: 400; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
 .studio-rotation-controls { grid-area: rotation; min-width: 0; }
 .studio-rotation-controls .sample-playback { gap: 5px; }
 .studio-rotation-controls .sample-playback > button { border-color: transparent; background: transparent; }
@@ -4750,7 +4751,6 @@ dialog.native-modal:has(> .sample-original-modal) { align-items: center; justify
 }
 @media (max-width: 720px) {
   .has-studio .studio-topbar { gap: 6px; }
-  .studio-topbar .home-brand { font-size: 26px; }
   .home-active-studio.quiet-studio { gap: 12px; }
   .studio-download { font-size: 14px; }
   .studio-photo-stage { height: min(92vw, 410px); }
