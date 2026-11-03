@@ -4,14 +4,32 @@ import dynamic from "next/dynamic";
 import {
   ArrowRight, Aperture, Coins, Plus, SpinnerGap, User, X,
 } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ProjectStudioClient } from "@/components/projects/ProjectStudioClient";
 import { ProjectsClient } from "@/components/projects/ProjectsClient";
 import { SampleCarousel } from "@/components/SampleCarousel";
 import type { CreditLedgerEntry, CreditSummary, ProjectDetail, ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
+import { shootReferences } from "@/lib/client/shoot-plan";
 
 const AccountClient = dynamic(() => import("@/components/account/AccountClient").then((module) => module.AccountClient));
-const ProjectStudioClient = dynamic(() => import("@/components/projects/ProjectStudioClient").then((module) => module.ProjectStudioClient));
+
+async function prepareProjectPreview(project: ProjectDetail) {
+  const firstView = project.shots.find((shot) => shot.versions.length)?.versions.at(-1);
+  const src = firstView?.previewUrl ?? shootReferences(project.assets)[0]?.previewUrl;
+  if (!src) return;
+
+  const image = new Image();
+  image.src = src;
+  let timeout: number | undefined;
+  // Keep the library visible while the first photo decodes, with a short
+  // deadline so a slow or unavailable photo cannot block opening the shoot.
+  await Promise.race([
+    image.decode().catch(() => {}),
+    new Promise<void>((resolve) => { timeout = window.setTimeout(resolve, 500); }),
+  ]);
+  window.clearTimeout(timeout);
+}
 
 export function StudioHome({ initialCredits, initialProjects, initialProject = null, initialWalletOpen = false }: {
   initialCredits: CreditSummary | null;
@@ -29,8 +47,28 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sessionRequest = useRef<Promise<CreditSummary> | null>(null);
+  const openingProject = useRef(false);
+  const libraryScroll = useRef<number | null>(null);
+  const returningProject = useRef<string | null>(null);
   const studioRef = useRef<HTMLElement>(null);
   const walletRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    if (activeProject && libraryScroll.current !== null) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      studioRef.current?.querySelector<HTMLElement>(".quiet-back")?.focus({ preventScroll: true });
+    } else if (returningProject.current) {
+      const library = document.getElementById("shoots");
+      if (libraryScroll.current === null) {
+        library?.scrollIntoView({ behavior: "instant", block: "start" });
+      } else {
+        window.scrollTo({ top: libraryScroll.current, behavior: "instant" });
+      }
+      library?.querySelector<HTMLElement>(`a[href="/projects/${CSS.escape(returningProject.current)}"]`)?.focus({ preventScroll: true });
+      libraryScroll.current = null;
+      returningProject.current = null;
+    }
+  }, [activeProject]);
 
   const refreshBalance = useCallback(() => {
     void Promise.all([
@@ -102,25 +140,33 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
   }, [walletOpen, walletActivity, credits]);
 
   async function openProject(projectId: string) {
+    if (openingProject.current) return;
+    openingProject.current = true;
     setBusy("project");
     setError(null);
     try {
       const [response, library] = await Promise.all([
-        apiRequest<{ project: ProjectDetail }>(`/api/projects/${projectId}`),
+        apiRequest<{ project: ProjectDetail }>(`/api/projects/${projectId}`).then(async (detail) => {
+          await prepareProjectPreview(detail.project);
+          return detail;
+        }),
         apiRequest<{ projects: ProjectSummary[] }>("/api/projects"),
       ]);
+      libraryScroll.current = window.scrollY;
       setActiveProject(response.project);
       setProjects(library.projects);
       const url = new URL(window.location.href);
       url.searchParams.set("project", projectId);
       url.hash = "studio";
       window.history.replaceState(null, "", url);
-      requestAnimationFrame(() => studioRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "This shoot could not open. Please try again.";
       setError(message);
       throw cause;
-    } finally { setBusy(null); }
+    } finally {
+      openingProject.current = false;
+      setBusy(null);
+    }
   }
 
   function closeWallet() {
@@ -132,12 +178,12 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
   }
 
   function closeProject() {
+    returningProject.current = activeProject?.id ?? null;
     setActiveProject(null);
     const url = new URL(window.location.href);
     url.searchParams.delete("project");
     url.hash = "shoots";
     window.history.replaceState(null, "", url);
-    requestAnimationFrame(() => document.getElementById("shoots")?.scrollIntoView({ behavior: "smooth" }));
   }
 
   return (
@@ -182,7 +228,7 @@ export function StudioHome({ initialCredits, initialProjects, initialProject = n
           {walletActivity === null ? <p className="home-loading" role="status"><SpinnerGap className="spin" /> Loading your wallet…</p> : <AccountClient initialCredits={credits} initialActivity={walletActivity} displayName="Your private workspace" email="Saved in this browser" isDemo onCreditsChange={(updated) => { setCredits(updated); setWalletRevision((value) => value + 1); }} />}
         </section> : null}
 
-        {busy === "project" ? <p className="home-loading" role="status"><SpinnerGap className="spin" /> Opening your shoot…</p> : null}
+        {busy === "project" ? <p className="home-opening-shoot" role="status"><SpinnerGap className="spin" /> Opening your shoot…</p> : null}
 
         {!activeProject && credits ? <ProjectsClient key={projects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={projects} onOpenProject={openProject} createOpen={createOpen} onCreateClose={() => setCreateOpen(false)} /> : null}
       </main>
