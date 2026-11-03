@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import sharp from "sharp";
 import { measureSample } from "./sample-geometry.mjs";
 
 const readJson = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), "utf8"));
@@ -49,6 +50,11 @@ for (const asset of manifest.assets) {
       checkedGuides.add(guide.rig);
     }
   }
+  const image = sharp(bytes);
+  assert((await image.metadata()).hasAlpha, `Sample lacks an alpha channel: ${key}`);
+  const { channels } = await image.stats();
+  const alpha = channels.at(-1);
+  assert(alpha?.min === 0 && alpha.max === 255, `Sample lacks transparent or opaque pixels: ${key}`);
   const info = await measureSample(bytes, asset.product);
   assert.equal(info.width, info.height, `Sample must be square: ${key}`);
   const framing = offsets[asset.product]?.[viewOrder.indexOf(asset.id)];
@@ -71,4 +77,4 @@ for (const product of ["linen-doll", "ceramic-mug", "leather-handbag"]) {
   for (const view of viewOrder) assert(seen.has(`${product}:${view}`), `Missing ${product}:${view}`);
 }
 
-console.log("Sample framing: 24 photographs retain 10% margins, centered measured body axes, fixed per-product floor contact and source/output provenance. All original-plus-orientation-guide roles and hint rigs verified. These checks do not certify photographic geometry or visual quality.");
+console.log("Sample framing: 24 transparent photographs retain 10% margins, centered measured body axes, fixed per-product floor contact and source/output provenance. All original-plus-orientation-guide roles and hint rigs verified. These checks do not certify photographic geometry or visual quality.");
