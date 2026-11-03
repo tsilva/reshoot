@@ -5,6 +5,18 @@ vi.mock("server-only", () => ({}));
 import { renderPhoneTurntable, turntableAngles } from "../lib/generation/phone-turntable";
 
 describe("shared phone turntable geometry", () => {
+  it("preserves the source's transparent corners instead of extending the edge colors", async () => {
+    const front = await sharp(Buffer.from(
+      '<svg width="120" height="256"><rect width="120" height="256" rx="25" fill="#4d5366"/></svg>',
+    )).png().toBuffer();
+    const image = await renderPhoneTurntable(0, async () => front);
+    const pixels = await sharp(image).raw().toBuffer();
+    const alpha = (x: number, y: number) => pixels[(y * 1024 + x) * 4 + 3];
+    expect(alpha(355, 108)).toBe(0);
+    expect(alpha(512, 108)).toBe(255);
+    expect(alpha(355, 145)).toBe(255);
+  });
+
   it("renders all eight views with a fixed height and puts each rear rail on the correct side", async () => {
     const colors = new Map([[0, "#444444"], [90, "#ff0000"], [180, "#dddddd"], [270, "#0000ff"]]);
     const source = async (face: number) => sharp({

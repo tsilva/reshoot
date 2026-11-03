@@ -8,7 +8,6 @@ const SIZE = 1024;
 const HEIGHT = 820;
 const WIDTH = 390;
 const DEPTH = 54;
-const RADIUS = 34;
 const SUPERSAMPLE = 2;
 
 export function turntableFaces(angle: number): number[] {
@@ -25,7 +24,7 @@ async function phoneTexture(buffer: Buffer, width: number) {
   let left = info.width, right = -1, top = info.height, bottom = -1;
   for (let y = 0; y < info.height; y++) {
     for (let x = 0; x < info.width; x++) {
-      if (data[(y * info.width + x) * 4 + 3] < 128) continue;
+      if (data[(y * info.width + x) * 4 + 3] < 16) continue;
       left = Math.min(left, x);
       right = Math.max(right, x);
       top = Math.min(top, y);
@@ -33,28 +32,33 @@ async function phoneTexture(buffer: Buffer, width: number) {
     }
   }
   if (right <= left || bottom <= top) throw new Error("The phone texture has no visible silhouette.");
+  const textureWidth = width * SUPERSAMPLE;
   const texture = await sharp(buffer)
     .extract({ left, top, width: right - left + 1, height: bottom - top + 1 })
-    .resize(width, HEIGHT, { fit: "fill" }).toColourspace("srgb").ensureAlpha().raw().toBuffer();
+    .resize(textureWidth, HEIGHT * SUPERSAMPLE, { fit: "fill" })
+    .toColourspace("srgb").ensureAlpha().raw().toBuffer();
+  return { data: texture, width: textureWidth };
+}
 
-  // The shared shape supplies its own rounded corners. Extend the edge colors
-  // through the source's transparent corners so every view has the same outline.
-  for (let y = 0; y < HEIGHT; y++) {
-    const row = y * width * 4;
-    let first = 0, last = width - 1;
-    while (first < width && texture[row + first * 4 + 3] < 128) first++;
-    while (last >= first && texture[row + last * 4 + 3] < 128) last--;
-    if (first === width) {
-      if (y > 0) texture.copyWithin(row, row - width * 4, row);
-      continue;
-    }
-    for (let x = 0; x < width; x++) {
-      if (x >= first && x <= last) continue;
-      const source = row + (x < first ? first : last) * 4;
-      texture.copyWithin(row + x * 4, source, source + 4);
-    }
+function faceEdge(data: Buffer, width: number, row: number, right: boolean) {
+  for (let offset = 0; offset < width; offset++) {
+    const x = right ? width - 1 - offset : offset;
+    if (data[(row * width + x) * 4 + 3] >= 128) return (x + (right ? 1 : 0)) / width;
   }
-  return { data: texture, width };
+  return undefined;
+}
+
+function compositePixel(canvas: Buffer, dest: number, texture: Buffer, source: number) {
+  const alpha = texture[source + 3];
+  if (alpha === 0) return;
+  const behind = canvas[dest + 3] * (1 - alpha / 255);
+  const combined = alpha + behind;
+  for (let channel = 0; channel < 3; channel++) {
+    canvas[dest + channel] = Math.round(
+      (texture[source + channel] * alpha + canvas[dest + channel] * behind) / combined,
+    );
+  }
+  canvas[dest + 3] = Math.round(combined);
 }
 
 export async function renderPhoneTurntable(angle: number, loadFace: (face: number) => Promise<Buffer>) {
@@ -68,29 +72,41 @@ export async function renderPhoneTurntable(angle: number, loadFace: (face: numbe
   const cos = Math.cos(yaw), sin = Math.sin(yaw);
   const project = (x: number, z: number) => x * cos - z * sin;
 
+  const broadFace = faces.find(({ face }) => face % 180 === 0);
+  const back = broadFace?.face === 180;
+  const faceStart = project(back ? WIDTH / 2 : -WIDTH / 2, back ? -DEPTH / 2 : DEPTH / 2);
+  const faceEnd = project(back ? -WIDTH / 2 : WIDTH / 2, back ? -DEPTH / 2 : DEPTH / 2);
+  const railOnRight = cos * sin > 0;
+  const railWidth = Math.abs(DEPTH * sin);
+
+  // Project the original cutout alpha with its colors. On quarter views the
+  // rail meets the visible face's actual rounded edge, with half a pixel of
+  // overlap under the face's antialiasing to keep the seam closed.
   for (let row = 0; row < HEIGHT * SUPERSAMPLE; row++) {
-    const y = (row + .5) / SUPERSAMPLE - HEIGHT / 2;
-    const corner = Math.max(0, Math.abs(y) - (HEIGHT / 2 - RADIUS));
-    const half = WIDTH / 2 - RADIUS + Math.sqrt(RADIUS ** 2 - corner ** 2);
     const destY = (canvasSize - HEIGHT * SUPERSAMPLE) / 2 + row;
-    const textureY = Math.floor(row / SUPERSAMPLE);
+    const edge = broadFace && faces.length > 1
+      ? faceEdge(broadFace.data, broadFace.width, row, railOnRight)
+      : undefined;
+    const seam = edge === undefined ? undefined : faceStart + edge * (faceEnd - faceStart);
     for (const { face, data, width } of faces) {
       const rail = face % 180 !== 0;
-      const edge = face === 90 ? half : -half;
-      const nearZ = face === 0 || face === 90 ? DEPTH / 2 : -DEPTH / 2;
-      const start = rail ? project(edge, nearZ) : project(face === 0 ? -half : half, nearZ);
-      const end = rail ? project(edge, -nearZ) : project(face === 0 ? half : -half, nearZ);
+      let start = faceStart, end = faceEnd;
+      if (rail) {
+        if (broadFace && seam === undefined) continue;
+        if (seam === undefined) {
+          start = -railWidth / 2;
+          end = railWidth / 2;
+        } else {
+          start = seam - (railOnRight ? .5 : railWidth);
+          end = seam + (railOnRight ? railWidth : .5);
+        }
+      }
       const firstX = Math.ceil((start + SIZE / 2) * SUPERSAMPLE - .5);
       const lastX = Math.ceil((end + SIZE / 2) * SUPERSAMPLE - .5);
       for (let x = firstX; x < lastX; x++) {
         const fraction = ((x + .5) / SUPERSAMPLE - SIZE / 2 - start) / (end - start);
-        const u = rail ? fraction : .5 + (fraction - .5) * 2 * half / WIDTH;
-        const source = (textureY * width + Math.min(width - 1, Math.floor(u * width))) * 4;
-        const dest = (destY * canvasSize + x) * 4;
-        canvas[dest] = data[source];
-        canvas[dest + 1] = data[source + 1];
-        canvas[dest + 2] = data[source + 2];
-        canvas[dest + 3] = 255;
+        const source = (row * width + Math.min(width - 1, Math.floor(fraction * width))) * 4;
+        compositePixel(canvas, (destY * canvasSize + x) * 4, data, source);
       }
     }
   }
