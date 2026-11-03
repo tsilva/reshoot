@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   assets,
@@ -70,7 +70,33 @@ async function projectCounts(projectId: string, userId: string) {
   };
 }
 
-async function primaryPreview(primaryAssetId: string | null, userId: string) {
+async function projectCoverPreview(projectId: string, primaryAssetId: string | null, userId: string) {
+  const [front] = await db
+    .select({ key: generationOutputs.previewR2Key })
+    .from(generationOutputs)
+    .innerJoin(shots, eq(shots.id, generationOutputs.shotId))
+    .where(
+      and(
+        eq(generationOutputs.projectId, projectId),
+        eq(generationOutputs.ownerId, userId),
+        eq(shots.projectId, projectId),
+        eq(shots.ownerId, userId),
+        or(
+          inArray(shots.azimuth, [-360, 0, 360]),
+          and(
+            isNull(shots.azimuth),
+            or(
+              eq(shots.presetKey, "front"),
+              and(isNull(shots.presetKey), sql`lower(trim(${shots.label})) in ('front', 'front view')`),
+            ),
+          ),
+        ),
+      ),
+    )
+    .orderBy(desc(generationOutputs.createdAt), desc(generationOutputs.version), desc(generationOutputs.id))
+    .limit(1);
+  if (front) return signRead(front.key);
+
   if (!primaryAssetId) return null;
   const [variant] = await db
     .select({ key: assetVariants.r2Key })
@@ -81,6 +107,7 @@ async function primaryPreview(primaryAssetId: string | null, userId: string) {
         eq(assetVariants.assetId, primaryAssetId),
         eq(assetVariants.ownerId, userId),
         eq(assets.ownerId, userId),
+        eq(assets.projectId, projectId),
         eq(assetVariants.kind, "preview"),
       ),
     )
@@ -105,7 +132,7 @@ export async function listProjects(userId: string): Promise<ProjectSummary[]> {
       title: project.title,
       status: publicProjectStatus(project.status),
       ...(await projectCounts(project.id, userId)),
-      primaryPreviewUrl: await primaryPreview(project.primaryAssetId, userId),
+      primaryPreviewUrl: await projectCoverPreview(project.id, project.primaryAssetId, userId),
       updatedAt: project.updatedAt.toISOString(),
     })),
   );
@@ -227,7 +254,7 @@ export async function getProjectDetail(
     title: project.title,
     status: publicProjectStatus(project.status),
     ...counts,
-    primaryPreviewUrl: await primaryPreview(project.primaryAssetId, userId),
+    primaryPreviewUrl: await projectCoverPreview(project.id, project.primaryAssetId, userId),
     updatedAt: project.updatedAt.toISOString(),
     assets: publicAssets,
     shots: publicShots,

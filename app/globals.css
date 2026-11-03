@@ -2548,7 +2548,10 @@ h3 {
   color: var(--lavender-strong);
 }
 
-.project-image-frame img,
+.project-image-frame img {
+  object-fit: contain;
+}
+
 .photo-slide-image img,
 .preset-image img,
 .version-image img,
