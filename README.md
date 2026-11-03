@@ -70,6 +70,8 @@ pnpm test       # run unit and integration tests
 pnpm db:migrate # apply forward database migrations
 ```
 
+Local builds skip Sentry source-map uploads. Runtime error reporting still uses the configured DSN.
+
 ## Notes
 
 Sentry 11 uses the `@sentry/nextjs/config` build entry point and enables logs by default. Client and server integrations retain their configured log levels and explicitly disable personal, request, queue, and content data collection.

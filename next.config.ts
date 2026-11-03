@@ -23,9 +23,12 @@ const nextConfig: NextConfig = {
     : undefined,
 };
 
+const isHostedBuild = process.env.VERCEL === "1" && Boolean(process.env.VERCEL_DEPLOYMENT_ID);
+
 const sentryConfig = withSentryConfig(nextConfig, {
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+  useRunAfterProductionCompileHook: isHostedBuild ? undefined : false,
+  authToken: isHostedBuild ? process.env.SENTRY_AUTH_TOKEN : undefined,
+  sourcemaps: { disable: !isHostedBuild || !process.env.SENTRY_AUTH_TOKEN },
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
@@ -49,6 +52,7 @@ const sentryConfig = withSentryConfig(nextConfig, {
   // tunnelRoute: "/monitoring",
 
   webpack: {
+    disableSentryConfig: !isHostedBuild,
     // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
     // See the following for more information:
     // https://docs.sentry.io/product/crons/

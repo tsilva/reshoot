@@ -33,6 +33,8 @@ def main():
         environment["WORKFLOW_LOCAL_DATA_DIR"] = str(ROOT / ".workflow-local" / instance)
     if sys.argv[1] == "dev":
         environment["NEXT_DEV_OUTPUT_DIR"] = f".next-dev-{os.getpid()}"
+    if sys.argv[1] in ("dev", "build", "start"):
+        environment["SENTRY_AUTH_TOKEN"] = ""
     os.chdir(ROOT)
     os.execvpe(command[0], command, environment)
 
