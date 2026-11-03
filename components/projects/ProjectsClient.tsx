@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Camera,
@@ -18,6 +18,7 @@ import type { ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
 import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
 import { Dialog } from "@/components/Dialog";
+import { projectPath } from "@/lib/projects/routes";
 
 function subscribeToCameraSupport(onChange: () => void) {
   const pointer = window.matchMedia("(pointer: coarse)");
@@ -75,14 +76,17 @@ async function readLegacyShoot(): Promise<LegacyShoot | null> {
   });
 }
 
+function OpeningShootStatus() {
+  const { pending } = useLinkStatus();
+  return pending ? <span className="home-opening-shoot" role="status"><SpinnerGap className="spin" /> Opening your shoot…</span> : null;
+}
+
 export function ProjectsClient({
   initialProjects,
-  onOpenProject,
   createOpen,
   onCreateClose,
 }: {
   initialProjects: ProjectSummary[];
-  onOpenProject?: (projectId: string) => Promise<void>;
   createOpen?: boolean;
   onCreateClose?: () => void;
 }) {
@@ -93,10 +97,6 @@ export function ProjectsClient({
   function setModalOpen(open: boolean) {
     setInternalModalOpen(open);
     if (!open) onCreateClose?.();
-  }
-  async function openProject(projectId: string) {
-    if (onOpenProject) await onOpenProject(projectId);
-    else router.push(`/projects/${projectId}`);
   }
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -247,11 +247,10 @@ export function ProjectsClient({
         setOffline(!navigator.onLine);
         return;
       }
-      await openProject(created.id);
+      router.push(projectPath(created.id));
       setModalOpen(false);
       setUploads([]);
       setCreatedProject(null);
-      router.refresh();
     } catch (requestError) {
       if (!navigator.onLine) setOffline(true);
       setError(
@@ -285,14 +284,10 @@ export function ProjectsClient({
         <div className="project-grid">
           {projects.map((project) => (
             <Link
-              href={`/projects/${project.id}`}
+              href={projectPath(project.id)}
               className="project-card"
               key={project.id}
               aria-label={`Open ${project.title}`}
-              onNavigate={onOpenProject ? (event) => {
-                event.preventDefault();
-                void openProject(project.id).catch(() => {});
-              } : undefined}
             >
               <div className="project-image-frame">
                 {project.primaryPreviewUrl ? (
@@ -313,6 +308,7 @@ export function ProjectsClient({
               <div className="project-card-body">
                 <h2>{project.title}</h2>
               </div>
+              <OpeningShootStatus />
             </Link>
           ))}
         </div>
@@ -402,8 +398,7 @@ export function ProjectsClient({
               <span>{uploads.length}/25 photos</span>
               {createdProject ? (
                 <button className="button secondary-button" disabled={submitting} onClick={() => {
-                  void openProject(createdProject.id).catch(() => {});
-                  router.refresh();
+                  router.push(projectPath(createdProject.id));
                   resetModal();
                 }}>
                   Continue to project

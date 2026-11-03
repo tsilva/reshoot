@@ -1,12 +1,16 @@
 <p align="center">
-  <img src="./public/brand/web-seo/og-image-1200x630-ctr.png" alt="Reshoot turns one product photo into a consistent set of studio angles" width="640" />
+  <img src="./logo.png" alt="Reshoot logo" width="260" />
   <br />
   <!-- repo-tagline:start -->
   <strong>📸 Every angle, one product 📸</strong>
   <!-- repo-tagline:end -->
 </p>
 
-Reshoot is a single-page product-photography studio for small brands, studios, and product teams. Explore free, pre-made samples on the home page, add reference photos, and get studio views automatically. A completed shoot opens as a gallery with one large photo, the landing page’s playback controls, and a Download button. Reference photos and the Generate button appear only before the shoot’s first generation. Saved shoots appear as clickable photo-and-title cards, without photo counts, separate open/delete buttons, search or a second new-shoot button; Add photos in the introduction starts a shoot. The whole card opens its shoot and grows slightly on hover, with animation disabled for reduced-motion preferences. The library stays in place while a shoot opens. The gallery starts at the top, and the back arrow restores the library scroll position and focus to the shoot card. The wallet expands on the same page for balances, credit activity, and supported test top-ups.
+<p align="center">
+  <img src="./public/brand/web-seo/og-image-1200x630-ctr.png" alt="Reshoot turns one product photo into a consistent set of studio angles" width="640" />
+</p>
+
+Reshoot is a product-photography studio for small brands, studios, and product teams. Explore free, pre-made samples on the home page, add reference photos, and get studio views automatically. A completed shoot opens as a gallery with one large photo, the landing page’s playback controls, and a Download button. Reference photos and the Generate button appear only before the shoot’s first generation. Saved shoots appear as clickable photo-and-title cards, without photo counts, separate open/delete buttons, search or a second new-shoot button; Add photos in the introduction starts a shoot. The whole card opens its shoot and grows slightly on hover, with animation disabled for reduced-motion preferences. The library stays visible while a shoot opens. The gallery starts at the top, and the back arrow opens the saved shoots library. The wallet expands on the same page for balances, credit activity, and supported test top-ups.
 
 Start a shoot by selecting at least one product photo; no name is required. Reshoot suggests a short name from the first saved photo’s visible content. On touch devices whose browser supports native capture, **Take a photo** opens the rear-facing camera; choosing existing photos remains available. Both inputs use the same JPG/PNG/WebP validation, upload limits, progress, and retry flow. Camera availability and the native chooser depend on the device/browser. If automatic naming is unavailable, photos are still saved under **Product shoot**. Later uploads preserve the shoot’s existing name.
 
@@ -22,7 +26,7 @@ The original thumbnail stays small and unframed. On a pointer device, hovering i
 
 Playback starts after the current product’s studio photos load, including while the mouse rests over the preview. Keyboard focus on a carousel control pauses it, as do an offscreen sample or hidden page. The pause/play control stops or resumes the loop immediately, including while keyboard focus remains on the button; a later keyboard focus can pause it again. Reduced-motion preferences disable automatic playback by default, with Play available as an explicit opt-in. Automatic changes do not announce every frame to screen readers; manual navigation still announces the product, photo and position.
 
-Starting your own shoot or opening a wallet creates or resumes the private browser workspace. Older welcome, project, and account links return to the home studio; a selected shoot remains addressable through `/?project=<id>#studio`. Real billing remains disabled, and no-charge test top-ups remain limited to local and Preview environments.
+Starting your own shoot or opening a wallet creates or resumes the private browser workspace. Saved shoots are listed at `/projects`, and each shoot opens at `/projects/<id>` in the browser workspace that owns it. Older `/?project=<id>#studio` links redirect to the shoot’s new URL. Real billing remains disabled, and no-charge test top-ups remain limited to local and Preview environments.
 
 The carousel’s accessible description identifies these as illustrative examples. Its everyday uploads were created from earlier product artwork, then edited to add cluttered household backgrounds, uneven indoor lighting, slight overall softness, and natural handheld framing. All three sample products’ photographs are generated from their displayed original as the authority for identity, materials and photographic detail, plus a textureless mesh capture used only to clarify orientation and occlusion. Final artwork comes from native image generation; rendered meshes and proxy textures are not published as product photographs. Hidden surfaces remain estimates, and these examples are not recorded customer uploads or measured results of the paid application pipeline. See [example upload provenance](design/qa/example-uploads/generation.json), the [current rotation record](design/qa/original-rotation/generation.json), and [original/guide input roles and exact prompts](design/qa/orientation-guided-rotation/photographs.json).
 

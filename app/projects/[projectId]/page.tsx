@@ -1,6 +1,14 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { StudioPage } from "@/components/StudioPage";
 
-export default async function ProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
-  const { projectId } = await params;
-  redirect(`/?project=${encodeURIComponent(projectId)}#studio`);
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
+
+export default async function ProjectPage({ params, searchParams }: {
+  params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ wallet?: string | string[] }>;
+}) {
+  const [{ projectId }, { wallet }] = await Promise.all([params, searchParams]);
+  return <StudioPage projectId={projectId} walletOpen={wallet === "open"} />;
 }

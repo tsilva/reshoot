@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { StudioPage } from "@/components/StudioPage";
 
 export default function ProjectsPage() {
-  redirect("/#shoots");
+  return <StudioPage showLibrary />;
 }

@@ -43,10 +43,9 @@ function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack, onOpenWallet, onBalanceChange, walletRevision = 0 }: {
+export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenWallet, onBalanceChange, walletRevision = 0 }: {
   initialProject: ProjectDetail;
   checkoutAvailable: boolean;
-  onBack?: () => void;
   onOpenWallet?: () => void;
   onBalanceChange?: () => void;
   walletRevision?: number;
@@ -343,7 +342,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
   return (
     <section className={`studio-main quiet-studio${generationStarted ? " is-gallery" : ""}`} aria-label="Product studio">
       <header className="quiet-studio-heading">
-        {onBack ? <button className="quiet-back" onClick={onBack} aria-label="All shoots"><ArrowLeft size={22} /></button> : <Link href="/" className="quiet-back" aria-label="All shoots"><ArrowLeft size={22} /></Link>}
+        <Link href="/projects" className="quiet-back" aria-label="All shoots"><ArrowLeft size={22} /></Link>
         <h2>{project.title}</h2>
         {completedShots.length ? <button className="studio-download" onClick={() => void downloadViews()} disabled={exporting}>
           {exporting ? <SpinnerGap className="spin" size={18} /> : null}{exporting ? "Downloading…" : "Download"}
