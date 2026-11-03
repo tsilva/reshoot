@@ -24,6 +24,9 @@ describe("catalog photo requests", () => {
     expect(front).toContain("Ignore any lean, sideways roll");
     expect(front).not.toMatch(/preserve the product.s pose/i);
     expect(rear).toContain("Both the rear and the right side face the fixed camera");
+    expect(rear).toContain("on the image-left edge of the rear face");
+    expect(buildGenerationPrompt({ label: "Rear left", azimuth: 225 }, 1))
+      .toContain("on the image-right edge of the rear face");
     expect(rear).toContain("Hide its front screen");
     expect(rear).toContain("its light broad face denotes the rear");
     expect(productGuideKind("Black smartphone in hand")).toBe("upright-phone-v1");

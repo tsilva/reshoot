@@ -60,7 +60,8 @@ function productDirection(azimuth: number | null | undefined) {
   if (angle < 90) return `FRONT-RIGHT three-quarter view: turn the whole product ${angle} degrees around its center vertical axis to reveal its right side to the fixed camera. Both the front and right side must be visible with natural depth.`;
   if (angle > 270) return `FRONT-LEFT three-quarter view: turn the whole product ${360 - angle} degrees around its center vertical axis to reveal its left side to the fixed camera. Both the front and left side must be visible with natural depth.`;
   const side = angle < 180 ? "right" : "left";
-  return `BACK-${side.toUpperCase()} three-quarter view at ${angle} degrees. Both the rear and the ${side} side face the fixed camera. The front face is hidden behind the product. Hide its front screen, face, or front label if present.`;
+  const edge = side === "right" ? "left" : "right";
+  return `BACK-${side.toUpperCase()} three-quarter view at ${angle} degrees. Both the rear and the ${side} side face the fixed camera. As seen by the viewer, the visible side is on the image-${edge} edge of the rear face. The front face is hidden behind the product. Hide its front screen, face, or front label if present.`;
 }
 
 export function buildGenerationPrompt(shot: GenerationShot, referenceCount: number, guide?: OrientationGuide) {
