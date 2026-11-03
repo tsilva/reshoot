@@ -29,7 +29,13 @@ describe("catalog photo requests", () => {
       .toContain("on the image-right edge of the rear face");
     expect(rear).toContain("Hide its front screen");
     expect(rear).toContain("its light broad face denotes the rear");
-    expect(productGuideKind("Black smartphone in hand")).toBe("upright-phone-v1");
+    const codedRear = buildGenerationPrompt({ label: "Rear right", azimuth: 135 }, 1, {
+      kind: "upright-phone-v2", azimuth: 135, elevation: 0, image: "guide",
+    });
+    expect(codedRear).toContain("ORANGE marks the physical right rail");
+    expect(codedRear).toContain("LEFT margin of the device silhouette");
+    expect(codedRear).toContain("The image-right outline belongs to the rear panel itself");
+    expect(productGuideKind("Black smartphone in hand")).toBe("upright-phone-v2");
     expect(productGuideKind("iPhone case")).toBe("generic-cup-v1");
   });
 

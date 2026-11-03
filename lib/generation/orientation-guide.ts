@@ -4,6 +4,7 @@ import { shotOrientation, type GenerationShot, type OrientationGuide, type Orien
 
 type Point = [number, number, number];
 type Triangle = [Point, Point, Point, gray?: number];
+type Surface = { vertices: Point[]; gray?: number; color?: string };
 
 // Generic direction cue, never geometry inferred from a user's product.
 // Keep this version deterministic; a future product-specific guide replaces
@@ -31,7 +32,7 @@ function cupTriangles(): Triangle[] {
   return triangles;
 }
 
-function phoneTriangles(): Triangle[] {
+function phoneSurfaces(colorCoded: boolean): Surface[] {
   const radius = .055, halfWidth = .25, halfDepth = .025;
   const rim = [[halfWidth - radius, 1 - radius], [-halfWidth + radius, 1 - radius],
     [-halfWidth + radius, radius], [halfWidth - radius, radius]]
@@ -41,26 +42,43 @@ function phoneTriangles(): Triangle[] {
     }));
   const front = rim.map(([x, y]): Point => [x, y, halfDepth]);
   const back = rim.map(([x, y]): Point => [x, y, -halfDepth]);
-  return front.flatMap((point, i): Triangle[] => {
+  if (colorCoded) {
+    const rails = front.map((point, i) => {
+      const next = (i + 1) % front.length;
+      const longSide = Math.abs(front[next][1] - point[1]) > .5;
+      return {
+        vertices: [point, back[i], back[next], front[next]],
+        color: longSide ? (point[0] > 0 ? "#ee6500" : "#167acf") : "#949494",
+      };
+    });
+    return [
+      { vertices: front, color: "#363636" },
+      { vertices: [...back].reverse(), color: "#c9c9c9" },
+      ...rails,
+    ];
+  }
+  return front.flatMap((point, i): Surface[] => {
     const next = (i + 1) % front.length;
     return [
-      [[0, .5, halfDepth], point, front[next], 75],
-      [[0, .5, -halfDepth], back[next], back[i], 183],
-      [point, back[i], back[next], 127],
-      [point, back[next], front[next], 127],
+      { vertices: [[0, .5, halfDepth], point, front[next]], gray: 75 },
+      { vertices: [[0, .5, -halfDepth], back[next], back[i]], gray: 183 },
+      { vertices: [point, back[i], back[next]], gray: 127 },
+      { vertices: [point, back[next], front[next]], gray: 127 },
     ];
   });
 }
 
-const cup = cupTriangles();
-const phone = phoneTriangles();
+const surfacesByKind: Record<OrientationGuideKind, Surface[]> = {
+  "generic-cup-v1": cupTriangles().map(([a, b, c]) => ({ vertices: [a, b, c] })),
+  "upright-phone-v1": phoneSurfaces(false),
+  "upright-phone-v2": phoneSurfaces(true),
+};
 const SIZE = 512;
 
 // Orthographic software capture: one centered vertical pivot, no textures,
 // no cast shadows, no browser/WebGL or external reconstruction dependency.
 function renderGuide(kind: OrientationGuideKind, azimuth: number, elevation: number) {
-  const isPhone = kind === "upright-phone-v1";
-  const triangles = isPhone ? phone : cup;
+  const isPhone = kind !== "generic-cup-v1";
   const scale = isPhone ? SIZE * .8 : SIZE / 2.7;
   const yaw = azimuth * Math.PI / 180, tilt = elevation * Math.PI / 180;
   function transform([x, y, z]: Point): Point {
@@ -69,16 +87,19 @@ function renderGuide(kind: OrientationGuideKind, azimuth: number, elevation: num
     return [rotatedX, (y - .5) * Math.cos(tilt) - rotatedZ * Math.sin(tilt),
       (y - .5) * Math.sin(tilt) + rotatedZ * Math.cos(tilt)];
   }
-  const faces = triangles.flatMap((triangle) => {
-    const [a, b, c] = [transform(triangle[0]), transform(triangle[1]), transform(triangle[2])];
+  const faces = surfacesByKind[kind].flatMap((surface) => {
+    const vertices = surface.vertices.map(transform);
+    const [a, b, c] = vertices;
     const u = b.map((v, i) => v - a[i]), v = c.map((n, i) => n - a[i]);
     const normal = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
     const length = Math.hypot(...normal);
     if (length < 1e-10 || normal[2] <= 0) return [];
     const light = Math.max(0, (-3 * normal[0] + 7 * normal[1] + 4 * normal[2]) / (Math.sqrt(74) * length));
-    const gray = (triangle[3] ?? 140) + Math.round((isPhone ? 28 : 65) * light);
-    const points = [a, b, c].map(([x, y]) => `${(SIZE / 2 + x * scale).toFixed(2)},${(SIZE / 2 - y * scale).toFixed(2)}`).join(" ");
-    return [{ depth: (a[2] + b[2] + c[2]) / 3, svg: `<polygon points="${points}" fill="rgb(${gray},${gray},${gray})" stroke="rgb(${gray},${gray},${gray})" stroke-width="0.35"/>` }];
+    const gray = (surface.gray ?? 140) + Math.round((isPhone ? 28 : 65) * light);
+    const fill = surface.color ?? `rgb(${gray},${gray},${gray})`;
+    const points = vertices.map(([x, y]) => `${(SIZE / 2 + x * scale).toFixed(2)},${(SIZE / 2 - y * scale).toFixed(2)}`).join(" ");
+    const depth = vertices.reduce((sum, vertex) => sum + vertex[2], 0) / vertices.length;
+    return [{ depth, svg: `<polygon points="${points}" fill="${fill}" stroke="${fill}" stroke-width="0.35"/>` }];
   });
   faces.sort((a, b) => a.depth - b.depth);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}"><rect width="100%" height="100%" fill="white"/>${faces.map((f) => f.svg).join("")}</svg>`;

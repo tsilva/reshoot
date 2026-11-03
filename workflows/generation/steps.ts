@@ -177,13 +177,14 @@ export async function executeGenerationJob(
     const referenceBuffers = await Promise.all(
       inputs.map((input) => getObjectBuffer(input.frozenR2Key)),
     );
+    const orientationGuide = await createOrientationGuide(shot, guideKind);
     const request = buildImageRequest({
       model: attempt.providerModel ?? imageProviderConfig.model,
       shot,
       referenceImages: referenceBuffers.map(
         (buffer) => `data:image/webp;base64,${buffer.toString("base64")}`,
       ),
-      orientationGuide: await createOrientationGuide(shot, guideKind),
+      orientationGuide,
     });
     const providerKey = requireImageProviderKey();
 
@@ -262,7 +263,7 @@ export async function executeGenerationJob(
       });
       return { status: "failed" as const };
     }
-    if (guideKind === "upright-phone-v1" && (shot.elevation ?? 0) === 0) {
+    if (orientationGuide && orientationGuide.kind !== "generic-cup-v1" && orientationGuide.elevation === 0) {
       const lean = await phoneLeanDegrees(image);
       if (lean !== undefined && Math.abs(lean) > MAX_PHONE_LEAN_DEGREES) {
         await releaseGeneration({

@@ -44,6 +44,24 @@ describe("orientation guides", () => {
     }
   });
 
+  it.each([
+    [45, "orange", "right"], [90, "orange", "center"], [135, "orange", "left"],
+    [225, "blue", "right"], [270, "blue", "center"], [315, "blue", "left"],
+  ])("places the intended rail at %s degrees", async (azimuth, color, placement) => {
+    const guide = await createOrientationGuide({ label: "Turntable", azimuth }, "upright-phone-v2");
+    const pixels = await sharp(Buffer.from(guide!.image.split(",")[1], "base64")).removeAlpha().raw().toBuffer();
+    const row = Array.from({ length: 512 }, (_, x) => {
+      const index = (256 * 512 + x) * 3;
+      return [...pixels.subarray(index, index + 3)];
+    });
+    const rail = row.flatMap(([r, , b], x) => (color === "orange" ? r - b : b - r) > 100 ? [x] : []);
+    expect(rail.length).toBeGreaterThan(5);
+    const center = rail.reduce((sum, x) => sum + x, 0) / rail.length;
+    if (placement === "center") expect(center).toBeCloseTo(255.5, 0);
+    if (placement === "left") expect(center).toBeLessThan(245);
+    if (placement === "right") expect(center).toBeGreaterThan(267);
+  });
+
   it("honors exact custom angles and normalizes equivalent turns", async () => {
     const guide = await createOrientationGuide({ label: "Custom", azimuth: 22, elevation: -12 });
     expect(guide).toMatchObject({ azimuth: 22, elevation: -12 });
