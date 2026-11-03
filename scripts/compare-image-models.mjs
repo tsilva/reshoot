@@ -62,7 +62,10 @@ async function run() {
     const recordPath = resolve(directory, `${name}.json`);
     try { await access(recordPath); console.log(`Skipped recorded request: ${name}`); continue; } catch {}
     const request = buildImageRequest({ model, shot: testCase.shot, referenceImages: [`data:image/webp;base64,${testCase.reference.toString("base64")}`] });
-    if (values.phase === "baseline") request.prompt = legacyPrompt(testCase.shot);
+    if (values.phase === "baseline") {
+      request.prompt = legacyPrompt(testCase.shot);
+      request.background = "opaque";
+    }
     const startedAt = new Date().toISOString();
     const start = performance.now();
     // Record before dispatch: a crash/timeout must never replay a potentially paid call.

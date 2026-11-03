@@ -7,26 +7,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 307,
-        "right": 926,
-        "top": 67,
-        "bottom": 1188
+        "left": 312,
+        "right": 910,
+        "top": 106,
+        "bottom": 1186
       },
-      "bodyAxisX": 614,
+      "bodyAxisX": 610.5,
       "bodyBand": [
         0.4,
         0.55
       ],
-      "output": "public/assets/angle-guides/front.jpg",
+      "output": "public/assets/samples/linen-doll/front.webp",
       "offset": {
-        "x": 91.258983,
-        "y": 79.479661,
-        "scale": 0.872542373
+        "x": 74.09050000000002,
+        "y": 41.93933333333325,
+        "scale": 0.9056666666666666
       },
       "displayBounds": {
-        "left": 359.1294915254237,
-        "right": 899.233220338983,
-        "top": 137.94000000000005,
+        "left": 356.6585,
+        "right": 898.2471666666667,
+        "top": 137.9399999999999,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -71,26 +71,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 113,
-        "right": 1132,
-        "top": 51,
-        "bottom": 1125
+        "left": 195,
+        "right": 1056,
+        "top": 162,
+        "bottom": 1069
       },
-      "bodyAxisX": 624,
+      "bodyAxisX": 625,
       "bodyBand": [
         0.55,
         0.85
       ],
-      "output": "public/assets/samples/leather-handbag/front.jpg",
+      "output": "public/assets/samples/leather-handbag/front.webp",
       "offset": {
-        "x": 58.706816,
-        "y": 91.492961,
-        "scale": 0.910726257
+        "x": -47.00771775082694,
+        "y": -36.762800441014406,
+        "scale": 1.078412348401323
       },
       "displayBounds": {
-        "left": 161.61888268156423,
-        "right": 1089.648938547486,
-        "top": 137.93999999999988,
+        "left": 163.28269018743106,
+        "right": 1091.7957221609702,
+        "top": 137.93999999999994,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -103,26 +103,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 393,
-        "right": 892,
-        "top": 84,
-        "bottom": 1168
+        "left": 379,
+        "right": 881,
+        "top": 126,
+        "bottom": 1154
       },
-      "bodyAxisX": 633.5,
+      "bodyAxisX": 622,
       "bodyBand": [
         0.4,
         0.55
       ],
-      "output": "public/assets/angle-guides/back-right-three-quarter.jpg",
+      "output": "public/assets/samples/linen-doll/back-right-three-quarter.webp",
       "offset": {
-        "x": 55.377288,
-        "y": 62.144723,
-        "scale": 0.902324723
+        "x": 35.18031128404664,
+        "y": 18.053696498054478,
+        "scale": 0.9514785992217899
       },
       "displayBounds": {
-        "left": 409.99090405904053,
-        "right": 860.2509409594096,
-        "top": 137.93999999999988,
+        "left": 395.790700389105,
+        "right": 873.4329571984435,
+        "top": 137.94,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -135,26 +135,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 370,
-        "right": 890,
-        "top": 55,
-        "bottom": 1176
+        "left": 397,
+        "right": 869,
+        "top": 111,
+        "bottom": 1163
       },
-      "bodyAxisX": 644.5,
+      "bodyAxisX": 626.5,
       "bodyBand": [
         0.4,
         0.55
       ],
-      "output": "public/assets/angle-guides/back-left-three-quarter.jpg",
+      "output": "public/assets/samples/linen-doll/back-left-three-quarter.webp",
       "offset": {
-        "x": 64.646441,
-        "y": 89.950169,
-        "scale": 0.872542373
+        "x": 44.49792775665401,
+        "y": 34.7353231939162,
+        "scale": 0.9297718631178707
       },
       "displayBounds": {
-        "left": 387.4871186440678,
-        "right": 841.2091525423729,
-        "top": 137.94000000000003,
+        "left": 413.6173574144487,
+        "right": 852.4696768060837,
+        "top": 137.93999999999986,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -167,25 +167,25 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 321,
-        "right": 934,
-        "top": 64,
-        "bottom": 1185
+        "left": 333,
+        "right": 922,
+        "top": 133,
+        "bottom": 1157
       },
-      "bodyAxisX": 629,
+      "bodyAxisX": 628,
       "bodyBand": [
         0.4,
         0.55
       ],
-      "output": "public/assets/angle-guides/back.jpg",
+      "output": "public/assets/samples/linen-doll/back.webp",
       "offset": {
-        "x": 78.170847,
-        "y": 82.097288,
-        "scale": 0.872542373
+        "x": 27.137343750000014,
+        "y": 10.899023437499864,
+        "scale": 0.9551953125
       },
       "displayBounds": {
-        "left": 358.2569491525424,
-        "right": 893.1254237288135,
+        "left": 345.21738281250003,
+        "right": 907.827421875,
         "top": 137.93999999999988,
         "bottom": 1116.06
       },
@@ -199,26 +199,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 360,
-        "right": 896,
-        "top": 47,
-        "bottom": 1181
+        "left": 372,
+        "right": 877,
+        "top": 121,
+        "bottom": 1163
       },
-      "bodyAxisX": 598,
+      "bodyAxisX": 583,
       "bodyBand": [
         0.4,
         0.55
       ],
-      "output": "public/assets/angle-guides/front-three-quarter.jpg",
+      "output": "public/assets/samples/linen-doll/front-three-quarter.webp",
       "offset": {
-        "x": 111.20127,
-        "y": 97.400635,
-        "scale": 0.862539683
+        "x": 79.74092130518238,
+        "y": 24.35792706333973,
+        "scale": 0.9386948176583493
       },
       "displayBounds": {
-        "left": 421.71555555555557,
-        "right": 884.0368253968254,
-        "top": 137.94000000000003,
+        "left": 428.9353934740883,
+        "right": 902.9762763915547,
+        "top": 137.94,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -231,26 +231,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 435,
-        "right": 864,
-        "top": 54,
-        "bottom": 1173
+        "left": 452,
+        "right": 809,
+        "top": 190,
+        "bottom": 1136
       },
-      "bodyAxisX": 655.5,
+      "bodyAxisX": 645,
       "bodyBand": [
         0.4,
         0.55
       ],
-      "output": "public/assets/angle-guides/left-profile.jpg",
+      "output": "public/assets/samples/linen-doll/left-profile.webp",
       "offset": {
-        "x": 54.02622,
-        "y": 90.738499,
-        "scale": 0.874101877
+        "x": -39.90000000000009,
+        "y": -58.51116279069788,
+        "scale": 1.033953488372093
       },
       "displayBounds": {
-        "left": 434.2605361930295,
-        "right": 809.2502412868632,
-        "top": 137.93999999999986,
+        "left": 427.446976744186,
+        "right": 796.5683720930232,
+        "top": 137.9399999999998,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -263,26 +263,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 426,
-        "right": 832,
-        "top": 73,
-        "bottom": 1160
+        "left": 413,
+        "right": 812,
+        "top": 112,
+        "bottom": 1158
       },
-      "bodyAxisX": 617.5,
+      "bodyAxisX": 593,
       "bodyBand": [
         0.4,
         0.55
       ],
-      "output": "public/assets/angle-guides/right-profile.jpg",
+      "output": "public/assets/samples/linen-doll/right-profile.webp",
       "offset": {
-        "x": 71.352254,
-        "y": 72.252088,
-        "scale": 0.899834407
+        "x": 72.48263862332703,
+        "y": 33.208221797323176,
+        "scale": 0.9351051625239005
       },
       "displayBounds": {
-        "left": 454.6817111315548,
-        "right": 820.0144802207911,
-        "top": 137.93999999999994,
+        "left": 458.6810707456979,
+        "right": 831.7880305927342,
+        "top": 137.94000000000005,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -455,26 +455,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 438,
-        "right": 817,
-        "top": 74,
-        "bottom": 1143
+        "left": 444,
+        "right": 792,
+        "top": 133,
+        "bottom": 1115
       },
-      "bodyAxisX": 626.5,
+      "bodyAxisX": 622.5,
       "bodyBand": [
         0.55,
         0.85
       ],
-      "output": "public/assets/samples/leather-handbag/right-profile.jpg",
+      "output": "public/assets/samples/leather-handbag/right-profile.webp",
       "offset": {
-        "x": 53.761291,
-        "y": 70.231038,
-        "scale": 0.914985968
+        "x": 6.959572301425624,
+        "y": 5.465498981669953,
+        "scale": 0.9960488798370672
       },
       "displayBounds": {
-        "left": 454.5251449953227,
-        "right": 801.3048269410664,
-        "top": 137.93999999999994,
+        "left": 449.2052749490835,
+        "right": 795.8302851323829,
+        "top": 137.93999999999988,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -487,26 +487,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 348,
-        "right": 886,
-        "top": 56,
-        "bottom": 1159
+        "left": 347,
+        "right": 861,
+        "top": 145,
+        "bottom": 1167
       },
-      "bodyAxisX": 648.5,
+      "bodyAxisX": 640.5,
       "bodyBand": [
         0.4,
         0.55
       ],
-      "output": "public/assets/angle-guides/front-left-three-quarter.jpg",
+      "output": "public/assets/samples/linen-doll/front-left-three-quarter.webp",
       "offset": {
-        "x": 51.922194,
-        "y": 88.280236,
-        "scale": 0.886781505
+        "x": 14.0001369863013,
+        "y": -0.834363992172257,
+        "scale": 0.9570645792563601
       },
       "displayBounds": {
-        "left": 360.52215775158663,
-        "right": 837.6106074342703,
-        "top": 137.94,
+        "left": 346.10154598825824,
+        "right": 838.0327397260273,
+        "top": 137.93999999999997,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -519,26 +519,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 126,
-        "right": 1115,
-        "top": 54,
-        "bottom": 1166
+        "left": 166,
+        "right": 1060,
+        "top": 100,
+        "bottom": 1135
       },
-      "bodyAxisX": 617,
+      "bodyAxisX": 611.5,
       "bodyBand": [
         0.55,
         0.85
       ],
-      "output": "public/assets/samples/leather-handbag/front-three-quarter.jpg",
+      "output": "public/assets/samples/leather-handbag/front-three-quarter.webp",
       "offset": {
-        "x": 84.284137,
-        "y": 90.441367,
-        "scale": 0.879604317
+        "x": 49.10591304347827,
+        "y": 43.43565217391301,
+        "scale": 0.9450434782608695
       },
       "displayBounds": {
-        "left": 195.1142805755395,
-        "right": 1065.0429496402876,
-        "top": 137.93999999999994,
+        "left": 205.98313043478262,
+        "right": 1050.8519999999999,
+        "top": 137.93999999999997,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -551,26 +551,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 136,
-        "right": 1106,
-        "top": 61,
-        "bottom": 1097
+        "left": 183,
+        "right": 1068,
+        "top": 147,
+        "bottom": 1107
       },
-      "bodyAxisX": 622,
+      "bodyAxisX": 624.5,
       "bodyBand": [
         0.55,
         0.85
       ],
-      "output": "public/assets/samples/leather-handbag/back.jpg",
+      "output": "public/assets/samples/leather-handbag/back.webp",
       "offset": {
-        "x": 39.750347,
-        "y": 80.347992,
-        "scale": 0.944131274
+        "x": -9.28743750000001,
+        "y": -11.83462499999996,
+        "scale": 1.018875
       },
       "displayBounds": {
-        "left": 168.15220077220079,
-        "right": 1083.9595366795365,
-        "top": 137.94,
+        "left": 177.1666875,
+        "right": 1078.8710624999999,
+        "top": 137.94000000000003,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -647,26 +647,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 179,
-        "right": 1076,
-        "top": 69,
-        "bottom": 1148
+        "left": 214,
+        "right": 1037,
+        "top": 119,
+        "bottom": 1139
       },
-      "bodyAxisX": 615.5,
+      "bodyAxisX": 633.5,
       "bodyBand": [
         0.55,
         0.85
       ],
-      "output": "public/assets/samples/leather-handbag/back-right-three-quarter.jpg",
+      "output": "public/assets/samples/leather-handbag/back-right-three-quarter.webp",
       "offset": {
-        "x": 69.045542,
-        "y": 75.391084,
-        "scale": 0.906506024
+        "x": 19.510764705882366,
+        "y": 23.826000000000022,
+        "scale": 0.9589411764705882
       },
       "displayBounds": {
-        "left": 231.31012048192764,
-        "right": 1044.4460240963854,
-        "top": 137.9399999999998,
+        "left": 224.72417647058825,
+        "right": 1013.9327647058823,
+        "top": 137.94,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -679,26 +679,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 159,
-        "right": 1103,
-        "top": 62,
-        "bottom": 1153
+        "left": 189,
+        "right": 1046,
+        "top": 136,
+        "bottom": 1133
       },
-      "bodyAxisX": 637.5,
+      "bodyAxisX": 613,
       "bodyBand": [
         0.55,
         0.85
       ],
-      "output": "public/assets/samples/leather-handbag/back-left-three-quarter.jpg",
+      "output": "public/assets/samples/leather-handbag/back-left-three-quarter.webp",
       "offset": {
-        "x": 55.458753,
-        "y": 82.354812,
-        "scale": 0.896535289
+        "x": 25.608264794383217,
+        "y": 4.515406218655926,
+        "scale": 0.9810631895687061
       },
       "displayBounds": {
-        "left": 198.0078643446379,
-        "right": 1044.3371769019247,
-        "top": 137.93999999999997,
+        "left": 211.02920762286865,
+        "right": 1051.8003610832498,
+        "top": 137.93999999999994,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -711,26 +711,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 165,
-        "right": 1107,
-        "top": 26,
-        "bottom": 1154
+        "left": 197,
+        "right": 1057,
+        "top": 114,
+        "bottom": 1116
       },
-      "bodyAxisX": 640.5,
+      "bodyAxisX": 632,
       "bodyBand": [
         0.55,
         0.85
       ],
-      "output": "public/assets/samples/leather-handbag/front-left-three-quarter.jpg",
+      "output": "public/assets/samples/leather-handbag/front-left-three-quarter.webp",
       "offset": {
-        "x": 71.604734,
-        "y": 115.394681,
-        "scale": 0.86712766
+        "x": 10.0620359281437,
+        "y": 26.656886227544874,
+        "scale": 0.9761676646706587
       },
       "displayBounds": {
-        "left": 214.68079787234035,
-        "right": 1031.5150531914892,
-        "top": 137.93999999999994,
+        "left": 202.36706586826347,
+        "right": 1041.8712574850301,
+        "top": 137.93999999999997,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",
@@ -743,26 +743,26 @@
       "width": 1254,
       "height": 1254,
       "bounds": {
-        "left": 438,
+        "left": 450,
         "right": 803,
-        "top": 57,
-        "bottom": 1135
+        "top": 133,
+        "bottom": 1120
       },
-      "bodyAxisX": 623,
+      "bodyAxisX": 623.5,
       "bodyBand": [
         0.55,
         0.85
       ],
-      "output": "public/assets/samples/leather-handbag/left-profile.jpg",
+      "output": "public/assets/samples/leather-handbag/left-profile.webp",
       "offset": {
-        "x": 61.722857,
-        "y": 86.221224,
-        "scale": 0.907346939
+        "x": 9.109604863221875,
+        "y": 6.13659574468079,
+        "scale": 0.9910030395136779
       },
       "displayBounds": {
-        "left": 459.1408163265306,
-        "right": 790.3224489795919,
-        "top": 137.93999999999983,
+        "left": 455.06097264437693,
+        "right": 804.8850455927052,
+        "top": 137.93999999999994,
         "bottom": 1116.06
       },
       "registrationKind": "uniform-photo-registration-only",

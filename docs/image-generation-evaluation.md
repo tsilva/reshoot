@@ -1,27 +1,27 @@
 # Product photo model evaluation — 2026-10-07
 
-Reshoot turns a simple original product image into separate catalog views with a consistent white studio setting. Product identity, pose, construction, markings, and correct camera angles take priority over creative styling.
+Reshoot turns a simple original product image into separate catalog views with transparent backgrounds shown on the studio’s white surface. Product identity, pose, construction, markings, and correct camera angles take priority over creative styling.
 
 ## Decision
 
-Use `openai/gpt-image-2.5-flare` by default, with `openai/gpt-image-2.5-sunburst` available through the server-only `RESHOOT_IMAGE_MODEL` environment variable. An unsupported override fails configuration rather than silently selecting another provider. A claimed attempt retains its recorded model and endpoint across configuration changes. There is no automatic paid model fallback.
+Use `openai/gpt-image-2.5-flare` by default, with `openai/gpt-image-2.5-sunburst` available through the server-only `RESHOOT_IMAGE_MODEL` environment variable. An unsupported override fails configuration rather than silently selecting another provider. A claimed attempt retains its recorded model and uses the configured local or hosted provider route. There is no automatic paid model fallback.
 
 Flare gave the more convincing right profile of the knitted doll with the revised prompt. Sunburst's right-profile result showed more of the far arm and both feet, drifting toward a three-quarter view. Both models preserved the visible bow, braids, knitted material and seated posture, although synthesized views changed some limb spacing and proportions. Both reproduced `RESHOOT`, `CREME SOAP`, and `100 g` correctly on the packaging fixture. Neither model demonstrated perfect geometric reconstruction from one image.
 
 This is a small visual pilot, not a measured population-level quality or reliability ranking. There were no repeated seeds or runs per condition. The packaging reference is a deterministic illustration, not a photographic product. Sunburst produced sharper-looking, larger product framing in this pilot; Flare's angle adherence mattered more for the product's intended multi-angle workflow. The revised prompt makes requirements explicit, but these samples do not establish a universal improvement over the old prompt.
 
-## Studio presentation defaults — 2026-10-29
+## Studio presentation defaults
 
 `CATALOG_STUDIO_INSTRUCTIONS` in `lib/generation/request.ts` supplies the shared presentation instructions for new app generation requests and can be reused in isolated image-generation experiments:
 
-- Square canvas with a seamless pure-white `#FFFFFF` background and floor. Outer margins stay white; a local soft neutral-gray contact shadow may extend to screen right.
+- Square transparent canvas. The area outside the product and visible gaps between its parts have zero alpha. The generated image excludes the studio floor and cast shadow. The app’s white viewing surface shows through the transparent areas.
 - One large diffused key light approximately 45 degrees to camera-left and 45 degrees above the camera, neutral 5500 K daylight, and gentle fill. Light direction stays fixed relative to the image across views.
-- The complete product silhouette, including extremities, handles and packaging, stays inside x = 10–90% and y = 10–90% of the image. This leaves a minimum 10% clear margin on every side. The soft shadow is excluded from the product's bounding box.
+- The complete product silhouette, including extremities, handles and packaging, stays inside x = 10–90% and y = 10–90% of the image. This leaves a minimum 10% clear margin on every side.
 - Aim for 80% occupancy along the longest dimension of the widest or tallest view. Keep one scale, central body axis and contact-point placement across the set rather than zooming or recentering each silhouette independently. Narrower views can have larger margins.
 - Rotate the whole product around its own vertical center axis at x = 50%, with a fixed floor contact. Lock the camera position, distance, elevation, focal length and framing; keep the studio lights fixed. Standard presets all use level elevation, including the three-quarter view.
 - Optional styling is subordinate to product identity, camera direction, studio lighting, background and margins.
 
-These are prompt targets for generated workspace images. The application does not deterministically measure or enforce arbitrary output geometry, rotation axes or product masks. Existing saved results are unchanged.
+Local generation through AgentBridge and hosted generation through OpenRouter both send `background: "transparent"`. Both configured models advertise that option. The worker checks for fully transparent and visible pixels before saving a new output. If the provider returns an opaque or blank result, it releases the held credits and records the provider response without another request. Original downloads and resized WebP previews retain alpha. The alpha check does not measure arbitrary product geometry or validate the shape of the cutout. Previously saved results and recoverable attempts keep their original bytes.
 
 All three home-page samples now use an original-first, orientation-guided photographic workflow. Every final image is generated by the native image tool with Image 1 as the authoritative original and Image 2 as a textureless pose hint. The hint supplies direction and occlusion; product identity, construction, proportions, fine material detail and photographic quality come from the original. Direct photographs of textured proxy meshes were rejected by the user on 2026-10-31 and are not selected. The doll hint uses a source-derived Hunyuan3D-2.1 shape; the mug uses an approximate round cup/loop scaffold after a tilted inferred rim gave misleading elevation cues. All hint sets rotate only their proxy about a centered vertical ground axis, with one fixed orthographic camera at 8 degrees. This sample-only elevation does not change the application's standard presets.
 
@@ -30,6 +30,8 @@ The exact [photographic prompts and original/guide roles](../design/qa/orientati
 The 2026-10-30 user review rejected the bag's visual rigidity despite these passing registration measurements. Independently generated views change apparent body dimensions, handle proportions and perspective. Registration tests must not be presented as geometric reconstruction or natural-rotation acceptance. Replacement artwork must pass a separate identity/geometry review; shared geometry and a fixed render rig, or a real turntable capture, provide a coherent basis for that review. See the follow-up in [design QA](../design-qa.md).
 
 The 2026-11-03 ceramic mug set uses the eight selected native-generated RGBA PNGs. The carousel supplies the white background, and the art contains no baked studio shadow. The same source and angle hints were used as for the earlier JPEGs. Framing excludes transparent pixels and registers the mug to its previous displayed body height and floor anchor. The opaque comparison files are retained, with the previous selection recorded at commit `6fff0e7`.
+
+The remaining sample sets were regenerated as transparent cutouts on 2026-11-03. The doll and handbag are served as lossless WebP with their original alpha and visible RGB values. The approved mug PNGs remain the third transparent set. All three use the carousel’s white viewing surface.
 
 ## Temporary guides in user generation — 2026-10-31
 

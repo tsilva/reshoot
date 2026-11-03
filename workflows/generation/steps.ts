@@ -242,6 +242,20 @@ export async function executeGenerationJob(
     if (!mimeType || !metadata.width || !metadata.height) {
       throw new Error("The paid response contained an unsupported raster output.");
     }
+    const alpha = metadata.hasAlpha ? (await image.stats()).channels.at(-1) : undefined;
+    if (!alpha || alpha.min !== 0 || alpha.max === 0) {
+      await releaseGeneration({
+        jobId,
+        attemptId,
+        attemptState: "failed",
+        failureCode: "invalid_transparent_output",
+        publicError: "This shot did not have a transparent background. Credits were released.",
+        privateError: "The provider output lacked both fully transparent and visible pixels.",
+        providerRequestId,
+        usageCostMicros,
+      });
+      return { status: "failed" as const };
+    }
     await db.update(generationAttempts).set({
       providerRequestId,
       usageCostMicros,

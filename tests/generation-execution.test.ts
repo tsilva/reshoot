@@ -33,13 +33,19 @@ describe("durable generation dispatch", () => {
   });
 
   it("retains the recorded model while sending old queued attempts through the current gateway, persists an image, then captures credits", async () => {
-    const png = await sharp({ create: { width: 16, height: 16, channels: 3, background: "white" } }).png().toBuffer();
+    const png = await sharp({
+      create: { width: 16, height: 16, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    }).composite([{
+      input: { create: { width: 8, height: 8, channels: 3, background: "blue" } },
+      gravity: "centre",
+    }]).png().toBuffer();
     state.fetch.mockResolvedValue(new Response(JSON.stringify({ data: [{ b64_json: png.toString("base64") }], usage: { cost: 0.07 } }), { headers: { "x-request-id": "request" } }));
     expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "succeeded" });
     expect(state.fetch).toHaveBeenCalledTimes(1);
     const [endpoint, options] = state.fetch.mock.calls[0];
     expect(endpoint).toBe("https://new.example/images");
     const body = JSON.parse(options.body);
+    expect(body.background).toBe("transparent");
     expect(body.model).toBe("openrouter/openai/gpt-image-2.5-sunburst");
     expect(body.prompt).toContain("RIGHT PROFILE view");
     expect(body.input_references.slice(0, 2).map((item: { image_url: { url: string } }) => item.image_url.url)).toEqual(["primary", "supporting"].map((key) => `data:image/webp;base64,${Buffer.from(key).toString("base64")}`));
@@ -53,8 +59,26 @@ describe("durable generation dispatch", () => {
     expect(body.prompt).not.toContain("REFERENCE 3 is a supporting original");
     expect(state.updates).toContainEqual(expect.objectContaining({ providerRequestId: "request", usageCostMicros: 70000 }));
     expect(state.putObject).toHaveBeenCalledTimes(2);
+    expect(state.putObject).toHaveBeenCalledWith(expect.objectContaining({ key: "output", body: png }));
+    const preview = state.putObject.mock.calls.find(([object]) => object.key === "preview")?.[0].body;
+    expect((await sharp(preview).stats()).isOpaque).toBe(false);
     expect(state.capture).toHaveBeenCalledWith(expect.objectContaining({ usageCostMicros: 70000, providerRequestId: "request", output: expect.objectContaining({ ownerId: "owner", mimeType: "image/png", width: 16, height: 16 }) }));
     expect(state.release).not.toHaveBeenCalled();
+  });
+
+  it("releases the held credit when the provider returns an opaque output", async () => {
+    const png = await sharp({ create: { width: 16, height: 16, channels: 4, background: "white" } }).png().toBuffer();
+    state.fetch.mockResolvedValue(new Response(JSON.stringify({
+      id: "opaque-request", data: [{ b64_json: png.toString("base64") }], usage: { cost: 0.07 },
+    })));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "failed" });
+    expect(state.fetch).toHaveBeenCalledTimes(1);
+    expect(state.putObject).not.toHaveBeenCalled();
+    expect(state.capture).not.toHaveBeenCalled();
+    expect(state.release).toHaveBeenCalledWith(expect.objectContaining({
+      attemptState: "failed", failureCode: "invalid_transparent_output",
+      providerRequestId: "opaque-request", usageCostMicros: 70000,
+    }));
   });
 
   it("recovers persisted output without another paid request", async () => {
