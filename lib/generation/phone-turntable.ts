@@ -48,6 +48,22 @@ function faceEdge(data: Buffer, width: number, row: number, right: boolean) {
   return undefined;
 }
 
+function chassisEdges(data: Buffer, width: number, right: boolean) {
+  const rows = HEIGHT * SUPERSAMPLE;
+  const edges = Array.from({ length: rows }, (_, row) => faceEdge(data, width, row, right));
+  const cap = Math.round(rows * .1);
+  const body = edges.slice(cap, -cap).filter((edge) => edge !== undefined).sort((a, b) => a - b);
+  // Fit the main edge from the inside of the silhouette so buttons and other
+  // protrusions on the broad source face cannot shift the side rail.
+  const straightEdge = body[Math.floor((body.length - 1) * (right ? .2 : .8))];
+  if (straightEdge === undefined) return edges;
+  return edges.map((edge, row) => {
+    if (edge === undefined) return undefined;
+    if (row >= cap && row < rows - cap) return straightEdge;
+    return right ? Math.min(edge, straightEdge) : Math.max(edge, straightEdge);
+  });
+}
+
 function compositePixel(canvas: Buffer, dest: number, texture: Buffer, source: number) {
   const alpha = texture[source + 3];
   if (alpha === 0) return;
@@ -79,14 +95,15 @@ export async function renderPhoneTurntable(angle: number, loadFace: (face: numbe
   const railOnRight = cos * sin > 0;
   const railWidth = Math.abs(DEPTH * sin);
 
-  // Project the original cutout alpha with its colors. On quarter views the
-  // rail meets the visible face's actual rounded edge, with half a pixel of
-  // overlap under the face's antialiasing to keep the seam closed.
+  const nearEdges = broadFace && faces.length > 1
+    ? chassisEdges(broadFace.data, broadFace.width, railOnRight)
+    : undefined;
+
+  // Only the corners follow the outline. The middle rail and its hardware
+  // follow a straight seam, which clips protrusions from the broad texture.
   for (let row = 0; row < HEIGHT * SUPERSAMPLE; row++) {
     const destY = (canvasSize - HEIGHT * SUPERSAMPLE) / 2 + row;
-    const edge = broadFace && faces.length > 1
-      ? faceEdge(broadFace.data, broadFace.width, row, railOnRight)
-      : undefined;
+    const edge = nearEdges?.[row];
     const seam = edge === undefined ? undefined : faceStart + edge * (faceEnd - faceStart);
     for (const { face, data, width } of faces) {
       const rail = face % 180 !== 0;
@@ -101,8 +118,10 @@ export async function renderPhoneTurntable(angle: number, loadFace: (face: numbe
           end = seam + (railOnRight ? railWidth : .5);
         }
       }
-      const firstX = Math.ceil((start + SIZE / 2) * SUPERSAMPLE - .5);
-      const lastX = Math.ceil((end + SIZE / 2) * SUPERSAMPLE - .5);
+      const clipStart = !rail && seam !== undefined && !railOnRight ? seam - .5 : start;
+      const clipEnd = !rail && seam !== undefined && railOnRight ? seam + .5 : end;
+      const firstX = Math.ceil((Math.max(start, clipStart) + SIZE / 2) * SUPERSAMPLE - .5);
+      const lastX = Math.ceil((Math.min(end, clipEnd) + SIZE / 2) * SUPERSAMPLE - .5);
       for (let x = firstX; x < lastX; x++) {
         const fraction = ((x + .5) / SUPERSAMPLE - SIZE / 2 - start) / (end - start);
         const source = (row * width + Math.min(width - 1, Math.floor(fraction * width))) * 4;
