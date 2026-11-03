@@ -1,55 +1,71 @@
+import { getTableName, type Table } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createDemoSessionToken, demoSessionEmail, DEMO_SESSION_COOKIE, DEMO_STARTING_CREDITS } from "../lib/auth/demo-session";
+import { demoSessionEmail } from "../lib/auth/demo-session";
 
-const state = vi.hoisted(() => ({ token: undefined as string | undefined, lookup: vi.fn() }));
+const state = vi.hoisted(() => ({
+  token: undefined as string | undefined,
+  lookup: vi.fn(),
+  transaction: vi.fn(),
+}));
 vi.mock("next/headers", () => ({ cookies: async () => ({
   get: (name: string) => name === "reshoot_demo_session" && state.token ? { value: state.token } : undefined,
 }) }));
+vi.mock("next/server", () => ({ connection: async () => {} }));
 vi.mock("react", () => ({ cache: (callback: unknown) => callback }));
-vi.mock("@/lib/db", () => ({ db: { select: () => ({ from: () => ({ where: (query: unknown) => ({ limit: () => state.lookup(query) }) }) }) } }));
+vi.mock("@/lib/db", () => ({ db: {
+  select: () => ({ from: () => ({ where: (query: unknown) => ({
+    limit: () => state.lookup(new PgDialect().sqlToQuery(query as Parameters<PgDialect["sqlToQuery"]>[0]).params[0]),
+  }) }) }),
+  transaction: state.transaction,
+} }));
 
-import { findCurrentUser, resolveCurrentUser } from "../lib/auth/current-user";
+import { findLegacyDemoUser, resolveCurrentUser } from "../lib/auth/current-user";
 
-describe("private browser demo sessions", () => {
-  beforeEach(() => { state.token = undefined; state.lookup.mockReset(); });
+const sharedEmail = "shared-demo@reshoot.local";
+const sharedUser = { id: "shared", email: sharedEmail, isDemo: true };
 
-  it("does not grant anonymous requests access to the old shared account", async () => {
-    expect(await findCurrentUser()).toBeNull();
-    await expect(resolveCurrentUser()).rejects.toMatchObject({ status: 401, code: "session_required" });
-    expect(state.lookup).not.toHaveBeenCalled();
+describe("shared demo workspace", () => {
+  beforeEach(() => {
+    state.token = undefined;
+    state.lookup.mockReset();
+    state.transaction.mockReset();
   });
 
-  it("gives different browsers independent private owner identities", async () => {
-    const firstToken = createDemoSessionToken();
-    const secondToken = createDemoSessionToken();
-    const emails = [demoSessionEmail(firstToken), demoSessionEmail(secondToken)];
-    state.lookup.mockImplementation((condition) => {
-      const { params } = new PgDialect().sqlToQuery(condition);
-      const index = emails.indexOf(params[0] as string);
-      return index < 0 ? [] : [{ id: `owner-${index}`, email: emails[index], isDemo: true }];
-    });
-    state.token = firstToken;
-    expect(await resolveCurrentUser()).toMatchObject({ id: "owner-0", email: "demo@reshoot.local" });
-    state.token = secondToken;
-    expect(await resolveCurrentUser()).toMatchObject({ id: "owner-1", email: "demo@reshoot.local" });
-    expect(emails[0]).not.toEqual(emails[1]);
-    expect(emails[0]).not.toContain(firstToken);
+  it("uses the same account with or without an old browser session", async () => {
+    const legacyToken = "a".repeat(64);
+    const legacyEmail = demoSessionEmail(legacyToken);
+    const legacyUser = { id: "private", email: legacyEmail, isDemo: true };
+    state.lookup.mockImplementation((email) => email === sharedEmail ? [sharedUser] : [legacyUser]);
+    expect(await resolveCurrentUser()).toBe(sharedUser);
+    expect(await findLegacyDemoUser()).toBeUndefined();
+    state.token = legacyToken;
+    expect(await resolveCurrentUser()).toBe(sharedUser);
+    expect(await findLegacyDemoUser()).toBe(legacyUser);
+    expect(state.transaction).not.toHaveBeenCalled();
   });
 
-  it("rejects malformed cookies, missing sessions and non-demo identities", async () => {
-    state.token = "00000000-0000-4000-8000-000000000001";
-    expect(await findCurrentUser()).toBeNull();
-    state.token = createDemoSessionToken();
-    state.lookup.mockResolvedValue([]);
-    expect(await findCurrentUser()).toBeNull();
-    state.lookup.mockResolvedValue([{ id: "real-account", isDemo: false }]);
-    expect(await findCurrentUser()).toBeNull();
-  });
+  it.each([true, false])("grants credits only to the request that creates the shared account (created: %s)", async (created) => {
+    const inserted: Array<{ table: string; values: Record<string, unknown> }> = [];
+    state.lookup.mockResolvedValueOnce([]).mockResolvedValueOnce([sharedUser]);
+    state.transaction.mockImplementation(async (callback) => callback({
+      insert: (table: Table) => ({ values: (values: Record<string, unknown>) => {
+        const name = getTableName(table);
+        inserted.push({ table: name, values });
+        return {
+          onConflictDoNothing: () => ({ returning: async () => created ? [{ id: "shared" }] : [] }),
+          returning: async () => [{ id: "account" }],
+        };
+      } }),
+    }));
 
-  it("uses a high-entropy cookie and the agreed starting credit allocation", () => {
-    expect(createDemoSessionToken()).toMatch(/^[a-f0-9]{64}$/);
-    expect(DEMO_SESSION_COOKIE).toBe("reshoot_demo_session");
-    expect(DEMO_STARTING_CREDITS).toBe(1_000);
+    expect(await resolveCurrentUser()).toBe(sharedUser);
+    expect(inserted.map(({ table }) => table)).toEqual(created
+      ? ["users", "credit_accounts", "credit_ledger"] : ["users"]);
+    expect(inserted[0].values).toMatchObject({ email: sharedEmail, legacyImportCompletedAt: expect.any(Date) });
+    if (created) {
+      expect(inserted[1].values).toMatchObject({ userId: "shared", availableCredits: 1000 });
+      expect(inserted[2].values).toMatchObject({ accountId: "account", userId: "shared", type: "grant", amountCredits: 1000 });
+    }
   });
 });

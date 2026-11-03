@@ -1,76 +1,32 @@
-import { getTableName, type Table } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const state = vi.hoisted(() => ({
-  user: null as { id: string } | null,
-  setCookie: vi.fn(),
-  transaction: vi.fn(),
-}));
-vi.mock("server-only", () => ({}));
-vi.mock("next/headers", () => ({ cookies: async () => ({ set: state.setCookie }) }));
-vi.mock("@/lib/auth/current-user", () => ({ findCurrentUser: async () => state.user }));
-vi.mock("@/lib/db", () => ({ db: { transaction: state.transaction } }));
+const state = vi.hoisted(() => ({ resolveUser: vi.fn() }));
+vi.mock("@/lib/auth/current-user", () => ({ resolveCurrentUser: state.resolveUser }));
 
 import { POST } from "../app/api/demo-session/route";
 
-describe("starting a testing workspace", () => {
-  beforeEach(() => { state.user = null; state.setCookie.mockReset(); state.transaction.mockReset(); });
+describe("shared workspace compatibility endpoint", () => {
+  beforeEach(() => { state.resolveUser.mockReset(); });
 
-  it.each([false, true])("creates one owner, account and grant (inline: %s)", async (inline) => {
-    const inserted: Array<{ table: string; values: Record<string, unknown> }> = [];
-    state.transaction.mockImplementation(async (callback) => callback({
-      insert: (table: Table) => ({ values: (values: Record<string, unknown>) => {
-        inserted.push({ table: getTableName(table), values });
-        return { returning: async () => [{ id: "account" }] };
-      } }),
-    }));
+  it.each([false, true])("opens the shared workspace without setting a browser cookie (inline: %s)", async (inline) => {
     const response = await POST(new Request("https://reshoot.tsilva.eu/api/demo-session", {
       method: "POST", headers: { origin: "https://reshoot.tsilva.eu", ...(inline ? { accept: "application/json" } : {}) },
     }));
     expect(response.status).toBe(inline ? 200 : 303);
     if (inline) {
       expect(await response.json()).toEqual({ ready: true });
-      expect(response.headers.get("location")).toBeNull();
     } else {
       expect(response.headers.get("location")).toBe("https://reshoot.tsilva.eu/");
     }
-    expect(state.transaction).toHaveBeenCalledTimes(1);
-    expect(inserted.map((item) => item.table)).toEqual(["users", "credit_accounts", "credit_ledger"]);
-    expect(inserted[1].values).toMatchObject({ availableCredits: 1000, lifetimeGrantedCredits: 1000 });
-    expect(inserted[2].values).toMatchObject({ type: "grant", amountCredits: 1000, availableDelta: 1000, availableAfter: 1000, heldDelta: 0 });
-    expect(inserted[0].values.id).toBe(inserted[1].values.userId);
-    expect(inserted[0].values.id).toBe(inserted[2].values.userId);
-    expect(state.setCookie).toHaveBeenCalledWith("reshoot_demo_session", expect.stringMatching(/^[a-f0-9]{64}$/), expect.objectContaining({ httpOnly: true, secure: true, sameSite: "lax", path: "/" }));
+    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(state.resolveUser).toHaveBeenCalledOnce();
   });
 
-  it("resumes an existing workspace without adding more credits", async () => {
-    state.user = { id: "existing-owner" };
-    const response = await POST(new Request("https://reshoot.tsilva.eu/api/demo-session", {
-      method: "POST", headers: { origin: "https://reshoot.tsilva.eu" },
-    }));
-    expect(response.status).toBe(303);
-    expect(state.transaction).not.toHaveBeenCalled();
-    expect(state.setCookie).not.toHaveBeenCalled();
-  });
-
-  it("resumes inline without a redirect or another credit grant", async () => {
-    state.user = { id: "existing-owner" };
-    const response = await POST(new Request("https://reshoot.tsilva.eu/api/demo-session", {
-      method: "POST", headers: { origin: "https://reshoot.tsilva.eu", accept: "application/json" },
-    }));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ ready: true });
-    expect(response.headers.get("location")).toBeNull();
-    expect(state.transaction).not.toHaveBeenCalled();
-    expect(state.setCookie).not.toHaveBeenCalled();
-  });
-
-  it("rejects session creation from another origin before any credit grant", async () => {
+  it("rejects requests from another origin", async () => {
     const response = await POST(new Request("https://reshoot.tsilva.eu/api/demo-session", {
       method: "POST", headers: { origin: "https://another.example" },
     }));
     expect(response.status).toBe(403);
-    expect(state.transaction).not.toHaveBeenCalled();
-    expect(state.setCookie).not.toHaveBeenCalled();
+    expect(state.resolveUser).not.toHaveBeenCalled();
   });
 });
