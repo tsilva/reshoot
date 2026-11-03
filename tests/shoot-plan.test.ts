@@ -12,16 +12,20 @@ function original(id: number, patch: Partial<Asset> = {}): Asset {
 }
 
 describe("automatic shoot plan", () => {
-  it("creates the existing four views from a single original without user selections", () => {
+  it("creates a full rotation from a single original without user selections", () => {
     const requests = automaticShotRequests([original(1)]);
-    expect(requests.map((shot) => shot.azimuth)).toEqual([0, 45, 90, 180]);
+    expect(requests.map((shot) => [shot.azimuth, shot.presetKey])).toEqual([
+      [0, "front"], [45, "front-three-quarter"], [90, "right-profile"],
+      [135, "back-right-three-quarter"], [180, "back"], [225, "back-left-three-quarter"],
+      [270, "left-profile"], [315, "front-left-three-quarter"],
+    ]);
     expect(requests.every((shot) => shot.elevation === 0 && !shot.additionalReferenceAssetIds.length)).toBe(true);
   });
 
   it("includes every supporting original automatically up to the five-reference limit", () => {
     const assets = [original(3), original(1), original(2), original(4), original(5)];
     expect(automaticShotRequests(assets).map((shot) => shot.additionalReferenceAssetIds)).toEqual(
-      Array.from({ length: 4 }, () => ["2", "3", "4", "5"]),
+      Array.from({ length: 8 }, () => ["2", "3", "4", "5"]),
     );
   });
 

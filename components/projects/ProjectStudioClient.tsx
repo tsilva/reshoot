@@ -310,7 +310,9 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
     }
   }
 
-  const completedShots = useMemo(() => project.shots.filter((shot) => shot.versions.length > 0), [project.shots]);
+  const completedShots = useMemo(() => project.shots
+    .filter((shot) => shot.versions.length > 0)
+    .sort((a, b) => (a.azimuth ?? 360) - (b.azimuth ?? 360)), [project.shots]);
   const activeShot = completedShots.find((shot) => shot.id === activeShotId) ?? completedShots[0];
   function latestVersion(shot: ProjectShot) {
     return shot.versions.at(-1)!;
@@ -428,10 +430,10 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onBack,
               <>
                 {quote.affordable ? <button className="button primary-button" onClick={() => void confirmBatch()} disabled={busy}>
                   {submitting ? <SpinnerGap className="spin" size={18} /> : null}
-                  {submitting ? "Starting…" : `Generate · ${quote.totalCredits} credits`}
+                  {submitting ? "Starting…" : `Generate ${quote.shots.length} views · ${quote.totalCredits} credits`}
                 </button> : checkoutAvailable ? (
                   onOpenWallet ? <button className="button primary-button" onClick={onOpenWallet}>Add credits</button> : <Link href="/?wallet=open#wallet" className="button primary-button">Add credits</Link>
-                ) : <button className="button primary-button" disabled>Generate · {quote.totalCredits} credits</button>}
+                ) : <button className="button primary-button" disabled>Generate {quote.shots.length} views · {quote.totalCredits} credits</button>}
               </>
             ) : <button className="button primary-button" onClick={() => void requestQuote()} disabled={quoting || busy || !primary || photosStale}>
               {quoting ? <SpinnerGap className="spin" size={18} /> : null}{quoting ? "Calculating…" : "Check cost"}

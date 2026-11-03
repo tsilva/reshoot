@@ -35,6 +35,8 @@ The remaining sample sets were regenerated as transparent cutouts on 2026-11-03.
 
 ## Temporary guides in user generation — 2026-10-31
 
+New studio shoots request eight level views at 45° intervals, starting at the front and proceeding through the right profile, back, and left profile. One confirmed quote covers all eight jobs, each with the same set of frozen originals and its own orientation guide.
+
 The durable application worker now applies the same separation of roles as the sample workflow. Frozen uploaded originals stay first, with the primary at reference 1 and supporting originals in their original order. `createGenericOrientationGuide` in `lib/generation/orientation-guide.ts` renders a neutral, textureless generic cup into a 512-pixel PNG and appends it as a separate orientation-only input to `buildImageRequest`. It receives only shot orientation, never a user's photograph or inferred geometry. The prompt forbids copying the cup body, handle, rim, material, proportions or framing; identity, construction and photographic detail come only from the selected originals. Final output remains a generated product photograph.
 
 This temporary generic scaffold is captured with an orthographic software renderer, a centered vertical pivot and fixed camera-relative diffuse light. It turns the cup to the exact requested azimuth and matches the requested camera elevation; standard presets remain level. Known legacy preset keys can supply a missing azimuth. A label-only legacy/custom shot without a known direction keeps the textual request without a fabricated front-view guide. Product-specific reconstruction, user-mesh uploads and per-product geometry remain deferred.

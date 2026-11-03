@@ -1,12 +1,15 @@
 import type { Asset } from "@/lib/api/types";
 import { MAX_GENERATION_REFERENCES } from "@/lib/projects/limits";
 
-// Keep the existing four-view generation budget; the studio chooses the views.
 export const STUDIO_VIEWS = [
   { id: "front", label: "Front", azimuth: 0, elevation: 0 },
-  { id: "front-three-quarter", label: "3/4 right", azimuth: 45, elevation: 0 },
+  { id: "front-three-quarter", label: "Front-right three-quarter", azimuth: 45, elevation: 0 },
   { id: "right-profile", label: "Right profile", azimuth: 90, elevation: 0 },
+  { id: "back-right-three-quarter", label: "Back-right three-quarter", azimuth: 135, elevation: 0 },
   { id: "back", label: "Back", azimuth: 180, elevation: 0 },
+  { id: "back-left-three-quarter", label: "Back-left three-quarter", azimuth: 225, elevation: 0 },
+  { id: "left-profile", label: "Left profile", azimuth: 270, elevation: 0 },
+  { id: "front-left-three-quarter", label: "Front-left three-quarter", azimuth: 315, elevation: 0 },
 ] as const;
 
 export function shootReferences(assets: Asset[]) {

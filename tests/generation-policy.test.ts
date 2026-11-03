@@ -11,6 +11,7 @@ vi.mock("@/lib/projects/service", () => ({ requireOwnedProject: async () => ({ p
 vi.mock("@/lib/db", () => ({ db: { select: state.select, insert: state.insert, transaction: state.transaction } }));
 
 import { createGenerationBatch } from "../lib/generation/batches";
+import { STUDIO_VIEWS } from "../lib/client/shoot-plan";
 import { POST } from "../app/api/projects/[projectId]/generation-quotes/route";
 
 type Row = { id: string; [key: string]: unknown };
@@ -84,25 +85,32 @@ function database() {
 function confirm(quoteId = quoteIds[0], idempotencyKey = "first-confirmation") {
   return createGenerationBatch({ userId: "owner", projectId: "project", quoteId, idempotencyKey });
 }
-function request(shotId?: string) {
+function request(shots: unknown[] = [shot]) {
   return POST(new Request("https://reshoot.tsilva.eu/api/projects/project/generation-quotes", {
-    method: "POST", body: JSON.stringify({ shots: [{ clientId: "front", label: "Front", ...(shotId ? { shotId } : {}) }] }),
+    method: "POST", body: JSON.stringify({ shots }),
   }), { params: Promise.resolve({ projectId: "project" }) });
 }
 
 describe("one generation per shoot", () => {
   beforeEach(() => vi.clearAllMocks());
-  it("quotes a new shoot and accepts its first batch", async () => {
+  it("quotes and confirms all eight views in one batch and credit hold", async () => {
     const tables = database();
-    expect((await request()).status).toBe(201);
-    await confirm();
+    const response = await request(STUDIO_VIEWS.map(({ id, ...view }) => ({
+      ...view, clientId: id, presetKey: id,
+    })));
+    expect(response.status).toBe(201);
+    const { quote } = await response.json();
+    expect(quote.totalCredits).toBe(320);
+    await confirm(quote.id);
     expect(tables.generation_batches).toHaveLength(1);
+    expect(tables.shots.map((row) => row.azimuth)).toEqual([0, 45, 90, 135, 180, 225, 270, 315]);
+    expect(tables.generation_jobs).toHaveLength(8);
     expect(tables.credit_holds).toHaveLength(1);
-    expect(tables.credit_accounts[0]).toMatchObject({ availableCredits: 960, heldCredits: 40 });
+    expect(tables.credit_accounts[0]).toMatchObject({ availableCredits: 680, heldCredits: 320 });
   });
   it("rejects both explicit regeneration and fresh-set quotes for an existing shoot", async () => {
     const tables = database();
-    expect((await request(primaryId)).status).toBe(409);
+    expect((await request([{ ...shot, shotId: primaryId }])).status).toBe(409);
     tables.shots.push({ id: "existing", ownerId: "owner", projectId: "project" });
     const response = await request();
     expect(response.status).toBe(409);
