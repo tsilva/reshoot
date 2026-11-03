@@ -34,6 +34,8 @@ describe("photo-based shoot names", () => {
     ["Black smartphone in hand", "Black smartphone"],
     ["Black smartphone held in a person's hand", "Black smartphone"],
     ["Ceramic mug on a wooden table", "Ceramic mug"],
+    ["Black smartphone with apps", "Black smartphone"],
+    ["Black smartphone displaying app icons", "Black smartphone"],
     ["Wall-mounted lamp with shade", "Wall-mounted lamp with shade"],
   ])("keeps product details and removes scene wording from %s", async (title, expected) => {
     fetchMock.mockResolvedValue(Response.json({ choices: [{ message: { content: JSON.stringify({ title }) } }] }));
