@@ -20,6 +20,8 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type KeyboardEvent,
+  type ReactNode,
 } from "react";
 import type {
   GenerationBatchStatus,
@@ -43,12 +45,15 @@ function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenWallet, onBalanceChange, walletRevision = 0 }: {
+export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenWallet, onBalanceChange, walletRevision = 0, walletButton, pageError, children }: {
   initialProject: ProjectDetail;
   checkoutAvailable: boolean;
   onOpenWallet?: () => void;
   onBalanceChange?: () => void;
   walletRevision?: number;
+  walletButton: ReactNode;
+  pageError: ReactNode;
+  children: ReactNode;
 }) {
   const router = useRouter();
   const [project, setProject] = useState(initialProject);
@@ -339,16 +344,15 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     setActiveShotId(completedShots[(index + direction + completedShots.length) % completedShots.length].id);
   }
 
-  return (
-    <section className={`studio-main quiet-studio${generationStarted ? " is-gallery" : ""}`} aria-label="Product studio">
-      <header className="quiet-studio-heading">
-        <Link href="/projects" className="quiet-back" aria-label="All shoots"><ArrowLeft size={22} /></Link>
-        <h2>{project.title}</h2>
-        {completedShots.length ? <button className="studio-download" onClick={() => void downloadViews()} disabled={exporting}>
-          {exporting ? <SpinnerGap className="spin" size={18} /> : null}{exporting ? "Downloading…" : "Download"}
-        </button> : null}
-      </header>
+  function handleRotationKey(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.target instanceof HTMLElement && event.target.closest("input, select, textarea, [contenteditable='true']")) return;
+    if (completedShots.length < 2 || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
+    event.preventDefault();
+    cycleView(event.key === "ArrowLeft" ? 1 : -1);
+  }
 
+  const studioContent = (
+    <section id="studio" className={`home-active-studio studio-main quiet-studio${generationStarted ? " is-gallery" : ""}`} aria-label="Product studio">
       {notice ? (
         <div className="studio-notice" role="status">
           <CheckCircle size={18} /> {notice}
@@ -367,6 +371,11 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
           <button className="button secondary-button" onClick={() => void reconnectGeneration()}>Reconnect</button>
         </div>
       ) : null}
+      {project.turntableUnavailable ? (
+        <div className="studio-notice error-notice" role="alert">
+          <WarningCircle size={18} /> The phone turntable could not be completed. Available views are shown individually.
+        </div>
+      ) : null}
       {batch?.jobs.some((job) => job.status === "failed") ? (
         <div className="studio-failed-jobs">
           {batch.jobs.filter((job) => job.status === "failed").map((job) => {
@@ -380,12 +389,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
 
       <div className="studio-photo-canvas" ref={canvasRef} role="region" aria-label="Product photos" aria-roledescription="carousel"
         onFocusCapture={playback.onFocusCapture} onBlurCapture={playback.onBlurCapture}
-        onKeyDown={(event) => {
-          if (event.target instanceof HTMLElement && event.target.closest("input, select, textarea, [contenteditable='true']")) return;
-          if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-          event.preventDefault();
-          cycleView(event.key === "ArrowLeft" ? -1 : 1);
-        }}
+        onKeyDown={handleRotationKey}
       >
         <div className="studio-photo-stage" aria-busy={generating}>
           {completedShots.length ? completedShots.map((shot) => {
@@ -407,7 +411,6 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
             {batch ? `${batch.completedJobs} of ${batch.jobs.length} views ready` : "Resuming generation…"}
           </div> : null}
         </div>
-        {completedShots.length ? <SlideshowControls playing={playback.enabled && completedShots.length > 1} disabled={completedShots.length < 2} onPrevious={() => cycleView(-1)} onNext={() => cycleView(1)} onTogglePlayback={playback.toggle} /> : null}
         <p className="sr-only" aria-live={playback.enabled && completedShots.length > 1 ? "off" : "polite"}>{activeShot && activeVersion ? `${activeShot.label}, version ${activeVersion.version}` : "Reference photo. Generate studio views when your photos are ready."}</p>
       </div>
 
@@ -450,5 +453,33 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
         </div>)}
       </div> : null}
     </section>
+  );
+
+  return (
+    <>
+      <header className="home-header">
+        <div className="home-header-inner studio-topbar">
+          <Link href="/projects" className="quiet-back" aria-label="All shoots"><ArrowLeft size={22} /></Link>
+          <Link href="/" className="home-brand" aria-label="Reshoot home">reshoot.</Link>
+          <h1 className="studio-title" title={project.title}>{project.title}</h1>
+          {completedShots.length ? <>
+            <div className="studio-rotation-controls" onFocusCapture={playback.onFocusCapture} onBlurCapture={playback.onBlurCapture} onKeyDown={handleRotationKey}>
+              <SlideshowControls playing={playback.enabled && completedShots.length > 1} disabled={completedShots.length < 2}
+                previousLabel="Rotate left" nextLabel="Rotate right"
+                onPrevious={() => cycleView(1)} onNext={() => cycleView(-1)} onTogglePlayback={playback.toggle} />
+            </div>
+            <button type="button" className="studio-download" onClick={() => void downloadViews()} disabled={exporting}>
+              {exporting ? <SpinnerGap className="spin" size={18} /> : null}{exporting ? "Downloading…" : "Download"}
+            </button>
+          </> : null}
+          {walletButton}
+        </div>
+      </header>
+      <main className="home-content">
+        {pageError}
+        {studioContent}
+        {children}
+      </main>
+    </>
   );
 }

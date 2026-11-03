@@ -6,6 +6,7 @@ import {
   assets,
   assetVariants,
   generationBatches,
+  generationQuotes,
   generationOutputs,
   projects,
   shots,
@@ -115,7 +116,18 @@ export async function getProjectDetail(
   projectId: string,
 ): Promise<ProjectDetail> {
   const project = await requireOwnedProject(userId, projectId);
-  const [assetRows, variantRows, shotRows, outputRows, activeBatchRows, counts] =
+  // Read the batch first so a terminal batch implies all committed outputs are
+  // visible to the queries that follow, even if generation finishes mid-request.
+  const [batch] = await db
+    .select({ id: generationBatches.id, status: generationBatches.status, quoteShots: generationQuotes.shots })
+    .from(generationBatches)
+    .innerJoin(generationQuotes, eq(generationQuotes.id, generationBatches.quoteId))
+    .where(and(eq(generationBatches.projectId, projectId), eq(generationBatches.ownerId, userId)))
+    .orderBy(desc(inArray(generationBatches.status, ["held", "queued", "running"])), desc(generationBatches.createdAt))
+    .limit(1);
+  const batchActive = batch && ["held", "queued", "running"].includes(batch.status);
+  const expectsPhoneTurntable = batch?.quoteShots[0]?.orientationGuideKind === "upright-phone-v2";
+  const [assetRows, variantRows, shotRows, outputRows, counts] =
     await Promise.all([
       db
         .select()
@@ -147,18 +159,6 @@ export async function getProjectDetail(
           ),
         )
         .orderBy(asc(generationOutputs.createdAt)),
-      db
-        .select({ id: generationBatches.id })
-        .from(generationBatches)
-        .where(
-          and(
-            eq(generationBatches.projectId, projectId),
-            eq(generationBatches.ownerId, userId),
-            inArray(generationBatches.status, ["held", "queued", "running"]),
-          ),
-        )
-        .orderBy(desc(generationBatches.createdAt))
-        .limit(1),
       projectCounts(projectId, userId),
     ]);
 
@@ -186,16 +186,18 @@ export async function getProjectDetail(
     }),
   );
 
-  const outputsByShot = new Map<string, typeof outputRows>();
-  for (const output of outputRows) {
-    const values = outputsByShot.get(output.shotId) ?? [];
-    values.push(output);
-    outputsByShot.set(output.shotId, values);
-  }
-
-  const turntable = shotRows.length === 8 && outputRows.length === 8
+  const turntable = !batchActive && expectsPhoneTurntable && shotRows.length === 8 && outputRows.length === 8
     ? await getPhoneTurntable(userId, projectId)
     : null;
+  const outputsByShot = new Map<string, typeof outputRows>();
+  if (!expectsPhoneTurntable || !batchActive) {
+    for (const output of outputRows) {
+      const values = outputsByShot.get(output.shotId) ?? [];
+      values.push(output);
+      outputsByShot.set(output.shotId, values);
+    }
+  }
+
   const publicShots: ProjectShot[] = await Promise.all(
     shotRows.map(async (shot) => ({
       id: shot.id,
@@ -229,6 +231,7 @@ export async function getProjectDetail(
     updatedAt: project.updatedAt.toISOString(),
     assets: publicAssets,
     shots: publicShots,
-    activeBatchId: activeBatchRows[0]?.id ?? null,
+    activeBatchId: batchActive ? batch.id : null,
+    ...(expectsPhoneTurntable && !batchActive && !turntable ? { turntableUnavailable: true } : {}),
   };
 }

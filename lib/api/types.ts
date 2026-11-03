@@ -47,6 +47,7 @@ export type ProjectDetail = ProjectSummary & {
   assets: Asset[];
   shots: ProjectShot[];
   activeBatchId: string | null;
+  turntableUnavailable?: boolean;
 };
 
 export type GenerationQuote = {
