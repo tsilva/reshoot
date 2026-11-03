@@ -391,15 +391,15 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
         onFocusCapture={playback.onFocusCapture} onBlurCapture={playback.onBlurCapture}
         onKeyDown={handleRotationKey}
       >
-        <div className="studio-photo-stage" aria-busy={generating}>
-          {completedShots.length ? completedShots.map((shot) => {
+        <div className={`studio-photo-stage${project.registeredPhoneTurntable ? " is-registered-phone" : ""}`} aria-busy={generating}>
+          {completedShots.length ? <div className="studio-photo-frame">{completedShots.map((shot) => {
             const version = latestVersion(shot);
             return <Image key={version.outputId} unoptimized src={version.previewUrl} fill sizes="(max-width: 720px) 95vw, 640px" loading="eager"
               hidden={shot.id !== activeShot?.id}
               alt={`${project.title}, ${shot.label.toLowerCase()}, version ${version.version}`}
               onLoad={() => setLoadedPhotos((loaded) => loaded.has(version.previewUrl) ? loaded : new Set(loaded).add(version.previewUrl))}
             />;
-          }) : canvasImage ? (
+          })}</div> : canvasImage ? (
             <Image unoptimized src={canvasImage} fill sizes="(max-width: 720px) 95vw, 640px" alt={`${project.title}, reference photo`} />
           ) : (
             <label className="studio-canvas-empty">
