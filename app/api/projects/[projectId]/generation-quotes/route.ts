@@ -13,7 +13,8 @@ import {
   shots,
   type QuoteShotInput,
 } from "@/lib/db/schema";
-import { productGuideKind } from "@/lib/generation/request";
+import { turntableAngles } from "@/lib/generation/phone-turntable";
+import { productGuideKind, shotOrientation } from "@/lib/generation/request";
 import { MAX_BATCH_SHOTS } from "@/lib/projects/limits";
 import { requireOwnedProject } from "@/lib/projects/service";
 
@@ -113,7 +114,13 @@ export async function POST(request: Request, context: RouteContext) {
       bands.map((band) => [band.referenceCount, band.creditsPerShot]),
     );
 
-    const orientationGuideKind = productGuideKind(project.title);
+    const requestedGuideKind = productGuideKind(project.title);
+    const orientations = parsed.data.shots.map(shotOrientation);
+    const fullTurn = orientations.length === turntableAngles.length && turntableAngles.every(
+      (angle) => orientations.some((orientation) => orientation?.azimuth === angle && orientation.elevation === 0),
+    );
+    const orientationGuideKind = requestedGuideKind === "upright-phone-v2" && !fullTurn
+      ? "upright-phone-v1" : requestedGuideKind;
     const frozenShots: QuoteShotInput[] = parsed.data.shots.map((shot) => ({
       clientId: shot.clientId,
       orientationGuideKind,

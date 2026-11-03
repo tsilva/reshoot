@@ -18,6 +18,7 @@ import type {
   ProjectSummary,
 } from "@/lib/api/types";
 import { signRead } from "@/lib/storage/r2";
+import { getPhoneTurntable } from "@/lib/projects/phone-turntable";
 import { outputDownloadUrl } from "@/lib/projects/downloads";
 
 export async function requireOwnedProject(userId: string, projectId: string) {
@@ -192,6 +193,9 @@ export async function getProjectDetail(
     outputsByShot.set(output.shotId, values);
   }
 
+  const turntable = shotRows.length === 8 && outputRows.length === 8
+    ? await getPhoneTurntable(userId, projectId)
+    : null;
   const publicShots: ProjectShot[] = await Promise.all(
     shotRows.map(async (shot) => ({
       id: shot.id,
@@ -203,9 +207,11 @@ export async function getProjectDetail(
         (outputsByShot.get(shot.id) ?? []).map(async (output) => ({
           outputId: output.id,
           version: output.version,
-          mimeType: output.mimeType,
-          previewUrl: await signRead(output.previewR2Key),
-          downloadUrl: outputDownloadUrl(projectId, output.id),
+          mimeType: turntable ? "image/png" : output.mimeType,
+          previewUrl: turntable
+            ? outputDownloadUrl(projectId, output.id) + "?turntable=preview"
+            : await signRead(output.previewR2Key),
+          downloadUrl: outputDownloadUrl(projectId, output.id) + (turntable ? "?turntable=download" : ""),
           approvedAt: output.approvedAt?.toISOString() ?? null,
           selectedAt: output.selectedAt?.toISOString() ?? null,
           createdAt: output.createdAt.toISOString(),

@@ -3,13 +3,15 @@ import { apiErrorResponse, ApiError } from "@/lib/api/errors";
 import { resolveCurrentUser } from "@/lib/auth/current-user";
 import { db } from "@/lib/db";
 import { generationOutputs, shots } from "@/lib/db/schema";
+import { renderPhoneTurntable } from "@/lib/generation/phone-turntable";
+import { getPhoneTurntable } from "@/lib/projects/phone-turntable";
 import { shotDownloadFilename } from "@/lib/projects/downloads";
 import { requireOwnedProject } from "@/lib/projects/service";
-import { getObjectStream } from "@/lib/storage/r2";
+import { getObjectBuffer, getObjectStream } from "@/lib/storage/r2";
 
 type RouteContext = { params: Promise<{ projectId: string; outputId: string }> };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
     const user = await resolveCurrentUser();
     const { projectId, outputId } = await context.params;
@@ -26,6 +28,24 @@ export async function GET(_request: Request, context: RouteContext) {
       ))
       .limit(1);
     if (!row) throw new ApiError(404, "output_not_found", "Output not found.");
+    const mode = new URL(request.url).searchParams.get("turntable");
+    if (mode === "preview" || mode === "download") {
+      const sources = await getPhoneTurntable(user.id, projectId);
+      const target = sources && [...sources.values()].find((source) => source.outputId === outputId);
+      if (!sources || target?.azimuth == null) throw new ApiError(404, "output_not_found", "Turntable view not found.");
+      const frame = await renderPhoneTurntable(target.azimuth, async (face) => getObjectBuffer(sources.get(face)!.key));
+      const filename = shotDownloadFilename({
+        label: row.label, outputId, version: row.output.version, mimeType: "image/png",
+      });
+      return new Response(new Uint8Array(frame), {
+        headers: {
+          "Content-Type": "image/png",
+          "Content-Disposition": `${mode === "download" ? "attachment" : "inline"}; filename="${filename}"`,
+          "Cache-Control": "private, no-store",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    }
     const filename = shotDownloadFilename({
       label: row.label,
       outputId: row.output.id,

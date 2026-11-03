@@ -13,7 +13,7 @@ import {
 } from "@/lib/db/schema";
 import { captureGeneration, releaseGeneration } from "@/lib/generation/accounting";
 import { actualImageMime, recoverGenerationOutput } from "@/lib/generation/recovery";
-import { buildImageRequest } from "@/lib/generation/request";
+import { buildImageRequest, shotOrientation } from "@/lib/generation/request";
 import { MAX_PHONE_LEAN_DEGREES, phoneLeanDegrees } from "@/lib/generation/phone-alignment";
 import { createOrientationGuide } from "@/lib/generation/orientation-guide";
 import {
@@ -177,7 +177,12 @@ export async function executeGenerationJob(
     const referenceBuffers = await Promise.all(
       inputs.map((input) => getObjectBuffer(input.frozenR2Key)),
     );
-    const orientationGuide = await createOrientationGuide(shot, guideKind);
+    // The shared geometry uses the four straight views as appearance sources.
+    // Keep their guides neutral so the rail annotations cannot color those textures.
+    const angle = shotOrientation(shot)?.azimuth;
+    const guide = guideKind === "upright-phone-v2" && angle !== undefined && angle % 90 === 0
+      ? "upright-phone-v1" : guideKind;
+    const orientationGuide = await createOrientationGuide(shot, guide);
     const request = buildImageRequest({
       model: attempt.providerModel ?? imageProviderConfig.model,
       shot,
