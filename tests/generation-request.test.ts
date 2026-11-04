@@ -4,6 +4,22 @@ import { buildGenerationPrompt, buildImageRequest, CATALOG_STUDIO_INSTRUCTIONS, 
 import { selectImageModel, supportedImageModels } from "../lib/generation/provider";
 
 describe("catalog photo requests", () => {
+  it("gives handled mugs explicit angle-dependent occlusions without telling the model to ignore the handle", () => {
+    expect(productGuideKind("Blue ceramic mug")).toBe("upright-mug-v1");
+    for (const title of ["Travel mug", "Handleless mug", "Mug holder", "Ceramic bowl"]) {
+      expect(productGuideKind(title)).toBe("generic-cup-v1");
+    }
+    const expected = ["IMAGE RIGHT", "IMAGE RIGHT", "EDGE-ON", "IMAGE LEFT", "IMAGE LEFT", "BEHIND", "HIDDEN", "BEHIND"];
+    for (const [i, azimuth] of [0, 45, 90, 135, 180, 225, 270, 315].entries()) {
+      const body = buildImageRequest({ model: "pinned", shot: { label: "Mug", azimuth }, referenceImages: ["original"],
+        orientationGuide: { kind: "upright-mug-v1", azimuth, elevation: 0, image: "pose" } });
+      expect(body.prompt).toContain(`VISIBLE HANDLE CHECK: The handle`);
+      expect(body.prompt.split("VISIBLE HANDLE CHECK:")[1]).toContain(expected[i]);
+      expect(body.prompt).toContain("not the pose in REFERENCE 1");
+      expect(body.prompt).not.toContain("Ignore the guide's cup shape, handle");
+      expect(body.input_references.map((r) => r.image_url.url)).toEqual(["original", "pose"]);
+    }
+  });
   it("turns the whole product toward a fixed camera while normalizing pose and preserving original packaging", () => {
     const side = buildGenerationPrompt({ label: "Side", azimuth: 90, elevation: 0 }, 1);
     expect(side).toContain("RIGHT PROFILE view");

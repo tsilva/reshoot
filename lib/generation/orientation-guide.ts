@@ -9,7 +9,7 @@ type Surface = { vertices: Point[]; gray?: number; color?: string };
 // Generic direction cue, never geometry inferred from a user's product.
 // Keep this version deterministic; a future product-specific guide replaces
 // this factory without changing the ordered original-photo inputs.
-function cupTriangles(): Triangle[] {
+function cupTriangles(mug = false): Triangle[] {
   const triangles: Triangle[] = [];
   function surface(rows: number, columns: number, point: (row: number, column: number) => Point) {
     for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
@@ -22,12 +22,14 @@ function cupTriangles(): Triangle[] {
     [.46, .9], [.455, .99], [.44, 1], [.415, .99], [.4, .95], [.405, .2], [.34, .08], [0, .08]];
   surface(48, profile.length - 1, (slice, layer) => {
     const angle = slice * 2 * Math.PI / 48, [radius, height] = profile[layer];
-    return [radius * Math.sin(angle), height, radius * Math.cos(angle)];
+    const radiusScale = mug ? .87 : 1;
+    return [radius * radiusScale * Math.sin(angle), height, radius * radiusScale * Math.cos(angle)];
   });
   surface(64, 8, (segment, ring) => {
     const angle = segment * 2 * Math.PI / 64, tube = ring * 2 * Math.PI / 8;
-    return [.63 + (.33 + .065 * Math.cos(tube)) * Math.cos(angle),
-      .52 + (.36 + .065 * Math.cos(tube)) * Math.sin(angle), .065 * Math.sin(tube)];
+    const thickness = mug ? .055 : .065;
+    return [(mug ? .53 : .63) + ((mug ? .24 : .33) + thickness * Math.cos(tube)) * Math.cos(angle),
+      .52 + ((mug ? .34 : .36) + thickness * Math.cos(tube)) * Math.sin(angle), thickness * Math.sin(tube)];
   });
   return triangles;
 }
@@ -70,6 +72,7 @@ function phoneSurfaces(colorCoded: boolean): Surface[] {
 
 const surfacesByKind: Record<OrientationGuideKind, Surface[]> = {
   "generic-cup-v1": cupTriangles().map(([a, b, c]) => ({ vertices: [a, b, c] })),
+  "upright-mug-v1": cupTriangles(true).map(([a, b, c]) => ({ vertices: [a, b, c] })),
   "upright-phone-v1": phoneSurfaces(false),
   "upright-phone-v2": phoneSurfaces(true),
 };
@@ -78,8 +81,8 @@ const SIZE = 512;
 // Orthographic software capture: one centered vertical pivot, no textures,
 // no cast shadows, no browser/WebGL or external reconstruction dependency.
 function renderGuide(kind: OrientationGuideKind, azimuth: number, elevation: number) {
-  const isPhone = kind !== "generic-cup-v1";
-  const scale = isPhone ? SIZE * .8 : SIZE / 2.7;
+  const isPhone = kind.startsWith("upright-phone-");
+  const scale = isPhone ? SIZE * .8 : kind === "upright-mug-v1" ? SIZE * .48 : SIZE / 2.7;
   const yaw = azimuth * Math.PI / 180, tilt = elevation * Math.PI / 180;
   function transform([x, y, z]: Point): Point {
     const rotatedX = x * Math.cos(yaw) - z * Math.sin(yaw);

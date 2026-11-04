@@ -6,9 +6,12 @@ export type GenerationShot = {
   prompt?: string | null;
 };
 
-export type OrientationGuideKind = "generic-cup-v1" | "upright-phone-v1" | "upright-phone-v2";
+export type OrientationGuideKind = "generic-cup-v1" | "upright-mug-v1" | "upright-phone-v1" | "upright-phone-v2";
 
 export function productGuideKind(title: string): OrientationGuideKind {
+  if (/\bmug\b/i.test(title) && !/\b(?:handleless|travel|holder|rack|tree|stand|warmer)\b/i.test(title)) {
+    return "upright-mug-v1";
+  }
   return /\b(?:smart[ -]?phone|mobile phone|cell[ -]?phone|iphone|phone)\b/i.test(title)
     && !/\b(?:case|cover|holder|stand|mount|charger)\b/i.test(title)
     ? "upright-phone-v2"
@@ -64,6 +67,18 @@ function productDirection(azimuth: number | null | undefined) {
   return `BACK-${side.toUpperCase()} three-quarter view at ${angle} degrees. Both the rear and the ${side} side face the fixed camera. As seen by the viewer, the visible side is on the image-${edge} edge of the rear face. The front face is hidden behind the product. Hide its front screen, face, or front label if present.`;
 }
 
+export function mugHandleDirection(azimuth: number) {
+  const angle = ((azimuth % 360) + 360) % 360;
+  if (angle === 0) return "The handle is on IMAGE RIGHT, in full side silhouette with its open loop visible outside the body.";
+  if (angle === 90) return "The handle is directly IN FRONT of the body, centered on its vertical axis and seen EDGE-ON. It overlaps the body as a narrow vertical strip. There is NO open handle loop projecting from either side.";
+  if (angle === 180) return "The handle is on IMAGE LEFT, in full side silhouette with its open loop visible outside the body.";
+  if (angle === 270) return "The handle is directly BEHIND the body and completely HIDDEN by it. Show the plain cup silhouette with NO handle or open loop on either side.";
+  if (angle < 90) return "The handle moves toward the viewer on IMAGE RIGHT: foreshorten its loop and partially overlap the right-front surface of the cup.";
+  if (angle < 180) return "The handle moves away from the front-center position toward IMAGE LEFT: its foreshortened loop is on the left-front surface, partly overlapping the body.";
+  if (angle < 270) return "The handle recedes BEHIND the cup on IMAGE LEFT. The body occludes its attachments and the inner part of its loop; only the outer left arc projects beyond the body.";
+  return "The handle emerges from BEHIND the cup on IMAGE RIGHT. The body occludes its attachments and the inner part of its loop; only the outer right arc projects beyond the body.";
+}
+
 export function buildGenerationPrompt(shot: GenerationShot, referenceCount: number, guide?: OrientationGuide) {
   if (!Number.isInteger(referenceCount) || referenceCount < 1 || referenceCount > 5) {
     throw new RangeError("Generation requires one primary and up to four supporting originals.");
@@ -76,7 +91,14 @@ export function buildGenerationPrompt(shot: GenerationShot, referenceCount: numb
   }
   return [
     "Create exactly ONE photorealistic catalog photograph of the SAME physical product shown in the attached originals.",
-    "PRODUCT IDENTITY — highest priority:",
+    ...(guide?.kind === "upright-mug-v1" ? [
+      "MUG TARGET POSE — mandatory composition, before copying appearance:",
+      `REFERENCE ${referenceCount + 1} is the target pose template for this handled mug at ${guide.azimuth} degrees. Rephotograph the original mug in THIS pose, not the pose in REFERENCE 1.`,
+      mugHandleDirection(guide.azimuth),
+      "Match the template's handle SIDE, foreshortening and near/far OCCLUSION, centered vertical body axis, rim height and base placement. Keep one body height and camera distance across the set. Preserve the original mug's actual shape, handle construction and glaze; the neutral template supplies pose, not a replacement material or exact reconstruction.",
+      "The source photograph establishes the 0-degree front with the handle on image right. Positive turns bring it in front at 90 degrees, to image left at 180, and fully behind at 270. A right-side loop copied into a 90-, 135-, 180-, 225- or 270-degree view is WRONG. Do not mirror the photograph to simulate rotation.",
+    ] : []),
+    guide?.kind === "upright-mug-v1" ? "PRODUCT IDENTITY — preserve appearance, not the source camera angle:" : "PRODUCT IDENTITY — highest priority:",
     "REFERENCE 1 is the primary original and authoritative identity anchor. Identify the product separately from its background, display stand and unrelated props.",
     ...Array.from({ length: referenceCount - 1 }, (_, index) => `REFERENCE ${index + 2} is a supporting original of the same product. Use it to resolve surfaces and construction that are not visible in reference 1; do not blend different designs or average conflicting details.`),
     "Preserve the product’s construction, proportions, component count, seams, joins, texture, materials, original colors, markings, imperfections and wear. Preserve the relative positions of its parts. The originals establish identity and appearance. Use the upright studio pose below for the product’s orientation.",
@@ -95,7 +117,7 @@ export function buildGenerationPrompt(shot: GenerationShot, referenceCount: numb
       "UPRIGHT POSE GUIDE — geometry and orientation only:",
       `REFERENCE ${referenceCount + 1} is an upright phone-shaped scaffold at ${guide.azimuth} degrees with the requested camera elevation. Its dark broad face denotes the front screen, its light broad face denotes the rear, and its narrow edges denote the side rails.`,
       "Match the scaffold’s upright long edges, visible faces, bottom center, and projected height. Recover the exact phone details and colors from the originals. The guide’s gray shades only identify faces.",
-    ].join("\n") : guide ? [
+    ].join("\n") : guide && guide.kind !== "upright-mug-v1" ? [
       "ORIENTATION HINT — direction only, never product identity:",
       `REFERENCE ${referenceCount + 1} is a GENERIC TEXTURELESS CUP rendered at the requested ${guide.azimuth}-degree turn and ${guide.elevation}-degree camera elevation. It is NOT this product, NOT a reconstruction of it, and NOT a supporting original.`,
       "Rotate the product from REFERENCE 1 to the same front-relative orientation as the guide. Its canonical front has the cup handle on screen right; positive turns bring that handle toward the camera, then to screen left, then behind the body.",
@@ -106,6 +128,7 @@ export function buildGenerationPrompt(shot: GenerationShot, referenceCount: numb
     `Requested shot label: ${JSON.stringify(shot.label)}.`,
     "The product's FRONT is its face or main presentation surface. RIGHT means the side at the right of a straight-on front photograph; LEFT means the opposite side.",
     productDirection(orientation?.azimuth),
+    guide?.kind === "upright-mug-v1" ? `VISIBLE HANDLE CHECK: ${mugHandleDirection(guide.azimuth)}` : null,
     elevation === 0
       ? "Camera elevation: level with the product's center, with no overhead or low-angle view."
       : `Camera elevation: ${Math.abs(elevation)} degrees ${elevation > 0 ? "above" : "below"} the product's center, looking ${elevation > 0 ? "slightly down" : "up"} toward it.`,

@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import sharp from "sharp";
+import type { OrientationGuideKind } from "../lib/generation/request";
 const state = vi.hoisted(() => ({
   attemptState: "claimed", transitionWon: true, inputs: ["primary", "supporting"],
-  quoteShots: [] as Array<{ orientationGuideKind: "upright-phone-v1" }>,
+  quoteShots: [] as Array<{ orientationGuideKind: OrientationGuideKind }>,
   getObjectBuffer: vi.fn(), headObject: vi.fn(), putObject: vi.fn(),
   capture: vi.fn(), release: vi.fn(), fetch: vi.fn(), updates: [] as unknown[],
 }));
@@ -36,6 +37,37 @@ describe("durable generation dispatch", () => {
     state.headObject.mockRejectedValue({ $metadata: { httpStatusCode: 404 } });
     state.getObjectBuffer.mockImplementation(async (key) => Buffer.from(key));
     vi.stubGlobal("fetch", state.fetch);
+  });
+
+  it("uses the frozen mug pose and releases a wrong-angle output without another paid call", async () => {
+    state.quoteShots = [{ orientationGuideKind: "upright-mug-v1" }];
+    const png = await sharp(Buffer.from(`<svg width="512" height="512">
+      <ellipse cx="386" cy="240" rx="70" ry="110" fill="none" stroke="blue" stroke-width="22"/>
+      <rect x="146" y="76" width="220" height="360" rx="30" fill="blue"/>
+    </svg>`)).png().toBuffer();
+    state.fetch.mockResolvedValue(new Response(JSON.stringify({ data: [{ b64_json: png.toString("base64") }] })));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "failed" });
+    expect(state.fetch).toHaveBeenCalledOnce();
+    const body = JSON.parse(state.fetch.mock.calls[0][1].body);
+    expect(body.prompt).toContain("handle is directly IN FRONT");
+    expect(body.prompt).not.toContain("Ignore the guide's cup shape, handle");
+    expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ failureCode: "invalid_mug_orientation" }));
+    expect(state.capture).not.toHaveBeenCalled();
+    expect(state.putObject).not.toHaveBeenCalled();
+  });
+
+  it("saves a mug profile with no side loop and captures its credits once", async () => {
+    state.quoteShots = [{ orientationGuideKind: "upright-mug-v1" }];
+    const png = await sharp(Buffer.from(`<svg width="512" height="512">
+      <rect x="146" y="76" width="220" height="360" rx="30" fill="blue"/>
+      <rect x="245" y="120" width="22" height="240" rx="10" fill="#666"/>
+    </svg>`)).png().toBuffer();
+    state.fetch.mockResolvedValue(new Response(JSON.stringify({ data: [{ b64_json: png.toString("base64") }] })));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "succeeded" });
+    expect(state.fetch).toHaveBeenCalledOnce();
+    expect(state.capture).toHaveBeenCalledOnce();
+    expect(state.release).not.toHaveBeenCalled();
+    expect(state.putObject).toHaveBeenCalledTimes(2);
   });
 
   it("retains the recorded model while sending old queued attempts through the current gateway, persists an image, then captures credits", async () => {

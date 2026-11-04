@@ -4,6 +4,30 @@ vi.mock("server-only", () => ({}));
 import { createOrientationGuide } from "../lib/generation/orientation-guide";
 
 describe("orientation guides", () => {
+  it("places a mug handle right, in front, left, then behind at fixed body scale", async () => {
+    const rasters: Buffer[] = [];
+    for (const azimuth of [0, 90, 180, 270]) {
+      const guide = await createOrientationGuide({ label: "Mug", azimuth }, "upright-mug-v1");
+      rasters.push(await sharp(Buffer.from(guide!.image.split(",")[1], "base64")).removeAlpha().raw().toBuffer());
+    }
+    const outside = (pixels: Buffer, start: number, end: number) => {
+      let count = 0;
+      for (let y = 180; y < 320; y++) for (let x = start; x < end; x++) if (pixels[(y * 512 + x) * 3] < 245) count++;
+      return count;
+    };
+    expect(outside(rasters[0], 360, 470)).toBeGreaterThan(1000);
+    expect(outside(rasters[0], 42, 150)).toBe(0);
+    expect(outside(rasters[2], 42, 150)).toBeGreaterThan(1000);
+    expect(outside(rasters[2], 360, 470)).toBe(0);
+    for (const pixels of [rasters[1], rasters[3]]) {
+      expect(outside(pixels, 42, 150) + outside(pixels, 360, 470)).toBe(0);
+    }
+    expect(rasters[1]).not.toEqual(rasters[3]);
+    // Same base and rim rows at all four angles, independent of the handle.
+    const column = (pixels: Buffer) => Array.from({ length: 512 }, (_, y) => pixels[(y * 512 + 256) * 3] < 245);
+    expect(column(rasters[0])).toEqual(column(rasters[2]));
+    expect(column(rasters[0])).toEqual(column(rasters[3]));
+  });
   it("renders distinct neutral, opaque raster views across the full turn", async () => {
     const images = new Set<string>();
     for (const azimuth of [0, 45, 90, 135, 180, 225, 270, 315]) {

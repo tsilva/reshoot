@@ -100,6 +100,14 @@ The bar must follow actual settled jobs, including failures, and remain
 indeterminate if progress is unavailable. Verify live completion refreshes the
 card without starting or resuming generation.
 
+For handled mugs, compare all eight views against the original and the pose
+sequence: handle right at 0°, edge-on in front at 90°, left at 180°, hidden at
+270°, with the corresponding near/far quarter-view occlusions. Reject a repeated
+handle-right pose labeled as a profile or rear quarter. Check that body height,
+base, rim, handle attachments and glaze remain stable. The synthetic mug tests
+exercise right/left openings, hidden/edge-on silhouettes and release of a rejected
+output; they do not establish photographic quality or coherent 3D geometry.
+
 ## Sample rotation review
 
 Check the home page at desktop, tablet and phone sizes, including a short laptop

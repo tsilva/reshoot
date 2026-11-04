@@ -15,6 +15,7 @@ import { captureGeneration, releaseGeneration } from "@/lib/generation/accountin
 import { actualImageMime, recoverGenerationOutput } from "@/lib/generation/recovery";
 import { buildImageRequest, shotOrientation } from "@/lib/generation/request";
 import { MAX_PHONE_LEAN_DEGREES, phoneLeanDegrees } from "@/lib/generation/phone-alignment";
+import { mugOrientationFailure } from "@/lib/generation/mug-alignment";
 import { createOrientationGuide } from "@/lib/generation/orientation-guide";
 import {
   imageProviderConfig,
@@ -268,7 +269,18 @@ export async function executeGenerationJob(
       });
       return { status: "failed" as const };
     }
-    if (orientationGuide && orientationGuide.kind !== "generic-cup-v1" && orientationGuide.elevation === 0) {
+    if (orientationGuide?.kind === "upright-mug-v1" && orientationGuide.elevation === 0) {
+      const failure = await mugOrientationFailure(image, orientationGuide.azimuth);
+      if (failure) {
+        await releaseGeneration({
+          jobId, attemptId, attemptState: "failed", failureCode: "invalid_mug_orientation",
+          publicError: "This mug view did not match the requested handle position. Credits were released.",
+          privateError: failure, providerRequestId, usageCostMicros,
+        });
+        return { status: "failed" as const };
+      }
+    }
+    if (orientationGuide?.kind.startsWith("upright-phone-") && orientationGuide.elevation === 0) {
       const lean = await phoneLeanDegrees(image);
       if (lean !== undefined && Math.abs(lean) > MAX_PHONE_LEAN_DEGREES) {
         await releaseGeneration({
