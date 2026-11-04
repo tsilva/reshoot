@@ -3,12 +3,7 @@
 import Image from "next/image";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  CheckCircle,
-  ImageSquare,
-  SpinnerGap,
-  X,
-} from "@phosphor-icons/react";
+import { ImageSquare, SpinnerGap } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ProjectDetail, ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
@@ -69,7 +64,6 @@ function OpeningShootStatus() {
 export function ProjectsClient({ initialProjects }: { initialProjects: ProjectSummary[] }) {
   const router = useRouter();
   const [projects, setProjects] = useState(initialProjects);
-  const [importNotice, setImportNotice] = useState<string | null>(null);
   const importStarted = useRef(false);
 
   const refreshFinishedProject = useCallback(async (projectId: string) => {
@@ -107,20 +101,17 @@ export function ProjectsClient({ initialProjects }: { initialProjects: ProjectSu
         });
         indexedDB.deleteDatabase("reshoot-studio");
         if (response.projectId) {
-          setImportNotice("Your previous saved shoot was imported as a project.");
           const latest = await apiRequest<{ projects: ProjectSummary[] }>("/api/projects");
           setProjects(latest.projects);
           router.refresh();
         }
-      } catch (legacyError) {
-        setImportNotice(
-          legacyError instanceof Error
-            ? `Your previous local shoot is still safe, but could not be imported yet: ${legacyError.message}`
-            : "Your previous local shoot could not be imported yet.",
-        );
+      } catch {
+        // Keep the local shoot available for a later import without showing a banner.
       }
     })();
   }, [router]);
+
+  if (!projects.length) return null;
 
   return (
     <section className="product-main" id="shoots" aria-label="Your shoots">
@@ -130,51 +121,37 @@ export function ProjectsClient({ initialProjects }: { initialProjects: ProjectSu
         </div>
       </div>
 
-      {importNotice ? (
-        <div className="inline-notice legacy-import-notice" role="status">
-          <CheckCircle size={20} /> {importNotice}
-          <button className="icon-button" onClick={() => setImportNotice(null)} aria-label="Dismiss">
-            <X size={16} />
-          </button>
-        </div>
-      ) : null}
-
-      {projects.length ? (
-        <div className="project-grid">
-          {projects.map((project) => (
-            <Link
-              id={projectCardId(project.id)}
-              href={projectPath(project.id)}
-              className="project-card"
-              key={project.id}
-              aria-label={`Open ${project.title}`}
-              aria-describedby={project.status === "generating" ? `generation-${project.id}` : undefined}
-            >
-              <div className="project-image-frame">
-                {project.primaryPreviewUrl ? (
-                  <Image
-                    unoptimized
-                    src={project.primaryPreviewUrl}
-                    fill
-                    sizes="(max-width: 720px) 100vw, 33vw"
-                    alt=""
-                  />
-                ) : (
-                  <ImageSquare size={36} weight="thin" />
-                )}
-                <ProjectCardStatus project={project} onFinished={refreshFinishedProject} />
-              </div>
-              <div className="project-card-body">
-                <h2>{project.title}</h2>
-              </div>
-              <OpeningShootStatus />
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <p className="library-empty-message">Your product photos will be saved here.</p>
-      )}
-
+      <div className="project-grid">
+        {projects.map((project) => (
+          <Link
+            id={projectCardId(project.id)}
+            href={projectPath(project.id)}
+            className="project-card"
+            key={project.id}
+            aria-label={`Open ${project.title}`}
+            aria-describedby={project.status === "generating" ? `generation-${project.id}` : undefined}
+          >
+            <div className="project-image-frame">
+              {project.primaryPreviewUrl ? (
+                <Image
+                  unoptimized
+                  src={project.primaryPreviewUrl}
+                  fill
+                  sizes="(max-width: 720px) 100vw, 33vw"
+                  alt=""
+                />
+              ) : (
+                <ImageSquare size={36} weight="thin" />
+              )}
+              <ProjectCardStatus project={project} onFinished={refreshFinishedProject} />
+            </div>
+            <div className="project-card-body">
+              <h2>{project.title}</h2>
+            </div>
+            <OpeningShootStatus />
+          </Link>
+        ))}
+      </div>
     </section>
   );
 }
