@@ -10,7 +10,7 @@
   <img src="./public/brand/web-seo/og-image-1200x630-ctr.png" alt="Reshoot turns one product photo into a consistent set of studio angles" width="640" />
 </p>
 
-Reshoot is a product-photography studio for small brands, studios, and product teams. Explore free, pre-made samples on the home page, add reference photos, and get studio views automatically. A completed shoot opens as a gallery with one large photo. The top bar holds the shoot title, back link, rotation controls, and Download. Reference photos and the Generate button appear only before the shoot’s first generation. Saved shoots appear as clickable photo-and-title cards, without photo counts, separate open/delete buttons, search or a second new-shoot button; Add photos in the introduction starts a shoot. The borderless cards show the latest generated front view, or the primary reference photo while a front view is unavailable. The whole card opens its shoot and grows slightly on hover, with animation disabled for reduced-motion preferences. The library stays visible while a shoot opens. The gallery starts at the top, and the back arrow opens the saved shoots library. The wallet expands on the same page for balances, credit activity, and supported test top-ups.
+Reshoot is a product-photography studio for small brands, studios, and product teams. Explore free, pre-made samples on the home page, add reference photos, and get studio views automatically. A completed shoot opens as a gallery with one large photo. The top bar holds the shoot title, back link, rotation controls, and Download. Reference photos and the Generate button appear only before the shoot’s first generation. Saved shoots appear as clickable photo-and-title cards, without photo counts, separate open/delete buttons, search or a second new-shoot button; Add photos in the introduction starts a shoot. The borderless cards show the latest generated front view, or the primary reference photo while a front view is unavailable. While a shoot is generating, its card shows Generating with a progress bar underneath. The bar follows completed and failed batch jobs through live updates; it stays indeterminate until progress is available. Finished cards refresh automatically. The whole card opens its shoot and grows slightly on hover, with animation disabled for reduced-motion preferences. The library stays visible while a shoot opens. The gallery starts at the top. Returning with the back arrow, Reshoot home link, or browser Back scrolls to the visited project's card, clear of the sticky header. If that project is no longer listed, the back arrow opens the library heading. The wallet expands on the same page for balances, credit activity, and supported test top-ups.
 
 **Add photos** opens a blank shoot workspace. Set up the shoot there by choosing reference photos or dragging and dropping them onto the page; no name or separate upload dialog is required. The empty upload area fills the available height below the header. The lower Add photos and Generate controls appear only after a reference photo is saved, and disappear again when the last reference is removed. Photos upload directly into the shoot, with progress and retries for failed files. Once references are ready, the workspace calculates the price for eight studio views. Reshoot suggests a short name for the product in the first saved photo, leaving out the surroundings and how it is held or placed. On touch devices whose browser supports native capture, **Take a photo** opens the rear-facing camera; choosing existing photos remains available. File selection, drops, and camera capture use the same JPG/PNG/WebP validation and limits: up to 25 photos, 20 MB each, and 500 MB per shoot. Camera availability and the native chooser depend on the device/browser. If automatic naming is unavailable, photos are still saved under **Product shoot**. Later uploads preserve the shoot’s existing name.
 
@@ -75,10 +75,49 @@ pnpm start      # serve the production build
 pnpm lint       # run ESLint
 pnpm typecheck  # check TypeScript
 pnpm test       # run unit and integration tests
+pnpm db:check-migrations # inspect the Production ledger through Agent Vault
 pnpm db:migrate # apply forward database migrations
 ```
 
 Local builds skip Sentry source-map uploads. Runtime error reporting still uses the configured DSN.
+
+### Read-only migration inspection
+
+On a configured trusted Mac, `pnpm db:check-migrations` checks the Production
+`main` branch of `reshoot-neon`, database `neondb`, through Agent Vault. It reads
+only permission metadata and `drizzle.__drizzle_migrations`, requiring an exact
+match with the checkout's migration timestamps and SQL hashes. It rejects access
+to application tables, migration writes, elevated roles, role memberships,
+database/schema creation and callable non-system security-definer functions.
+An unconfigured route, authentication failure or ledger mismatch stops the check.
+It does not apply migrations.
+
+Provisioning requires a separate `reshoot_migration_auditor` PostgreSQL login
+without role memberships, superuser, database/role creation, replication or RLS
+bypass. Grant only database `CONNECT`, `USAGE` on schema `drizzle` and `SELECT` on
+`drizzle.__drizzle_migrations`, and set its `default_transaction_read_only` to
+`on`. Create the role through SQL: Neon console-created roles can inherit broader
+permissions. Initialize its password through a trusted administrator, then copy
+the complete connection URL directly from Neon into the Agent Vault service's
+Token field. Never commit or pass that URL to the checker.
+
+The reviewed bundle is `local-reshoot-migration-audit`, with one HTTP service,
+`reshoot-neon-ledger`, restricted to `POST /sql` on the exact pooled Neon endpoint.
+Its bearer credential uses header `Neon-Connection-String` and an empty prefix.
+The checker sends a placeholder; Agent Vault replaces it with the stored URL.
+The local proxy must already be running. A trusted administrator installs an
+owner-only `~/.config/infisical/neon-migration-checks/reshoot.json` containing only
+metadata: `version` (1), `project_id` (matching `.infisical.json`), `bundle`,
+`host`, `database`, `role`, absolute `infisical` and `ca_file` paths, `proxy`
+(`127.0.0.1:8283`) and the reviewed `ca_fingerprint` (`SHA256:…`).
+
+The launcher pins the Infisical instance and proxy CA without changing system
+trust. It runs curl in a macOS sandbox allowing only the local proxy and public
+CA access from the home directory. The trusted launcher manages the session;
+the SQL client receives a placeholder and short-lived proxy-session credentials.
+This protects the SQL client, not full-access processes elsewhere on the host.
+The shared token broker is unnecessary for this static Neon credential. Test a
+new route with synthetic credentials before a bounded authenticated check.
 
 ## Notes
 

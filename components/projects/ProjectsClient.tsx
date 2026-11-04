@@ -9,10 +9,21 @@ import {
   SpinnerGap,
   X,
 } from "@phosphor-icons/react";
-import { useEffect, useRef, useState } from "react";
-import type { ProjectSummary } from "@/lib/api/types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ProjectDetail, ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
-import { projectPath } from "@/lib/projects/routes";
+import { projectCardId, projectPath } from "@/lib/projects/routes";
+import { ProjectGenerationStatus } from "./ProjectGenerationStatus";
+
+function ProjectCardStatus({ project, onFinished }: {
+  project: ProjectSummary;
+  onFinished(projectId: string): Promise<void>;
+}) {
+  const refresh = useCallback(() => onFinished(project.id), [onFinished, project.id]);
+  return project.status === "generating"
+    ? <ProjectGenerationStatus key={project.activeBatchId ?? project.id} id={`generation-${project.id}`} title={project.title} batchId={project.activeBatchId ?? null} onFinished={refresh} />
+    : <span className={`status-label status-${project.status}`}>{project.status}</span>;
+}
 
 type LegacyShoot = {
   version?: number;
@@ -60,6 +71,11 @@ export function ProjectsClient({ initialProjects }: { initialProjects: ProjectSu
   const [projects, setProjects] = useState(initialProjects);
   const [importNotice, setImportNotice] = useState<string | null>(null);
   const importStarted = useRef(false);
+
+  const refreshFinishedProject = useCallback(async (projectId: string) => {
+    const { project } = await apiRequest<{ project: ProjectDetail }>(`/api/projects/${projectId}`, { cache: "no-store" });
+    setProjects((current) => current.map((item) => item.id === projectId ? project : item));
+  }, []);
 
   useEffect(() => {
     if (importStarted.current) return;
@@ -127,10 +143,12 @@ export function ProjectsClient({ initialProjects }: { initialProjects: ProjectSu
         <div className="project-grid">
           {projects.map((project) => (
             <Link
+              id={projectCardId(project.id)}
               href={projectPath(project.id)}
               className="project-card"
               key={project.id}
               aria-label={`Open ${project.title}`}
+              aria-describedby={project.status === "generating" ? `generation-${project.id}` : undefined}
             >
               <div className="project-image-frame">
                 {project.primaryPreviewUrl ? (
@@ -144,9 +162,7 @@ export function ProjectsClient({ initialProjects }: { initialProjects: ProjectSu
                 ) : (
                   <ImageSquare size={36} weight="thin" />
                 )}
-                <span className={`status-label status-${project.status}`}>
-                  {project.status}
-                </span>
+                <ProjectCardStatus project={project} onFinished={refreshFinishedProject} />
               </div>
               <div className="project-card-body">
                 <h2>{project.title}</h2>

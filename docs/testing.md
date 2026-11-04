@@ -39,6 +39,18 @@ errors. Verify pause/play, previous/next wrapping, arrows, product boundaries,
 menu/dialog pause, image-readiness waits and reduced-motion opt-in. A single-view
 shoot must not expose ineffective navigation.
 
+Open a shoot from a lower library row, then return with the shoot's back arrow,
+Reshoot home link and browser Back. Each route should show the visited project
+card below the sticky header at desktop and phone widths, including after the
+project order changes. Browser Forward should reopen the shoot at the top.
+Check a directly opened shoot and a newly created shoot too. A library return
+target that no longer exists should fall back to the library heading.
+
+Check generating library cards at zero, partial and completed batch progress.
+The bar must follow actual settled jobs, including failures, and remain
+indeterminate if progress is unavailable. Verify live completion refreshes the
+card without starting or resuming generation.
+
 ## Sample rotation review
 
 Inspect every loaded view against its original and its neighbors, including the

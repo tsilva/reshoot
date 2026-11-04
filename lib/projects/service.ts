@@ -126,11 +126,25 @@ export async function listProjects(userId: string): Promise<ProjectSummary[]> {
     .where(and(eq(projects.ownerId, userId), isNull(projects.deletedAt)))
     .orderBy(desc(projects.updatedAt));
 
+  const generatingIds = rows.filter((project) => project.status === "generating").map((project) => project.id);
+  const latestBatches = generatingIds.length
+    ? await db.select({ id: generationBatches.id, projectId: generationBatches.projectId })
+      .from(generationBatches).where(and(
+        eq(generationBatches.ownerId, userId),
+        inArray(generationBatches.projectId, generatingIds),
+      )).orderBy(desc(generationBatches.createdAt))
+    : [];
+  const batchByProject = new Map<string, string>();
+  for (const batch of latestBatches) {
+    if (!batchByProject.has(batch.projectId)) batchByProject.set(batch.projectId, batch.id);
+  }
+
   return Promise.all(
     rows.map(async (project) => ({
       id: project.id,
       title: project.title,
       status: publicProjectStatus(project.status),
+      activeBatchId: batchByProject.get(project.id) ?? null,
       ...(await projectCounts(project.id, userId)),
       primaryPreviewUrl: await projectCoverPreview(project.id, project.primaryAssetId, userId),
       updatedAt: project.updatedAt.toISOString(),

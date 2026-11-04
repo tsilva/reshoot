@@ -12,7 +12,7 @@ import { ProjectsClient } from "@/components/projects/ProjectsClient";
 import { SampleCarousel } from "@/components/SampleCarousel";
 import type { CreditLedgerEntry, CreditSummary, ProjectDetail, ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
-import { projectPath } from "@/lib/projects/routes";
+import { PROJECT_RETURN_KEY, projectCardId, projectPath } from "@/lib/projects/routes";
 
 const AccountClient = dynamic(() => import("@/components/account/AccountClient").then((module) => module.AccountClient));
 
@@ -37,13 +37,32 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
 
   useLayoutEffect(() => {
     if (projectId) {
+      try {
+        sessionStorage.setItem(PROJECT_RETURN_KEY, projectCardId(projectId));
+      } catch { /* Fragment links still work when browser storage is unavailable. */ }
       // Browsers can carry the old fragment across the legacy HTTP redirect.
       if (window.location.hash === "#studio") {
         window.history.replaceState(null, "", window.location.pathname + window.location.search);
       }
       studioRef.current?.querySelector<HTMLElement>(".quiet-back")?.focus({ preventScroll: true });
-    } else if (showLibrary) {
-      document.getElementById("shoots")?.scrollIntoView({ behavior: "instant", block: "start" });
+    } else {
+      const fragment = window.location.hash.slice(1);
+      let visitedId: string | null = null;
+      try {
+        visitedId = sessionStorage.getItem(PROJECT_RETURN_KEY);
+      } catch { /* Use the explicit return fragment instead. */ }
+      const targetId = visitedId ?? (fragment.startsWith("shoot-") ? fragment : null);
+      const visitedCard = targetId ? document.getElementById(targetId) : null;
+      const target = visitedCard ?? (showLibrary || targetId ? document.getElementById("shoots") : null);
+      target?.scrollIntoView({ behavior: "instant", block: "start" });
+      // Apply after Next.js and browser history finish restoring their scroll.
+      const frame = requestAnimationFrame(() => {
+        target?.scrollIntoView({ behavior: "instant", block: "start" });
+        try {
+          if (sessionStorage.getItem(PROJECT_RETURN_KEY) === visitedId) sessionStorage.removeItem(PROJECT_RETURN_KEY);
+        } catch { /* Storage is optional for explicit return links. */ }
+      });
+      return () => cancelAnimationFrame(frame);
     }
   }, [projectId, showLibrary]);
 

@@ -21,6 +21,7 @@ export type ProjectSummary = {
   generatedCount: number;
   primaryPreviewUrl: string | null;
   updatedAt: string;
+  activeBatchId?: string | null;
 };
 
 export type ShotVersion = {

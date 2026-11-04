@@ -10,6 +10,26 @@ Use [$reshoot_generate-rotation-images](.codex/skills/reshoot_generate-rotation-
 
 Use the human Infisical CLI login and pinned development project in `.infisical.json`. Default dev fetches the application allowlist into memory; never log credentials or create plaintext exports. Production is isolated in `reshoot-production`, Production `/`, synced only to this Vercel project’s Production environment. Redeploy after changes, retain Preview settings, and keep Keychain originals until verification/rotation is complete. Do not invoke reconciliation, retention cleanup, database migrations, credit minting, or paid image generation merely to test secret access. Run `pnpm test:secrets` and normal lint/type/app checks after changing this path.
 
+For Neon migration inspection, run `pnpm db:check-migrations`. The reviewed
+service mapping is Agent Vault bundle `local-reshoot-migration-audit`, service
+`reshoot-neon-ledger`, for `reshoot-neon` → `main` → `neondb`, using
+`reshoot_migration_auditor`. The owner-only local profile is
+`~/.config/infisical/neon-migration-checks/reshoot.json`. This is a dedicated
+Agent Vault binding; `.infisical.json` continues to identify the existing
+Development source project. Do not use its application `DATABASE_URL` for this
+check. Missing profiles or failed authentication must stop without fallback.
+
+The check starts a short Agent Vault session with its instance and CA pinned,
+requires the expected DSN placeholder, and runs curl in the macOS sandbox.
+That sandbox permits network access only to the local proxy and blocks home
+directory reads except the public proxy CA. The proxy supplies the connection
+string to `POST /sql` on the reviewed endpoint. The fixed query reads permission
+metadata and the migration ledger, then compares timestamps and hashes against
+this checkout. It must not run migrations, read application rows, or change
+application launcher defaults. Follow the provisioning instructions in the README
+when moving the check to another trusted Mac; never retrieve the connection
+string into an agent process.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

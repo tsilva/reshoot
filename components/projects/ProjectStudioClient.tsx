@@ -36,6 +36,7 @@ import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
 import { useBatchRealtime } from "@/lib/client/use-batch-realtime";
 import { automaticShotRequests, shootReferences } from "@/lib/client/shoot-plan";
 import { MAX_PROJECT_BYTES, MAX_PROJECT_ORIGINALS } from "@/lib/projects/limits";
+import { projectCardId } from "@/lib/projects/routes";
 import { usePhotoPlayback } from "@/lib/client/use-photo-playback";
 import { SlideshowControls } from "@/components/SlideshowControls";
 
@@ -576,8 +577,8 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     <div className={`studio-workspace${emptySetup ? " is-empty" : ""}`} onDragEnter={enterPhotos} onDragLeave={leavePhotos} onDragOver={dragPhotos} onDrop={dropPhotos}>
       <header className="home-header">
         <div className="home-header-inner studio-topbar">
-          <Link href="/projects" className="quiet-back" aria-label="All shoots"><ArrowLeft size={22} /></Link>
-          <Link href="/" className="home-brand" aria-label="Reshoot home">reshoot.</Link>
+          <Link href={`/projects#${projectCardId(project.id)}`} scroll={false} className="quiet-back" aria-label="All shoots"><ArrowLeft size={22} /></Link>
+          <Link href={`/#${projectCardId(project.id)}`} scroll={false} className="home-brand" aria-label="Reshoot home">reshoot.</Link>
           <h1 className="studio-title" title={project.title}>{project.title}</h1>
           {completedShots.length ? <>
             <div className="studio-rotation-controls" onFocusCapture={playback.onFocusCapture} onBlurCapture={playback.onBlurCapture} onKeyDown={handleRotationKey}>
