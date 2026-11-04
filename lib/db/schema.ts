@@ -90,6 +90,7 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").primaryKey(),
+    clerkUserId: text("clerk_user_id"),
     email: text("email").notNull(),
     displayName: text("display_name").notNull(),
     isDemo: boolean("is_demo").default(false).notNull(),
@@ -98,7 +99,10 @@ export const users = pgTable(
     }),
     ...timestamps,
   },
-  (table) => [uniqueIndex("users_email_unique").on(table.email)],
+  (table) => [
+    uniqueIndex("users_email_unique").on(table.email),
+    uniqueIndex("users_clerk_user_id_unique").on(table.clerkUserId),
+  ],
 );
 
 export const projects = pgTable(

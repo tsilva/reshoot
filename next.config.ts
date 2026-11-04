@@ -1,6 +1,9 @@
 import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 import { withWorkflow } from "workflow/next";
+import { requireProductionClerkConfiguration } from "./lib/auth/config";
+
+requireProductionClerkConfiguration(process.env);
 
 const storageHostname = process.env.R2_ENDPOINT
   ? new URL(process.env.R2_ENDPOINT).hostname

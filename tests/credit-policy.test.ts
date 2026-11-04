@@ -33,4 +33,12 @@ describe("demo checkout environment policy", () => {
       }),
     ).toBe(false);
   });
+
+  it("requires explicit simulated mode for production and rejects unsupported payment modes", () => {
+    expect(demoCheckoutEnabledForEnvironment({ isDemoUser: true, vercelEnv: "production", paymentsMode: "simulated" })).toBe(true);
+    expect(demoCheckoutEnabledForEnvironment({ isDemoUser: false, vercelEnv: "production", paymentsMode: "simulated" })).toBe(false);
+    for (const paymentsMode of ["disabled", "live", "", "test"]) {
+      expect(demoCheckoutEnabledForEnvironment({ isDemoUser: true, nodeEnv: "development", paymentsMode })).toBe(false);
+    }
+  });
 });

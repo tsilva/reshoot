@@ -1,19 +1,27 @@
 import type { ProjectDetail } from "@/lib/api/types";
 import { StudioHome } from "@/components/StudioHome";
-import { resolveCurrentUser } from "@/lib/auth/current-user";
-import { getCreditSummary } from "@/lib/credits/service";
-import { listProjects } from "@/lib/projects/service";
+import { findCurrentUser } from "@/lib/auth/current-user";
+import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 export async function StudioPage({ project, showLibrary, walletOpen }: {
   project?: ProjectDetail;
   showLibrary?: boolean;
   walletOpen?: boolean;
 }) {
-  const user = await resolveCurrentUser();
+  await connection();
+  const user = await findCurrentUser();
+  if (!user) {
+    if (showLibrary || walletOpen) redirect(`/login?returnTo=${encodeURIComponent(showLibrary ? "/projects" : "/?wallet=open")}`);
+    return <StudioHome key="signed-out" initialCredits={null} initialProjects={[]} currentUser={null} />;
+  }
+  const [{ getCreditSummary }, { listProjects }] = await Promise.all([
+    import("@/lib/credits/service"), import("@/lib/projects/service"),
+  ]);
   const [credits, projects] = await Promise.all([
     getCreditSummary(user.id, user.isDemo),
     project ? [] : listProjects(user.id),
   ]);
 
-  return <StudioHome initialCredits={credits} initialProjects={projects} project={project} showLibrary={showLibrary} initialWalletOpen={walletOpen} />;
+  return <StudioHome key={user.id} initialCredits={credits} initialProjects={projects} currentUser={{ displayName: user.displayName, email: user.email, isDemo: user.isDemo }} project={project} showLibrary={showLibrary} initialWalletOpen={walletOpen} />;
 }

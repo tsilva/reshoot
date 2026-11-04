@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { usePathname } from "next/navigation";
 import {
   CaretDown,
@@ -25,18 +26,12 @@ export type AppShellUser = {
   availableCredits?: number;
 };
 
-const fallbackUser: AppShellUser = {
-  displayName: "Reshoot Demo",
-  email: "demo@reshoot.local",
-  isDemo: true,
-};
-
 export function AppShell({
   children,
-  currentUser = fallbackUser,
+  currentUser = null,
 }: {
   children: ReactNode;
-  currentUser?: AppShellUser;
+  currentUser?: AppShellUser | null;
 }) {
   const pathname = usePathname();
   const shellRef = useRef<HTMLDivElement>(null);
@@ -80,14 +75,14 @@ export function AppShell({
             );
           })}
         </nav>
-        <details className="user-menu">
+        {currentUser ? <details className="user-menu">
           <summary className="user-menu-trigger" aria-label="Open user menu">
             <UserCircle className="user-menu-avatar" size={27} weight="duotone" />
             <span className="user-menu-trigger-copy">
               <strong>{currentUser.displayName}</strong>
               <span>
                 {currentUser.availableCredits === undefined
-                  ? "Demo workspace"
+                  ? "Your account"
                   : `${currentUser.availableCredits.toLocaleString()} credits`}
               </span>
             </span>
@@ -104,8 +99,8 @@ export function AppShell({
             <div className="demo-session-status">
               <ShieldCheck size={17} weight="duotone" />
               <div>
-                <strong>{currentUser.isDemo ? "Demo session" : "Signed in"}</strong>
-                <span>{currentUser.isDemo ? "Testing workspace" : "Personal workspace"}</span>
+                <strong>Signed in</strong>
+                <span>{currentUser.isDemo ? "Simulated payments" : "Personal workspace"}</span>
               </div>
             </div>
             {currentUser.availableCredits !== undefined ? (
@@ -127,10 +122,11 @@ export function AppShell({
               </Link>
             </nav>
             {currentUser.isDemo ? (
-              <p>Private to this browser. Keep its cookies to return to your projects.</p>
+              <p>Projects and test credits are private to your account.</p>
             ) : null}
+            <AccountMenu />
           </section>
-        </details>
+        </details> : <Link href="/login" className="home-wallet-button">Sign in</Link>}
       </header>
       {children}
     </div>

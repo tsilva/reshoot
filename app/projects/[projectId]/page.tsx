@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { ApiError } from "@/lib/api/errors";
-import { findLegacyDemoUser, resolveCurrentUser } from "@/lib/auth/current-user";
+import { findLegacyDemoUser, requirePageUser } from "@/lib/auth/current-user";
 import { PROJECT_ID_PATTERN } from "@/lib/projects/routes";
 import { getProjectDetail, requireOwnedProject } from "@/lib/projects/service";
 import { StudioPage } from "@/components/StudioPage";
@@ -18,7 +18,7 @@ export default async function ProjectPage({ params, searchParams }: {
 }) {
   const [{ projectId }, { wallet, move }] = await Promise.all([params, searchParams]);
   if (!PROJECT_ID_PATTERN.test(projectId)) notFound();
-  const user = await resolveCurrentUser();
+  const user = await requirePageUser(`/projects/${projectId}`);
   const project = await missingAsNull(getProjectDetail(user.id, projectId));
   if (project) return <StudioPage project={project} walletOpen={wallet === "open"} />;
 
@@ -26,10 +26,10 @@ export default async function ProjectPage({ params, searchParams }: {
   if (!legacy || !(await missingAsNull(requireOwnedProject(legacy.id, projectId)))) notFound();
 
   return (
-    <AppShell>
+    <AppShell currentUser={{ displayName: user.displayName, email: user.email, isDemo: user.isDemo }}>
       <main className="product-main deleted-project-state">
-        <h1>Move this shoot to the shared workspace</h1>
-        <p>Its photos and generated views will be visible to anyone who opens Reshoot.</p>
+        <h1>Move this shoot to your account</h1>
+        <p>Its photos and generated views will be private to your signed-in account.</p>
         {move === "busy" ? <p role="alert">Wait for uploads and generation to finish, then try again.</p> : null}
         <form action={moveToSharedWorkspace.bind(null, projectId)}>
           <button className="button primary-button" type="submit">Move shoot</button>

@@ -126,11 +126,17 @@ class SecretTests(unittest.TestCase):
             self.assertNotIn(key, actual)
 
     def test_missing_infisical_key_cannot_fall_back_to_next_dotenv(self):
-        (self.root / ".env").write_text("SENTRY_AUTH_TOKEN=dummy-stale-dotenv-key\n")
+        (self.root / ".env").write_text(
+            "SENTRY_AUTH_TOKEN=dummy-stale-dotenv-key\n"
+            "CLERK_SECRET_KEY=dummy-stale-clerk-secret\n"
+            "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=dummy-stale-clerk-public\n"
+        )
         code = (
             "const {createRequire} = await import('node:module'); const req=createRequire(import.meta.url); const nextEnv=req(req.resolve('@next/env', {paths:[req.resolve('next/package.json', {paths:[process.cwd()]})]})); "
             "nextEnv.loadEnvConfig(process.argv[1], true, {info(){},error(){}}); "
-            "process.stdout.write(JSON.stringify({hasKey:Boolean(process.env.SENTRY_AUTH_TOKEN)}));"
+            "process.stdout.write(JSON.stringify({hasKey:Boolean(process.env.SENTRY_AUTH_TOKEN),"
+            "hasClerkSecret:Boolean(process.env.CLERK_SECRET_KEY),"
+            "hasClerkPublic:Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)}));"
         )
         environment = application_environment({})
         result = subprocess.run(
@@ -140,7 +146,9 @@ class SecretTests(unittest.TestCase):
             text=True,
             check=True,
         )
-        self.assertFalse(json.loads(result.stdout)["hasKey"])
+        self.assertEqual(json.loads(result.stdout), {
+            "hasKey": False, "hasClerkSecret": False, "hasClerkPublic": False
+        })
 
     def test_gateway_and_production_transports_are_isolated(self):
         subprocess.run(

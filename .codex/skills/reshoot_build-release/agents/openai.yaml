@@ -1,0 +1,3 @@
+interface:
+  display_name: "reshoot: Build Release"
+  short_description: "Build, publish, and verify Reshoot deployments"

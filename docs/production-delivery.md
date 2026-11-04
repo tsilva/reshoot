@@ -1,5 +1,32 @@
 # Production delivery
 
+## Clerk accounts and simulated payments
+
+The application supports Clerk sign-in with private per-user wallets. Before
+deploying this change, apply `0003_flimsy_joseph` through the authorized migration
+procedure and review the trusted delivery mapping for these settings:
+
+| Setting | Classification | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Public configuration | Environment-specific Clerk frontend |
+| `CLERK_SECRET_KEY` | Server-only Secret | Verify sessions and read account profiles |
+| `RESHOOT_PAYMENTS_MODE` | Public configuration | Set to `simulated` only to enable no-charge Production top-ups; `disabled` disables them |
+
+The application change does not update the centrally owned allowlist, provision
+these settings, apply the migration, or deploy. Keep Clerk Development and
+Production applications separate, including their domains and credentials.
+Clerk settings must be present at build and runtime. Production builds reject
+missing keys. Unconfigured local or Preview builds close private access while
+retaining the public sample gallery. Complete Clerk domain checks
+before delivery; do not bypass required integration checks.
+
+Test accounts begin with an empty wallet. Only the server catalog determines
+credit grants, and repeated delivery of a purchase cannot grant twice. A decline
+or cancellation adds no credits. Existing shared-demo and legacy records remain
+unchanged. Verify sign-in, sign-out, two-account isolation, a no-charge purchase,
+and declined/cancelled checkout in a configured non-production environment first.
+Live Stripe payments and automatic recharge remain disabled.
+
 ## Neon Realtime rollout
 
 Development uses Realtime on the `development` branch of `reshoot-neon`; its URL and sealing secret live in Development `/` in the existing Reshoot Infisical project. Production uses the separate `main` branch, migration `0002_generation_realtime`, and that branch's `NEON_REALTIME_URL` and `NEON_REALTIME_SECRET` in `reshoot-production`, Production `/`. Both branches are enabled and migrated; their sealing secrets differ. The secret stays server-only; only sealed, owner-and-batch-scoped capabilities reach browsers.

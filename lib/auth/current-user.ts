@@ -1,65 +1,60 @@
+import "server-only";
+
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
-import { connection } from "next/server";
+import { redirect } from "next/navigation";
 import { cache } from "react";
-import {
-  DEMO_SESSION_COOKIE,
-  DEMO_STARTING_CREDITS,
-  demoSessionEmail,
-} from "@/lib/auth/demo-session";
-import { db } from "@/lib/db";
-import { creditAccounts, creditLedger, users } from "@/lib/db/schema";
-
-const SHARED_DEMO_EMAIL = "shared-demo@reshoot.local";
-
-async function findUser(email: string) {
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  if (user && !user.isDemo) throw new Error("Unexpected workspace account.");
-  return user;
-}
+import { ApiError } from "@/lib/api/errors";
+import { clerkConfigured, safeReturnPath } from "@/lib/auth/config";
+import { DEMO_SESSION_COOKIE, demoSessionEmail } from "@/lib/auth/demo-session";
+import { creditAccounts, users } from "@/lib/db/schema";
 
 export const findLegacyDemoUser = cache(async () => {
   const email = demoSessionEmail((await cookies()).get(DEMO_SESSION_COOKIE)?.value);
-  return email ? findUser(email) : undefined;
+  if (!email) return undefined;
+  const { db } = await import("@/lib/db");
+  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return user?.isDemo && !user.clerkUserId ? user : undefined;
 });
 
-export const resolveCurrentUser = cache(async () => {
-  await connection();
-  const existing = await findUser(SHARED_DEMO_EMAIL);
+export const findCurrentUser = cache(async () => {
+  if (!clerkConfigured()) return null;
+  const { userId } = await auth();
+  if (!userId) return null;
+  const { db } = await import("@/lib/db");
+  const [existing] = await db.select().from(users).where(eq(users.clerkUserId, userId)).limit(1);
   if (existing) return existing;
+
+  const profile = await currentUser();
+  if (!profile || profile.id !== userId) throw new ApiError(401, "sign_in_required", "Sign in to continue.");
+  const email = profile.emailAddresses.find((address) => address.id === profile.primaryEmailAddressId)?.emailAddress
+    ?? `clerk+${userId}@reshoot.local`;
+  const displayName = profile.fullName || profile.username || email.split("@")[0];
 
   await db.transaction(async (tx) => {
     const [user] = await tx.insert(users).values({
-      id: crypto.randomUUID(),
-      email: SHARED_DEMO_EMAIL,
-      displayName: "Reshoot Demo",
-      isDemo: true,
-      // Automatic browser-local imports belonged to the private workspace.
-      legacyImportCompletedAt: new Date(),
-    }).onConflictDoNothing({ target: users.email }).returning({ id: users.id });
+      id: crypto.randomUUID(), clerkUserId: userId, email, displayName,
+      // Authentication is real; this phase only grants simulated purchase credits.
+      isDemo: true, legacyImportCompletedAt: new Date(),
+    }).onConflictDoNothing({ target: users.clerkUserId }).returning({ id: users.id });
     if (!user) return;
-
-    const [account] = await tx.insert(creditAccounts).values({
-      userId: user.id,
-      availableCredits: DEMO_STARTING_CREDITS,
-      lifetimeGrantedCredits: DEMO_STARTING_CREDITS,
-    }).returning({ id: creditAccounts.id });
-    await tx.insert(creditLedger).values({
-      accountId: account.id,
-      userId: user.id,
-      type: "grant",
-      sourceType: "demo_workspace",
-      sourceId: user.id,
-      amountCredits: DEMO_STARTING_CREDITS,
-      availableDelta: DEMO_STARTING_CREDITS,
-      heldDelta: 0,
-      availableAfter: DEMO_STARTING_CREDITS,
-      heldAfter: 0,
-      description: "1,000 test credits for the shared workspace",
-    });
+    // Start empty so the first simulated purchase exercises the full wallet flow.
+    await tx.insert(creditAccounts).values({ userId: user.id });
   });
-
-  const user = await findUser(SHARED_DEMO_EMAIL);
-  if (!user) throw new Error("Shared workspace initialization failed.");
+  const [user] = await db.select().from(users).where(eq(users.clerkUserId, userId)).limit(1);
+  if (!user) throw new Error("Account initialization failed.");
   return user;
 });
+
+export const resolveCurrentUser = cache(async () => {
+  const user = await findCurrentUser();
+  if (!user) throw new ApiError(401, "sign_in_required", "Sign in to continue.");
+  return user;
+});
+
+export async function requirePageUser(returnTo = "/") {
+  const user = await findCurrentUser();
+  if (!user) redirect(`/login?returnTo=${encodeURIComponent(safeReturnPath(returnTo))}`);
+  return user;
+}

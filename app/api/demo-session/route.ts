@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
     if (request.headers.get("origin") !== url.origin) {
-      throw new ApiError(403, "invalid_origin", "Open the testing workspace from Reshoot.");
+      throw new ApiError(403, "invalid_origin", "Open your workspace from Reshoot.");
     }
     await resolveCurrentUser();
     if (request.headers.get("accept")?.includes("application/json")) {

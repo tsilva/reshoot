@@ -423,7 +423,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
   const advance = useCallback(() => {
     setActiveShotId((current) => {
       const index = Math.max(0, completedShots.findIndex((shot) => shot.id === current));
-      return completedShots[(index + 1) % completedShots.length]?.id ?? null;
+      return completedShots[(index - 1 + completedShots.length) % completedShots.length]?.id ?? null;
     });
   }, [completedShots]);
   const playback = usePhotoPlayback({

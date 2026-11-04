@@ -19,6 +19,7 @@ export function demoCheckoutEnabled(isDemoUser: boolean) {
     isDemoUser,
     nodeEnv: process.env.NODE_ENV,
     vercelEnv: process.env.VERCEL_ENV,
+    paymentsMode: process.env.RESHOOT_PAYMENTS_MODE,
   });
 }
 
@@ -121,8 +122,6 @@ export async function createDemoPurchase(input: {
         ),
       )
       .limit(1);
-    if (existing) return existing;
-
     const [pack] = await tx
       .select()
       .from(creditPacks)
@@ -132,6 +131,10 @@ export async function createDemoPurchase(input: {
       .limit(1);
     if (!pack) {
       throw new ApiError(400, "invalid_pack", "Choose an available credit pack.");
+    }
+    if (existing) {
+      if (existing.packId !== pack.id) throw new ApiError(409, "checkout_conflict", "This checkout already purchased a different pack. Start a new checkout.");
+      return existing;
     }
 
     const [account] = await tx

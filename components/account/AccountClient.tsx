@@ -12,7 +12,7 @@ import {
   WarningCircle,
   X,
 } from "@phosphor-icons/react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { CreditLedgerEntry, CreditSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
 import { Dialog } from "@/components/Dialog";
@@ -57,12 +57,18 @@ export function AccountClient({
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("confirm");
   const [checkingOut, setCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activityError, setActivityError] = useState<string | null>(null);
+  const [paymentOutcome, setPaymentOutcome] = useState<"succeeded" | "declined">("succeeded");
+  const checkoutKey = useRef<string | null>(null);
+  const submitting = useRef(false);
   const selectedPack = useMemo(
     () => credits.packs.find((pack) => pack.slug === selectedSlug) ?? null,
     [credits.packs, selectedSlug],
   );
 
   function openCheckout(slug: string) {
+    checkoutKey.current = crypto.randomUUID();
+    setPaymentOutcome("succeeded");
     setSelectedSlug(slug);
     setCheckoutStep("confirm");
     setError(null);
@@ -76,7 +82,8 @@ export function AccountClient({
   }
 
   async function checkout() {
-    if (!selectedPack) return;
+    if (!selectedPack || !checkoutKey.current || submitting.current || checkoutStep === "success") return;
+    submitting.current = true;
     setCheckingOut(true);
     setError(null);
     try {
@@ -86,17 +93,22 @@ export function AccountClient({
           method: "POST",
           body: JSON.stringify({
             packSlug: selectedPack.slug,
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey: checkoutKey.current,
+            outcome: paymentOutcome,
           }),
         },
       );
-      const latestActivity = await apiRequest<{ activity: CreditLedgerEntry[] }>(
-        "/api/account/activity",
-      );
       setCredits(response.credits);
       onCreditsChange?.(response.credits);
-      setActivity(latestActivity.activity);
       setCheckoutStep("success");
+      setActivityError(null);
+      // Payment stays successful if the separate activity refresh fails.
+      try {
+        const latestActivity = await apiRequest<{ activity: CreditLedgerEntry[] }>("/api/account/activity");
+        setActivity(latestActivity.activity);
+      } catch {
+        setActivityError("Credits were added. Reload the page to refresh the activity history.");
+      }
     } catch (checkoutError) {
       setError(
         checkoutError instanceof Error
@@ -104,6 +116,7 @@ export function AccountClient({
           : "Credits could not be added.",
       );
     } finally {
+      submitting.current = false;
       setCheckingOut(false);
     }
   }
@@ -114,7 +127,7 @@ export function AccountClient({
         <div>
           <div className="page-kicker">Account & credits</div>
           <h2>Your wallet</h2>
-          <p className="page-lede">{isDemo ? "Review your fake testing credits and every balance change." : "Manage purchase credits and review every balance change."}</p>
+          <p className="page-lede">{isDemo ? "Add test credits with a simulated payment. No card is needed and no money is charged." : "Manage purchase credits and review every balance change."}</p>
         </div>
         <div className="account-identity">
           <strong>{displayName}</strong>
@@ -127,7 +140,7 @@ export function AccountClient({
           <Coins size={24} weight="duotone" />
           <span>Available credits</span>
           <strong>{credits.availableCredits.toLocaleString()}</strong>
-          <small>{isDemo ? "Fake credits for this testing workspace" : `$${credits.purchaseValueUsd.toFixed(2)} purchase value`}</small>
+          <small>{isDemo ? "Test credits in your account" : `$${credits.purchaseValueUsd.toFixed(2)} purchase value`}</small>
         </article>
         <article className="metric-card">
           <LockKey size={24} weight="duotone" />
@@ -150,7 +163,7 @@ export function AccountClient({
       <div className="credit-value-note">
         <Info size={19} />
         <p>
-          {isDemo ? "This private testing workspace starts with 1,000 fake credits. No payment was made. " : `Credits are non-redeemable purchase value: ${credits.creditsPerUsd} credits = $1. They do not expire. `}
+          {isDemo ? "New accounts start with zero credits. Add test credits using a simulated payment below. " : `Credits are non-redeemable purchase value: ${credits.creditsPerUsd} credits = $1. They do not expire. `}
           A shot uses 40–70 credits depending on its references.
         </p>
       </div>
@@ -163,7 +176,7 @@ export function AccountClient({
             <p>Every pack keeps the same simple exchange rate with no expiring bonus credits.</p>
           </div>
           {credits.demoCheckoutAvailable ? (
-            <span className="test-mode-label">No-charge test checkout</span>
+            <span className="test-mode-label">Simulated payments · $0 charged</span>
           ) : null}
         </div>
         <div className="pack-grid">
@@ -190,15 +203,16 @@ export function AccountClient({
         </div>
         {!credits.demoCheckoutAvailable ? (
           <div className="inline-notice warning-notice">
-            <WarningCircle size={19} /> Credit purchasing is not available in this testing build. Your starting fake credits are already in your balance.
+            <WarningCircle size={19} /> Credit purchasing is temporarily unavailable. No payment will be taken.
           </div>
         ) : null}
       </section>
 
       <section className="account-section activity-section">
+        {activityError ? <p role="status" className="inline-notice">{activityError}</p> : null}
         <div className="section-heading-row">
           <div>
-            <div className="page-kicker">Immutable ledger</div>
+            <div className="page-kicker">History</div>
             <h2>Credit activity</h2>
           </div>
           <ClockCounterClockwise size={24} />
@@ -237,22 +251,28 @@ export function AccountClient({
             {checkoutStep === "confirm" ? (
               <>
                 <div className="checkout-icon"><CreditCard size={28} /></div>
-                <div className="page-kicker">No-charge test checkout</div>
-                <h2 id="checkout-title">Confirm {selectedPack.name}</h2>
+                <div className="page-kicker">Simulated checkout</div>
+                <h2 id="checkout-title">Buy {selectedPack.name} credits</h2>
                 <p>
-                  This test flow does not charge a card. It adds fake credits to your
-                  private testing workspace.
+                  Try the payment flow without entering card details. A successful
+                  simulated payment adds test credits to your account.
                 </p>
                 <div className="checkout-total">
                   <div><span>Credits</span><strong>{selectedPack.credits.toLocaleString()}</strong></div>
                   <div><span>Displayed value</span><strong>${selectedPack.usd}.00</strong></div>
                   <div><span>Amount charged</span><strong>$0.00</strong></div>
                 </div>
-                {error ? <div className="inline-notice error-notice"><WarningCircle size={18} /> {error}</div> : null}
+                <fieldset className="simulated-payment-options" disabled={checkingOut}>
+                  <legend>Simulate a payment result</legend>
+                  <label><input type="radio" name="payment-outcome" value="succeeded" checked={paymentOutcome === "succeeded"} onChange={() => setPaymentOutcome("succeeded")} /> Payment succeeds</label>
+                  <label><input type="radio" name="payment-outcome" value="declined" checked={paymentOutcome === "declined"} onChange={() => setPaymentOutcome("declined")} /> Payment is declined</label>
+                </fieldset>
+                {error ? <div role="alert" className="inline-notice error-notice"><WarningCircle size={18} /> {error}</div> : null}
                 <button className="button primary-button checkout-button" onClick={() => void checkout()} disabled={checkingOut}>
                   {checkingOut ? <SpinnerGap className="spin" /> : null}
-                  {checkingOut ? "Adding credits…" : "Add credits to account"}
+                  {checkingOut ? "Simulating payment…" : "Simulate payment · $0.00"}
                 </button>
+                <button type="button" className="button checkout-cancel" onClick={closeCheckout} disabled={checkingOut}>Cancel</button>
               </>
             ) : (
               <div className="checkout-success">

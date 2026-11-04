@@ -5,10 +5,10 @@ vi.mock("@/lib/auth/current-user", () => ({ resolveCurrentUser: state.resolveUse
 
 import { POST } from "../app/api/demo-session/route";
 
-describe("shared workspace compatibility endpoint", () => {
+describe("signed-in workspace compatibility endpoint", () => {
   beforeEach(() => { state.resolveUser.mockReset(); });
 
-  it.each([false, true])("opens the shared workspace without setting a browser cookie (inline: %s)", async (inline) => {
+  it.each([false, true])("opens the authenticated workspace without setting a demo cookie (inline: %s)", async (inline) => {
     const response = await POST(new Request("https://reshoot.tsilva.eu/api/demo-session", {
       method: "POST", headers: { origin: "https://reshoot.tsilva.eu", ...(inline ? { accept: "application/json" } : {}) },
     }));

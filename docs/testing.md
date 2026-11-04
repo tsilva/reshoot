@@ -16,6 +16,28 @@ The provenance manifests and guide assets under `design/qa/` are test inputs;
 they remain tracked so these checks work in a fresh clone. These measurements do
 not establish natural rotation, photographic quality or identical 3D geometry.
 
+## Accounts and simulated checkout
+
+`pnpm typecheck` regenerates current Next.js route declarations before TypeScript.
+Generated declarations belonging to previous development servers are excluded;
+no running server needs to be stopped when a route changes.
+
+The account tests verify that a legacy demo cookie cannot authenticate a user,
+Clerk IDs isolate account lookups, and racing first requests create only one empty
+wallet. Simulated checkout tests cover authentication, same-origin requests,
+forged prices/owners, declines, duplicate delivery, concurrent purchases, and
+preservation of held credits and other accounts. They use synthetic database
+fixtures and do not connect to Clerk, Stripe, Neon, or image providers.
+
+For configured browser verification, use two separate Clerk accounts. Confirm
+that each sees only its own shoots and balance, then buy a test pack, cancel a
+checkout, simulate a decline, and retry a successful purchase after a lost response.
+Only a successful new purchase should raise the balance. Check sign-out and return
+navigation, desktop and phone layout, and keyboard dismissal of checkout. The
+simulator must never ask for card details. Full sign-in verification requires a
+reviewed credential route and the additive account migration; source tests do not
+establish that those external prerequisites are configured.
+
 ## Studio and gallery checks
 
 Use synthetic/local fixtures for generation, credits and storage behavior. Browser
@@ -44,7 +66,9 @@ Retention cleanup must remove leftover ZIPs even without generated image records
 Check keyboard access, focus, image loading, persistent controls and console
 errors. Verify pause/play, previous/next wrapping, arrows, product boundaries,
 menu/dialog pause, image-readiness waits and reduced-motion opt-in. A single-view
-shoot must not expose ineffective navigation.
+shoot must not expose ineffective navigation. Completed-gallery autoplay must
+follow the same rightward sequence as Rotate right, including the first-to-last
+wrap; Rotate left must step in the opposite direction.
 
 Open a shoot from a lower library row, then return with the shoot's back arrow,
 Reshoot home link and browser Back. Each route should show the visited project

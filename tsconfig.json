@@ -36,12 +36,12 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/dev/types/**/*.ts",
-    ".next-dev-*/types/**/*.ts",
-    ".next-dev-*/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "design/stitch-source"
+    "design/stitch-source",
+    ".next-dev-*",
+    ".next/dev"
   ]
 }

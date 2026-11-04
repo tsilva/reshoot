@@ -10,15 +10,17 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { ProjectStudioClient } from "@/components/projects/ProjectStudioClient";
 import { ProjectsClient } from "@/components/projects/ProjectsClient";
 import { SampleCarousel } from "@/components/SampleCarousel";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import type { CreditLedgerEntry, CreditSummary, ProjectDetail, ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
 import { PROJECT_RETURN_KEY, projectCardId, projectPath } from "@/lib/projects/routes";
 
 const AccountClient = dynamic(() => import("@/components/account/AccountClient").then((module) => module.AccountClient));
 
-export function StudioHome({ initialCredits, initialProjects, project: activeProject = null, showLibrary = false, initialWalletOpen = false }: {
-  initialCredits: CreditSummary;
+export function StudioHome({ initialCredits, initialProjects, currentUser, project: activeProject = null, showLibrary = false, initialWalletOpen = false }: {
+  initialCredits: CreditSummary | null;
   initialProjects: ProjectSummary[];
+  currentUser: { displayName: string; email: string; isDemo: boolean } | null;
   project?: ProjectDetail | null;
   showLibrary?: boolean;
   initialWalletOpen?: boolean;
@@ -76,6 +78,7 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
   }, []);
 
   async function startShoot() {
+    if (!currentUser) { router.push("/login"); return; }
     if (creatingShoot.current) return;
     creatingShoot.current = true;
     setBusy("shoot");
@@ -94,6 +97,7 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
   }
 
   async function openWallet() {
+    if (!currentUser) { router.push("/login?returnTo=%2F%3Fwallet%3Dopen"); return; }
     setBusy("wallet");
     setError(null);
     try {
@@ -130,15 +134,15 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
   }
 
   const pageError = error ? <div className="home-error" role="alert"><span>{error}</span><button className="icon-button" onClick={() => setError(null)} aria-label="Dismiss error"><X size={18} /></button></div> : null;
-  const walletPanel = walletOpen ? <section className="home-wallet" id="wallet" ref={walletRef} aria-label="Inline wallet">
+  const walletPanel = walletOpen && credits && currentUser ? <section className="home-wallet" id="wallet" ref={walletRef} aria-label="Inline wallet">
     <button className="home-panel-close" onClick={closeWallet}><X size={17} /> Close wallet</button>
-    {walletActivity === null ? <p className="home-loading" role="status"><SpinnerGap className="spin" /> Loading your wallet…</p> : <AccountClient initialCredits={credits} initialActivity={walletActivity} displayName="Reshoot Demo" email="Shared testing workspace" isDemo onCreditsChange={(updated) => { setCredits(updated); setWalletRevision((value) => value + 1); }} />}
+    {walletActivity === null ? <p className="home-loading" role="status"><SpinnerGap className="spin" /> Loading your wallet…</p> : <AccountClient initialCredits={credits} initialActivity={walletActivity} displayName={currentUser.displayName} email={currentUser.email} isDemo={currentUser.isDemo} onCreditsChange={(updated) => { setCredits(updated); setWalletRevision((value) => value + 1); }} />}
   </section> : null;
 
-  if (activeProject) {
-    const walletButton = <button type="button" className="home-wallet-button is-quiet" aria-label={`Open wallet, ${credits.availableCredits.toLocaleString()} test credits`} onClick={() => void openWallet()} disabled={busy !== null}>
+  if (activeProject && credits && currentUser) {
+    const walletButton = <div className="home-account-controls"><button type="button" className="home-wallet-button is-quiet" aria-label={`Open wallet, ${credits.availableCredits.toLocaleString()} test credits`} onClick={() => void openWallet()} disabled={busy !== null}>
       {busy === "wallet" ? <SpinnerGap className="spin" size={17} /> : <User size={26} weight="light" />}
-    </button>;
+    </button><AccountMenu /></div>;
     return (
       <div className="one-page-studio has-studio" ref={studioRef}>
         <ProjectStudioClient key={activeProject.id} initialProject={activeProject} checkoutAvailable={credits.demoCheckoutAvailable} onOpenWallet={() => void openWallet()} onBalanceChange={refreshBalance} walletRevision={walletRevision} walletButton={walletButton} pageError={pageError}>
@@ -155,10 +159,10 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
           <Link href={showLibrary ? "/" : "#"} className="home-brand" aria-label="Reshoot home">
             <Aperture size={24} weight="light" aria-hidden="true" />reshoot.
           </Link>
-          <button className="home-wallet-button" onClick={() => void openWallet()} disabled={busy !== null}>
+          {currentUser && credits ? <div className="home-account-controls"><button className="home-wallet-button" onClick={() => void openWallet()} disabled={busy !== null}>
             {busy === "wallet" ? <SpinnerGap className="spin" size={17} /> : <Coins size={17} />}
             <span>{credits.availableCredits.toLocaleString()} test credits</span><Plus size={14} />
-          </button>
+          </button><AccountMenu /></div> : <Link className="home-wallet-button" href="/login">Sign in <User size={18} /></Link>}
         </div>
       </header>
 
@@ -175,7 +179,7 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
                   <span>{busy === "shoot" ? "Opening shoot…" : "Add photos"}</span>
                   {busy === "shoot" ? <SpinnerGap className="spin" size={20} /> : <ArrowRight size={20} />}
                 </button>
-                <p className="home-start-note">Shared testing workspace. Shoots are visible to everyone.</p>
+                <p className="home-start-note">{currentUser ? "Private to your account. Payments are simulated." : "Sign in to save your shoots. Explore the samples for free."}</p>
               </div>
             </div>
           </section>
