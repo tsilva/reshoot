@@ -153,7 +153,7 @@ export function StudioHome({ initialCredits, initialProjects, currentUser, proje
   }
 
   return (
-    <div className="one-page-studio">
+    <div className="one-page-studio home-page">
       <header className="home-header">
         <div className="home-header-inner">
           <Link href={showLibrary ? "/" : "#"} className="home-brand" aria-label="Reshoot home">

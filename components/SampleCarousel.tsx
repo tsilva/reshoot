@@ -92,15 +92,9 @@ export function SampleCarousel() {
       {originalOpen ? (
         <Dialog labelledBy="sample-original-title" onClose={() => setOriginalOpen(false)}>
           <section className="sample-original-modal" id="sample-original-modal">
-            <header>
-              <div>
-                <h2 id="sample-original-title">Original photo</h2>
-                <p>{product.label}</p>
-              </div>
-              <button type="button" className="icon-button" aria-label="Close original photo" data-autofocus onClick={() => setOriginalOpen(false)}><X size={22} aria-hidden="true" /></button>
-            </header>
-            <Image src={product.upload} alt={`Illustrative original: ${product.description} with a cluttered household background`} sizes="(max-width: 800px) 90vw, 720px" loading="eager" />
-            <p className="sample-original-disclosure">Illustrative example upload</p>
+            <span id="sample-original-title" className="sr-only">Original photo: {product.label}</span>
+            <Image src={product.upload} alt={`Illustrative original: ${product.description} with a cluttered household background`} sizes="(max-width: 1008px) 100vw, 960px" loading="eager" />
+            <button type="button" className="sample-original-close" aria-label="Close original photo" data-autofocus onClick={() => setOriginalOpen(false)}><X size={22} aria-hidden="true" /></button>
           </section>
         </Dialog>
       ) : null}

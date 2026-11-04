@@ -84,6 +84,15 @@ card without starting or resuming generation.
 
 ## Sample rotation review
 
+Check the home page at desktop, tablet and phone sizes, including a short laptop
+viewport and a 320 × 568 phone. With no saved shoots or wallet panel, the header,
+introduction, Add photos action, complete product preview, playback controls,
+Show original control and footer should fit without page scrolling. Check that
+the square photo keeps its proportions as the viewport changes. With enlarged
+text or an unusually short viewport, content must remain reachable by scrolling.
+Check the slim scrollbar on overflowing pages and dialogs, including its hover
+state; forced-color mode should retain native scrollbar styling.
+
 Inspect every loaded view against its original and its neighbors, including the
 last-to-first wrap. Check product identity, material detail, body/handle/limb
 proportions, attachment points, perspective, direction, occlusion, stable floor
