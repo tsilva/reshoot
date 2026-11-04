@@ -4,6 +4,7 @@ import { apiErrorResponse, ApiError, readJson } from "@/lib/api/errors";
 import { resolveCurrentUser } from "@/lib/auth/current-user";
 import { db } from "@/lib/db";
 import { assets, projects } from "@/lib/db/schema";
+import { deleteProjectArchives } from "@/lib/projects/archive-storage";
 import { getProjectDetail, requireOwnedProject } from "@/lib/projects/service";
 
 type RouteContext = { params: Promise<{ projectId: string }> };
@@ -94,6 +95,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
         .update(assets)
         .set({ deletedAt, retainedUntil: purgeAfter, updatedAt: deletedAt })
         .where(and(eq(assets.projectId, projectId), eq(assets.ownerId, user.id)));
+      // The project update holds its row lock until ZIP deletion finishes.
+      // A storage failure rolls back the soft deletion so it can be retried.
+      await deleteProjectArchives(projectId);
     });
 
     return new Response(null, { status: 204 });

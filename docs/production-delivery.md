@@ -41,7 +41,12 @@ private storage use signed URLs. Generation finalization saves a ZIP of the
 gallery views in the same private bucket. The gallery prepares a missing ZIP
 for older shoots when opened. Downloads stream the stored ZIP through Reshoot
 after checking workspace ownership and require no bucket CORS rule. Project
-retention cleanup removes the ZIP along with the generated images.
+deletion removes current and legacy ZIPs immediately, before confirming success.
+ZIP publication and deletion share a project row lock so an in-progress export
+cannot recreate the ZIP afterward. Bucket deletion failures roll back the
+project's soft deletion for retry. Retention cleanup also removes leftover ZIPs,
+even when no generated image records remain; image retention keeps its existing
+30-day policy. These paths do not enable scheduled retention cleanup.
 
 Preview uses the working Development database source so its asset references
 match the Development bucket. Existing Development-referenced objects were

@@ -10,7 +10,7 @@ import {
   projects,
 } from "@/lib/db/schema";
 import { deleteObject } from "@/lib/storage/r2";
-import { projectArchiveKey } from "@/lib/projects/downloads";
+import { deleteProjectArchives } from "@/lib/projects/archive-storage";
 
 export async function cleanupExpiredProjectObjects(limit = 100) {
   const expiredProjects = await db
@@ -69,12 +69,9 @@ export async function cleanupExpiredProjectObjects(limit = 100) {
       await Promise.all([deleteObject(output.output), deleteObject(output.preview)]);
       deletedObjects += 2;
     }
+    // Remove leftover ZIPs even if the image records were already purged.
+    deletedObjects += await deleteProjectArchives(project.id);
     if (outputRows.length) {
-      await Promise.all([
-        deleteObject(projectArchiveKey(project.id, false)),
-        deleteObject(projectArchiveKey(project.id, true)),
-      ]);
-      deletedObjects += 2;
       await db
         .delete(generationOutputs)
         .where(

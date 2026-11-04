@@ -1,7 +1,7 @@
 import { apiErrorResponse, ApiError } from "@/lib/api/errors";
 import { resolveCurrentUser } from "@/lib/auth/current-user";
 import { isMissingArchive, prepareProjectArchive } from "@/lib/projects/archive";
-import { projectArchiveKey } from "@/lib/projects/downloads";
+import { projectArchiveBasename, projectArchiveKey } from "@/lib/projects/downloads";
 import { requireOwnedProject } from "@/lib/projects/service";
 import { getObjectStream } from "@/lib/storage/r2";
 
@@ -27,12 +27,12 @@ export async function GET(request: Request, context: RouteContext) {
     const { projectId } = await context.params;
     const project = await requireOwnedProject(user.id, projectId);
     const turntable = new URL(request.url).searchParams.get("turntable") === "1";
-    const title = project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const basename = projectArchiveBasename({ id: projectId, title: project.title });
     return new Response(await getObjectStream(projectArchiveKey(projectId, turntable)), {
       headers: {
         ...privateHeaders,
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${title || "project"}-reshoot.zip"`,
+        "Content-Disposition": `attachment; filename="${basename}.zip"`,
         "X-Content-Type-Options": "nosniff",
       },
     });

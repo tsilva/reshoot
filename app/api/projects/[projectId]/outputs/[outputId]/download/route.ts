@@ -35,7 +35,7 @@ export async function GET(request: Request, context: RouteContext) {
       if (!sources || target?.azimuth == null) throw new ApiError(404, "output_not_found", "Turntable view not found.");
       const frame = await renderPhoneTurntable(target.azimuth, async (face) => getObjectBuffer(sources.get(face)!.key));
       const filename = shotDownloadFilename({
-        label: row.label, outputId, version: row.output.version, mimeType: "image/png",
+        label: row.label, mimeType: "image/png",
       });
       return new Response(new Uint8Array(frame), {
         headers: {
@@ -48,8 +48,6 @@ export async function GET(request: Request, context: RouteContext) {
     }
     const filename = shotDownloadFilename({
       label: row.label,
-      outputId: row.output.id,
-      version: row.output.version,
       mimeType: row.output.mimeType,
     });
     return new Response(await getObjectStream(row.output.r2Key), {

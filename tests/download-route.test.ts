@@ -49,7 +49,7 @@ describe("private output downloads", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
     expect(response.headers.get("content-type")).toBe("image/jpeg");
-    expect(response.headers.get("content-disposition")).toBe('attachment; filename="front-v1-output.jpg"');
+    expect(response.headers.get("content-disposition")).toBe('attachment; filename="Front.jpg"');
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(original);
     expect(state.getObjectStream).toHaveBeenCalledWith("private/original");
@@ -71,7 +71,7 @@ describe("private output downloads", () => {
     for (const [mode, disposition] of [["preview", "inline"], ["download", "attachment"]]) {
       const response = await GET(new Request(`${request.url}?turntable=${mode}`), context);
       expect(response.headers.get("content-type")).toBe("image/png");
-      expect(response.headers.get("content-disposition")).toBe(`${disposition}; filename="front-v1-output.png"`);
+      expect(response.headers.get("content-disposition")).toBe(`${disposition}; filename="Front.png"`);
       expect(await response.text()).toBe("frame");
     }
     expect(state.getPhoneTurntable).toHaveBeenCalledWith("owner", "project");
@@ -81,7 +81,7 @@ describe("private output downloads", () => {
 
   it("puts the original bytes from the download route into the gallery ZIP", async () => {
     const fetchFile = vi.fn<typeof fetch>().mockImplementation(async () => GET(request, context));
-    const archive = await exportVisibleShots([{
+    const archive = await exportVisibleShots({ id: "project", title: "Product Shoot" }, [{
       id: "shot", label: "Front", presetKey: "front", azimuth: 0, elevation: 0,
       versions: [{
         outputId: "output", version: 1, mimeType: "image/jpeg", previewUrl: "/preview",
@@ -90,7 +90,7 @@ describe("private output downloads", () => {
       }],
     }], {}, fetchFile);
     expect(fetchFile).toHaveBeenCalledWith(new URL(request.url).pathname, { cache: "no-store" });
-    expect(unzipSync(archive!)).toEqual({ "front-v1-output.jpg": original });
+    expect(unzipSync(archive!)).toEqual({ "reshoot_product-shoot_project/Front.jpg": original });
   });
 
   it("does not read storage when the project belongs to another workspace", async () => {

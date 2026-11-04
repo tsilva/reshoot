@@ -1,4 +1,5 @@
 import { unzipSync } from "fflate";
+import { PgDialect } from "drizzle-orm/pg-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
@@ -11,11 +12,21 @@ const state = vi.hoisted(() => ({
   read: vi.fn(),
   stream: vi.fn(),
   put: vi.fn(),
+  lock: vi.fn(),
+  lockWhere: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/current-user", () => ({ resolveCurrentUser: async () => ({ id: "owner" }) }));
 vi.mock("@/lib/db", () => ({
-  db: { select: () => ({ from: () => ({ where: state.outputRows }) }) },
+  db: {
+    select: () => ({ from: () => ({ where: state.outputRows }) }),
+    transaction: async (callback: (tx: unknown) => Promise<void>) => callback({
+      select: () => ({ from: () => ({ where: (condition: unknown) => {
+        state.lockWhere(condition);
+        return { limit: () => ({ for: state.lock }) };
+      } }) }),
+    }),
+  },
 }));
 vi.mock("@/lib/projects/service", () => ({
   getProjectDetail: state.projectDetail,
@@ -36,7 +47,7 @@ import { prepareProjectArchive } from "../lib/projects/archive";
 
 const request = new Request("https://reshoot.example/api/projects/project/download");
 const context = { params: Promise.resolve({ projectId: "project" }) };
-const viewsKey = "projects/project/exports/views-v1.zip";
+const viewsKey = "projects/project/exports/views-v2.zip";
 const oldVersion = { outputId: "old", version: 1, mimeType: "image/png" };
 const latest = { outputId: "latest", version: 2, mimeType: "image/jpeg" };
 const shots = [
@@ -48,29 +59,34 @@ const missing = Object.assign(new Error("Missing"), { name: "NotFound" });
 describe("stored project ZIPs", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    state.projectDetail.mockResolvedValue({ shots, activeBatchId: null });
+    state.projectDetail.mockResolvedValue({ title: "Product Shoot", shots, activeBatchId: null });
     state.requireProject.mockResolvedValue({ title: "Product Shoot" });
     state.head.mockRejectedValue(missing);
     state.outputRows.mockResolvedValue([{ id: "latest", key: "latest-key" }]);
     state.read.mockResolvedValue(Buffer.from("original"));
+    state.lock.mockResolvedValue([{ id: "project" }]);
   });
 
   it("precomputes available final views and streams the same bytes on click", async () => {
     await expect(prepareProjectArchive("owner", "project")).resolves.toEqual({ turntable: false });
     const [{ key, body, mimeType }] = state.put.mock.calls[0];
     expect({ key, mimeType }).toEqual({ key: viewsKey, mimeType: "application/zip" });
-    expect(unzipSync(body)).toEqual({ "front-v2-latest.jpg": new TextEncoder().encode("original") });
+    expect(unzipSync(body)).toEqual({ "reshoot_product-shoot_project/Front.jpg": new TextEncoder().encode("original") });
     expect(state.read.mock.calls).toEqual([["latest-key"]]);
 
     state.head.mockResolvedValue({});
     const ready = await POST(request, context);
     expect(await ready.json()).toEqual({ downloadUrl: "/api/projects/project/download" });
     expect(state.put).toHaveBeenCalledTimes(1);
+    expect(state.lock).toHaveBeenCalledWith("update");
+    const lockQuery = new PgDialect().sqlToQuery(state.lockWhere.mock.calls[0][0]);
+    expect(lockQuery.params).toEqual(["project", "owner"]);
+    expect(lockQuery.sql).toContain('"projects"."deleted_at" is null');
 
     state.projectDetail.mockClear();
     state.stream.mockResolvedValue(new Response(body).body);
     const response = await GET(request, context);
-    expect(response.headers.get("content-disposition")).toBe('attachment; filename="product-shoot-reshoot.zip"');
+    expect(response.headers.get("content-disposition")).toBe('attachment; filename="reshoot_product-shoot_project.zip"');
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(body);
     expect(state.stream).toHaveBeenCalledWith(viewsKey);
@@ -83,6 +99,7 @@ describe("stored project ZIPs", () => {
     state.projectDetail.mockResolvedValue({
       activeBatchId: null,
       registeredPhoneTurntable: true,
+      title: "Product Shoot",
       shots: [{ label: "Front", versions: [{ ...latest, mimeType: "image/png" }] }],
     });
     state.turntable.mockResolvedValue(new Map([[0, { outputId: "latest", azimuth: 0, key: "face-key" }]]));
@@ -95,15 +112,39 @@ describe("stored project ZIPs", () => {
     const response = await POST(request, context);
     expect(await response.json()).toEqual({ downloadUrl: "/api/projects/project/download?turntable=1" });
     const [{ key, body }] = state.put.mock.calls[0];
-    expect(key).toBe("projects/project/exports/turntable-v1.zip");
-    expect(unzipSync(body)).toEqual({ "front-v2-latest.png": new TextEncoder().encode("registered PNG") });
+    expect(key).toBe("projects/project/exports/turntable-v2.zip");
+    expect(unzipSync(body)).toEqual({ "reshoot_product-shoot_project/Front.png": new TextEncoder().encode("registered PNG") });
     expect(state.read.mock.calls).toEqual([["face-key"]]);
   });
 
+  it("uses the same safe folder and attachment name for a real project ID", async () => {
+    const projectId = "12345678-abcd-4000-8000-000000000000";
+    const title = '  Café / Camera__Shoot "\r\n';
+    state.projectDetail.mockResolvedValue({ title, shots, activeBatchId: null });
+    state.requireProject.mockResolvedValue({ title });
+    await prepareProjectArchive("owner", projectId);
+    const [{ body }] = state.put.mock.calls[0];
+    expect(Object.keys(unzipSync(body))).toEqual(["reshoot_cafe-camera-shoot_12345678/Front.jpg"]);
+    state.stream.mockResolvedValue(new Response(body).body);
+    const response = await GET(request, { params: Promise.resolve({ projectId }) });
+    expect(response.headers.get("content-disposition")).toBe('attachment; filename="reshoot_cafe-camera-shoot_12345678.zip"');
+    expect(state.head).toHaveBeenCalledWith(`projects/${projectId}/exports/views-v2.zip`);
+  });
+
   it("does not publish an unfinished archive", async () => {
-    state.projectDetail.mockResolvedValue({ shots, activeBatchId: "running" });
+    state.projectDetail.mockResolvedValue({ title: "Product Shoot", shots, activeBatchId: "running" });
     expect((await POST(request, context)).status).toBe(409);
     expect(state.head).not.toHaveBeenCalled();
+    expect(state.put).not.toHaveBeenCalled();
+  });
+
+  it("does not recreate a ZIP when the project is deleted while its images load", async () => {
+    state.read.mockImplementation(async () => {
+      state.lock.mockResolvedValue([]);
+      return Buffer.from("original");
+    });
+    expect((await POST(request, context)).status).toBe(404);
+    expect(state.lock).toHaveBeenCalledWith("update");
     expect(state.put).not.toHaveBeenCalled();
   });
 

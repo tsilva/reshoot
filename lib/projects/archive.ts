@@ -1,11 +1,12 @@
 import "server-only";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { zipSync } from "fflate";
 import { db } from "@/lib/db";
-import { generationOutputs } from "@/lib/db/schema";
+import { ApiError } from "@/lib/api/errors";
+import { generationOutputs, projects } from "@/lib/db/schema";
 import { renderPhoneTurntable } from "@/lib/generation/phone-turntable";
-import { projectArchiveKey, shotDownloadFilename } from "@/lib/projects/downloads";
+import { projectArchiveBasename, projectArchiveKey, uniqueShotDownloadFilenames } from "@/lib/projects/downloads";
 import { getPhoneTurntable } from "@/lib/projects/phone-turntable";
 import { getProjectDetail } from "@/lib/projects/service";
 import { getObjectBuffer, headObject, putObject } from "@/lib/storage/r2";
@@ -17,10 +18,15 @@ export function isMissingArchive(error: unknown) {
 export async function prepareProjectArchive(ownerId: string, projectId: string) {
   const project = await getProjectDetail(ownerId, projectId);
   if (project.activeBatchId) return null;
-  const views = project.shots.flatMap((shot) => {
+  const outputsToExport = project.shots.flatMap((shot) => {
     const version = shot.versions.at(-1);
-    return version ? [{ outputId: version.outputId, filename: shotDownloadFilename({ label: shot.label, ...version }) }] : [];
+    return version ? [{ label: shot.label, ...version }] : [];
   });
+  const folder = projectArchiveBasename({ id: projectId, title: project.title });
+  const filenames = uniqueShotDownloadFilenames(outputsToExport);
+  const views = outputsToExport.map((output, index) => ({
+    outputId: output.outputId, filename: `${folder}/${filenames[index]}`,
+  }));
   if (!views.length) return null;
 
   const turntable = Boolean(project.registeredPhoneTurntable);
@@ -66,7 +72,15 @@ export async function prepareProjectArchive(ownerId: string, projectId: string) 
     }
   }
 
-  // The image formats are already compressed. Store them directly in the ZIP.
-  await putObject({ key, body: zipSync(files, { level: 0 }), mimeType: "application/zip" });
+  // Build outside the transaction, then serialize publication with deletion.
+  const body = zipSync(files, { level: 0 });
+  await db.transaction(async (tx) => {
+    const [activeProject] = await tx.select({ id: projects.id }).from(projects)
+      .where(and(eq(projects.id, projectId), eq(projects.ownerId, ownerId), isNull(projects.deletedAt)))
+      .limit(1).for("update");
+    if (!activeProject) throw new ApiError(404, "project_not_found", "Project not found.");
+    // The image formats are already compressed. Store them directly in the ZIP.
+    await putObject({ key, body, mimeType: "application/zip" });
+  });
   return { turntable };
 }

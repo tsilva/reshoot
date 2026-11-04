@@ -34,6 +34,13 @@ Verify that busy or completed shoots reject drops without navigating to the file
 On supported touch devices, check the rear-facing **Take a photo** chooser.
 Test preset controls,
 original-image dialogs, completed gallery, ZIP download and error/empty states.
+Extract the ZIP and verify its `reshoot_<hyphenated-project-name>_<short-project-id>.zip`
+name, matching top-level folder, perspective-only filenames and original image
+formats. Include older cached shoots, registered phone views and repeated labels.
+With mocked storage, verify project deletion removes current and legacy ZIPs
+before success, storage failures allow retry, unowned projects cannot delete
+objects, and an export finishing after deletion cannot publish another ZIP.
+Retention cleanup must remove leftover ZIPs even without generated image records.
 Check keyboard access, focus, image loading, persistent controls and console
 errors. Verify pause/play, previous/next wrapping, arrows, product boundaries,
 menu/dialog pause, image-readiness waits and reduced-motion opt-in. A single-view
