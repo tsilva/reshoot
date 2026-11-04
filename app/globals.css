@@ -4715,6 +4715,8 @@ dialog.native-modal:has(> .sample-original-modal) { align-items: center; justify
 body:has(.home-page) { min-width: 0; }
 .home-page > .home-header { flex: none; }
 .home-page .home-header-inner { min-height: calc(var(--home-header-height) - 1px); }
+.home-page .home-brand { grid-row: 1; }
+.home-page > .home-header .home-account-controls { grid-column: 3; grid-row: 1; justify-self: end; min-width: 0; gap: 12px; }
 .home-page > .home-content { flex: 1; width: 100%; margin: 0; }
 .home-page .home-hero { height: calc(100svh - var(--home-header-height) - var(--home-footer-height)); min-height: min-content; }
 .home-page > .home-footer { flex: none; min-height: var(--home-footer-height); padding: 16px 0; line-height: 16px; }
@@ -4733,6 +4735,10 @@ body:has(.home-page) { min-width: 0; }
 }
 @media (max-width: 540px) {
   .home-page { --home-header-height: 64px; --home-footer-height: 41px; }
+  .home-page .home-header-inner { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+  .home-page .home-brand { justify-self: start; }
+  .home-page > .home-header .home-account-controls, .home-page .home-header-inner > .home-wallet-button { grid-column: 2; grid-row: 1; }
+  .home-page > .home-header .home-account-controls { gap: 8px; }
   .home-page .home-intro { padding: 14px 0; }
   .home-page .home-intro h1 { font-size: clamp(38px, 10.5vw, 54px); }
   .home-page .home-intro-copy { margin-top: 12px; }
