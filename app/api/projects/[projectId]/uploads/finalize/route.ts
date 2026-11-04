@@ -55,6 +55,9 @@ export async function POST(request: Request, context: RouteContext) {
     if (!asset) {
       throw new ApiError(404, "asset_not_found", "Upload not found.");
     }
+    if (asset.failureCode === "removed_reference") {
+      throw new ApiError(409, "reference_removed", "This photo was removed from the shoot. Add it again to use it.");
+    }
     if (asset.status === "ready") {
       const [preview] = await db
         .select()

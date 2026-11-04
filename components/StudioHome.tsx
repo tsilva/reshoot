@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight, Aperture, Coins, Plus, SpinnerGap, User, X,
 } from "@phosphor-icons/react";
@@ -11,6 +12,7 @@ import { ProjectsClient } from "@/components/projects/ProjectsClient";
 import { SampleCarousel } from "@/components/SampleCarousel";
 import type { CreditLedgerEntry, CreditSummary, ProjectDetail, ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
+import { projectPath } from "@/lib/projects/routes";
 
 const AccountClient = dynamic(() => import("@/components/account/AccountClient").then((module) => module.AccountClient));
 
@@ -21,8 +23,8 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
   showLibrary?: boolean;
   initialWalletOpen?: boolean;
 }) {
+  const router = useRouter();
   const [credits, setCredits] = useState(initialCredits);
-  const [createOpen, setCreateOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(initialWalletOpen);
   const [walletActivity, setWalletActivity] = useState<CreditLedgerEntry[] | null>(null);
   const [walletRevision, setWalletRevision] = useState(0);
@@ -30,6 +32,7 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
   const [error, setError] = useState<string | null>(null);
   const studioRef = useRef<HTMLDivElement>(null);
   const walletRef = useRef<HTMLElement>(null);
+  const creatingShoot = useRef(false);
   const projectId = activeProject?.id;
 
   useLayoutEffect(() => {
@@ -52,6 +55,24 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
       })
       .catch(() => setError("Your wallet could not refresh. Open it to try again."));
   }, []);
+
+  async function startShoot() {
+    if (creatingShoot.current) return;
+    creatingShoot.current = true;
+    setBusy("shoot");
+    setError(null);
+    try {
+      const { project } = await apiRequest<{ project: ProjectSummary }>("/api/projects", {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      router.push(projectPath(project.id));
+    } catch (cause) {
+      creatingShoot.current = false;
+      setBusy(null);
+      setError(cause instanceof Error ? cause.message : "Your shoot could not open. Please try again.");
+    }
+  }
 
   async function openWallet() {
     setBusy("wallet");
@@ -131,8 +152,8 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
             <div className="home-intro-copy">
               <p>Add your product photos. Get clean studio views, automatically.</p>
               <div className="home-start-row">
-                <button className="home-primary-button" onClick={() => setCreateOpen(true)} disabled={busy !== null}>
-                  <span>Add photos</span>
+                <button className="home-primary-button" onClick={() => void startShoot()} disabled={busy !== null}>
+                  <span>{busy === "shoot" ? "Opening shoot…" : "Add photos"}</span>
                   {busy === "shoot" ? <SpinnerGap className="spin" size={20} /> : <ArrowRight size={20} />}
                 </button>
                 <p className="home-start-note">Shared testing workspace. Shoots are visible to everyone.</p>
@@ -144,7 +165,7 @@ export function StudioHome({ initialCredits, initialProjects, project: activePro
         </div>
 
         {walletPanel}
-        <ProjectsClient key={initialProjects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={initialProjects} createOpen={createOpen} onCreateClose={() => setCreateOpen(false)} />
+        <ProjectsClient key={initialProjects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={initialProjects} />
       </main>
       <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span></footer>
     </div>

@@ -23,7 +23,14 @@ verification alone does not authorize a paid request, credit minting, migration
 or changes to production data. Follow the repository's configured development
 launcher and reuse existing servers.
 
-At desktop and narrow phone sizes, test upload selection, preset controls,
+At desktop and narrow phone sizes, verify that **Add photos** opens an empty
+shoot workspace without an upload dialog. Test file selection and page-wide
+file drops, additional photos, invalid file types, upload limits, progress,
+partial failures and retrying only failed files. Generation must stay disabled
+until saved references are ready, and show the quoted credits in smaller text below Generate inside the button, without a view count or explanatory label. Select each thumbnail with mouse and keyboard to verify that the large preview changes without changing the quoted cost. Check the top-left remove control and preview fallback after removing the selected reference. Check that adding and removing saved photos refreshes the quoted cost, including removing the primary, removing the last reference and crossing the five-reference cap. The drag target must contain no price. Removal must check ownership, serialize with generation confirmation and reject generated shoots. A removed photo must not be restored by replaying upload finalization.
+Verify that busy or completed shoots reject drops without navigating to the file.
+On supported touch devices, check the rear-facing **Take a photo** chooser.
+Test preset controls,
 original-image dialogs, completed gallery, ZIP download and error/empty states.
 Check keyboard access, focus, image loading, persistent controls and console
 errors. Verify pause/play, previous/next wrapping, arrows, product boundaries,

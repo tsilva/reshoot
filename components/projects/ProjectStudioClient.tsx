@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  Camera,
   ImageSquare,
   SpinnerGap,
   Plus,
@@ -18,7 +19,9 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ChangeEvent,
+  type DragEvent,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
@@ -32,8 +35,22 @@ import { apiRequest } from "@/lib/client/api";
 import { uploadProjectFile, validateUploadFile } from "@/lib/client/uploads";
 import { useBatchRealtime } from "@/lib/client/use-batch-realtime";
 import { automaticShotRequests, shootReferences } from "@/lib/client/shoot-plan";
+import { MAX_PROJECT_BYTES, MAX_PROJECT_ORIGINALS } from "@/lib/projects/limits";
 import { usePhotoPlayback } from "@/lib/client/use-photo-playback";
 import { SlideshowControls } from "@/components/SlideshowControls";
+
+function subscribeToCameraSupport(onChange: () => void) {
+  const pointer = window.matchMedia("(pointer: coarse)");
+  pointer.addEventListener("change", onChange);
+  return () => pointer.removeEventListener("change", onChange);
+}
+
+function supportsCameraCapture() {
+  return "capture" in HTMLInputElement.prototype &&
+    (navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches);
+}
+
+function noCameraOnServer() { return false; }
 
 function batchIsTerminal(status: GenerationBatchStatus["status"]) {
   return ["partial", "succeeded", "failed"].includes(status);
@@ -85,15 +102,23 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
   const [quoting, setQuoting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [activeShotId, setActiveShotId] = useState<string | null>(null);
+  const [selectedReferenceId, setSelectedReferenceId] = useState<string | null>(null);
   const [loadedPhotos, setLoadedPhotos] = useState<Set<string>>(() => new Set());
   const [batch, setBatch] = useState<GenerationBatchStatus | null>(null);
   const [uploading, setUploading] = useState<Array<{ name: string; progress: number }>>([]);
+  const [failedUploads, setFailedUploads] = useState<File[]>([]);
+  const [draggingPhotos, setDraggingPhotos] = useState(false);
+  const [removingPhoto, setRemovingPhoto] = useState<string | null>(null);
   const [photosStale, setPhotosStale] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [liveRetry, setLiveRetry] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const uploadInProgress = useRef(false);
+  const dragDepth = useRef(0);
+  const cameraAvailable = useSyncExternalStore(subscribeToCameraSupport, supportsCameraCapture, noCameraOnServer);
   const quoteRevision = useRef(0);
   const automaticQuoteKey = useRef<string | null>(null);
   const batchConfirmation = useRef<{ quoteId: string; key: string } | null>(null);
@@ -113,7 +138,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     (asset) => asset.kind === "original" && asset.status === "ready",
   );
   const generationStarted = project.shots.length > 0 || Boolean(batch) || Boolean(initialProject.activeBatchId);
-  const busy = submitting || uploading.length > 0;
+  const busy = submitting || uploading.length > 0 || removingPhoto !== null;
   const generating = Boolean(batch && !batchIsTerminal(batch.status)) || Boolean(initialProject.activeBatchId && !batch);
 
   useEffect(() => {
@@ -196,19 +221,31 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
   async function uploadMore(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
     event.target.value = "";
-    if (!files.length) return;
+    await addPhotos(files);
+  }
+
+  async function addPhotos(files: File[]) {
+    if (!files.length || uploadInProgress.current || busy || generating || generationStarted) return;
     const invalid = files.find(validateUploadFile);
     if (invalid) {
       setError(validateUploadFile(invalid));
       return;
     }
-    if (project.originalCount + files.length > 25) {
+    if (project.originalCount + files.length > MAX_PROJECT_ORIGINALS) {
       setError("A project can contain up to 25 original photos.");
       return;
     }
+    const totalBytes = readyOriginals.reduce((sum, asset) => sum + asset.sizeBytes, 0)
+      + files.reduce((sum, file) => sum + file.size, 0);
+    if (totalBytes > MAX_PROJECT_BYTES) {
+      setError("Keep the project under 500 MB total.");
+      return;
+    }
+    uploadInProgress.current = true;
     invalidateQuote();
     setUploading(files.map((file) => ({ name: file.name, progress: 0 })));
     setError(null);
+    const failed: File[] = [];
     for (let index = 0; index < files.length; index += 1) {
       try {
         await uploadProjectFile({
@@ -221,9 +258,13 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
               ),
             ),
         });
-      } catch (uploadError) {
-        setError(uploadError instanceof Error ? uploadError.message : "A photo failed to upload.");
+      } catch {
+        failed.push(files[index]);
       }
+    }
+    setFailedUploads((current) => [...current.filter((file) => !files.includes(file)), ...failed]);
+    if (failed.length) {
+      setError(`${failed.length} photo${failed.length === 1 ? "" : "s"} could not upload. Your saved photos are safe. Retry the failed photos when connected.`);
     }
     try {
       await refreshProject();
@@ -232,8 +273,63 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
       setPhotosStale(true);
       setError("Could not refresh your photos. Reload the page before generating.");
     } finally {
+      uploadInProgress.current = false;
       setUploading([]);
     }
+  }
+
+  async function removePhoto(assetId: string) {
+    if (busy || uploadInProgress.current || generating || generationStarted) return;
+    uploadInProgress.current = true;
+    setRemovingPhoto(assetId);
+    invalidateQuote();
+    setError(null);
+    try {
+      await apiRequest(`/api/projects/${project.id}/references/${assetId}`, { method: "DELETE" });
+      await refreshProject();
+      setPhotosStale(false);
+    } catch (cause) {
+      setPhotosStale(true);
+      setError(cause instanceof Error ? cause.message : "Could not update your photos. Reload before generating.");
+    } finally {
+      uploadInProgress.current = false;
+      setRemovingPhoto(null);
+    }
+  }
+
+  function hasDraggedFiles(event: DragEvent<HTMLElement>) {
+    return Array.from(event.dataTransfer.types).includes("Files");
+  }
+
+  const canAddPhotos = !busy && !generating && !generationStarted;
+
+  function enterPhotos(event: DragEvent<HTMLElement>) {
+    if (!hasDraggedFiles(event)) return;
+    event.preventDefault();
+    dragDepth.current += 1;
+    if (canAddPhotos) {
+      setDraggingPhotos(true);
+    }
+  }
+
+  function leavePhotos(event: DragEvent<HTMLElement>) {
+    if (!hasDraggedFiles(event)) return;
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (!dragDepth.current) setDraggingPhotos(false);
+  }
+
+  function dragPhotos(event: DragEvent<HTMLElement>) {
+    if (!hasDraggedFiles(event)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = canAddPhotos ? "copy" : "none";
+  }
+
+  function dropPhotos(event: DragEvent<HTMLElement>) {
+    if (!hasDraggedFiles(event)) return;
+    event.preventDefault();
+    dragDepth.current = 0;
+    setDraggingPhotos(false);
+    void addPhotos(Array.from(event.dataTransfer.files));
   }
 
   const requestQuote = useCallback(async () => {
@@ -275,11 +371,11 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     void requestQuote();
   }, [referenceKey, project.id, walletRevision, busy, generating, generationStarted, quoting, photosStale, requestQuote]);
 
-  async function confirmBatch() {
+  async function confirmBatch(confirmedAt: number) {
     if (!quote || busy || generating || generationStarted) return;
-    if (Date.now() >= new Date(quote.expiresAt).getTime()) {
+    if (confirmedAt >= new Date(quote.expiresAt).getTime()) {
       invalidateQuote();
-      setError("This price expired. Check the cost again to continue.");
+      setError("This price expired. Press Generate to refresh the cost before confirming.");
       return;
     }
     if (batchConfirmation.current?.quoteId !== quote.id) {
@@ -320,7 +416,8 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     return shot.versions.at(-1)!;
   }
   const activeVersion = activeShot ? latestVersion(activeShot) : null;
-  const canvasImage = activeVersion?.previewUrl ?? primary?.previewUrl;
+  const previewReference = readyOriginals.find((asset) => asset.id === selectedReferenceId) ?? primary;
+  const canvasImage = activeVersion?.previewUrl ?? previewReference?.previewUrl;
   const advance = useCallback(() => {
     setActiveShotId((current) => {
       const index = Math.max(0, completedShots.findIndex((shot) => shot.id === current));
@@ -348,6 +445,10 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     event.preventDefault();
     cycleView(event.key === "ArrowLeft" ? 1 : -1);
   }
+
+  const costCaption = quote ? <small>{quote.totalCredits} credits</small>
+    : busy || quoting ? <small>Updating cost…</small>
+    : primary ? <small>Cost unavailable</small> : null;
 
   const studioContent = (
     <section id="studio" className={`home-active-studio studio-main quiet-studio${generationStarted ? " is-gallery" : ""}`} aria-label="Product studio">
@@ -392,18 +493,22 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
               onLoad={() => setLoadedPhotos((loaded) => loaded.has(version.previewUrl) ? loaded : new Set(loaded).add(version.previewUrl))}
             />;
           })}</div> : canvasImage ? (
-            <Image unoptimized src={canvasImage} fill sizes="(max-width: 720px) 95vw, 640px" alt={`${project.title}, reference photo`} />
+            <Image unoptimized src={canvasImage} fill sizes="(max-width: 720px) 95vw, 640px" alt={`${project.title}, reference photo: ${previewReference?.filename}`} />
           ) : (
-            <label className="studio-canvas-empty">
-              <UploadSimple size={30} weight="light" /><span>Add reference photos</span>
-              <input type="file" aria-label="Add reference photos" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadMore} disabled={busy || generating} />
+            <label className={`studio-canvas-empty${!canAddPhotos ? " is-disabled" : ""}`}>
+              <UploadSimple size={32} weight="light" aria-hidden="true" />
+              <strong>{uploading.length ? "Adding your photos…" : "Add reference photos"}</strong>
+              <span>Choose photos or drag and drop them here.</span>
+              <span className="studio-choose-photos">Choose photos</span>
+              <small>JPG, PNG or WebP · up to 25 photos · 20 MB each</small>
+              <input type="file" aria-label="Add reference photos" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadMore} disabled={!canAddPhotos} />
             </label>
           )}
           {generating ? <div className="studio-canvas-status" role="status"><SpinnerGap className="spin" size={18} />
             {batch ? `${batch.completedJobs} of ${batch.jobs.length} views ready` : "Resuming generation…"}
           </div> : null}
         </div>
-        <p className="sr-only" aria-live={playback.enabled && completedShots.length > 1 ? "off" : "polite"}>{activeShot && activeVersion ? `${activeShot.label}, version ${activeVersion.version}` : "Reference photo. Generate studio views when your photos are ready."}</p>
+        <p className="sr-only" aria-live={playback.enabled && completedShots.length > 1 ? "off" : "polite"}>{activeShot && activeVersion ? `${activeShot.label}, version ${activeVersion.version}` : previewReference ? `Reference photo: ${previewReference.filename}. Generate studio views when your photos are ready.` : "Add reference photos to start."}</p>
       </div>
 
       {!generationStarted ? <>
@@ -411,26 +516,37 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
           <div className="studio-reference-row" role="group" aria-label="Reference photos">
             <div className="studio-reference-thumbnails">
               {readyOriginals.map((asset) => <div className="studio-reference-thumbnail" key={asset.id} title={asset.filename}>
-                {asset.previewUrl ? <Image unoptimized src={asset.previewUrl} fill sizes="60px" alt={asset.filename} /> : <ImageSquare size={24} aria-label={asset.filename} />}
+                <button type="button" className="studio-select-reference" aria-label={`Preview ${asset.filename}`} aria-pressed={previewReference?.id === asset.id} onClick={() => setSelectedReferenceId(asset.id)}>
+                  {asset.previewUrl ? <Image unoptimized src={asset.previewUrl} fill sizes="60px" alt="" /> : <ImageSquare size={24} />}
+                </button>
+                <button type="button" className="studio-remove-reference" aria-label={`Remove ${asset.filename}`} disabled={!canAddPhotos} onClick={() => void removePhoto(asset.id)}>
+                  {removingPhoto === asset.id ? <SpinnerGap className="spin" size={14} /> : <X size={14} />}
+                </button>
               </div>)}
             </div>
-            <label className={`studio-add-reference${busy || generating ? " is-disabled" : ""}`}>
+            <label className={`studio-add-reference${!canAddPhotos ? " is-disabled" : ""}`}>
               <Plus size={22} weight="light" /><span>Add photos</span>
-              <input type="file" aria-label="Add photos" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadMore} disabled={busy || generating} />
+              <input type="file" aria-label="Add photos" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadMore} disabled={!canAddPhotos} />
             </label>
+            {cameraAvailable ? <>
+              <button type="button" className="studio-camera-button" disabled={!canAddPhotos} onClick={() => cameraInput.current?.click()}>
+                <Camera size={22} aria-hidden="true" /><span>Take a photo</span>
+              </button>
+              <input ref={cameraInput} type="file" aria-label="Take a product photo" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onChange={uploadMore} disabled={!canAddPhotos} />
+            </> : null}
           </div>
           <div className="studio-generate-actions" aria-live="polite">
             {quote ? (
               <>
-                {quote.affordable ? <button className="button primary-button" onClick={() => void confirmBatch()} disabled={busy}>
+                {quote.affordable ? <button className="button primary-button" onClick={() => void confirmBatch(Date.now())} disabled={busy}>
                   {submitting ? <SpinnerGap className="spin" size={18} /> : null}
-                  {submitting ? "Starting…" : `Generate ${quote.shots.length} views · ${quote.totalCredits} credits`}
+                  <span className="studio-generate-label"><span>{submitting ? "Starting…" : "Generate"}</span>{costCaption}</span>
                 </button> : checkoutAvailable ? (
-                  onOpenWallet ? <button className="button primary-button" onClick={onOpenWallet}>Add credits</button> : <Link href="/?wallet=open#wallet" className="button primary-button">Add credits</Link>
-                ) : <button className="button primary-button" disabled>Generate {quote.shots.length} views · {quote.totalCredits} credits</button>}
+                  onOpenWallet ? <button className="button primary-button" onClick={onOpenWallet}><span className="studio-generate-label"><span>Add credits</span>{costCaption}</span></button> : <Link href="/?wallet=open#wallet" className="button primary-button"><span className="studio-generate-label"><span>Add credits</span>{costCaption}</span></Link>
+                ) : <button className="button primary-button" disabled><span className="studio-generate-label"><span>Generate</span>{costCaption}</span></button>}
               </>
             ) : <button className="button primary-button" onClick={() => void requestQuote()} disabled={quoting || busy || !primary || photosStale}>
-              {quoting ? <SpinnerGap className="spin" size={18} /> : null}{quoting ? "Calculating…" : "Check cost"}
+              {quoting ? <SpinnerGap className="spin" size={18} /> : null}<span className="studio-generate-label"><span>Generate</span>{costCaption}</span>
             </button>}
           </div>
         </div>
@@ -444,11 +560,15 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
           <div className="progress-track"><span style={{ width: `${upload.progress * 100}%` }} /></div>
         </div>)}
       </div> : null}
+      {failedUploads.length ? <div className="studio-upload-retry">
+        <p role="status">Could not upload: {failedUploads.map((file) => file.name).join(", ")}</p>
+        <button type="button" className="button secondary-button" disabled={!canAddPhotos} onClick={() => void addPhotos(failedUploads)}>Retry failed photos</button>
+      </div> : null}
     </section>
   );
 
   return (
-    <>
+    <div className="studio-workspace" onDragEnter={enterPhotos} onDragLeave={leavePhotos} onDragOver={dragPhotos} onDrop={dropPhotos}>
       <header className="home-header">
         <div className="home-header-inner studio-topbar">
           <Link href="/projects" className="quiet-back" aria-label="All shoots"><ArrowLeft size={22} /></Link>
@@ -468,10 +588,13 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
         </div>
       </header>
       <main className="home-content">
+        {draggingPhotos ? <div className="studio-drop-overlay" role="status">
+          <UploadSimple size={36} weight="light" /><strong>Drop reference photos here</strong>
+        </div> : null}
         {pageError}
         {studioContent}
         {children}
       </main>
-    </>
+    </div>
   );
 }

@@ -10,6 +10,7 @@ const state = vi.hoisted(() => ({
   projectId: "5392ef6c-5eb7-4825-a44d-3eb4514ce359",
   assetId: "7a3b32b6-c3a5-4dcf-adb0-8d37e39c2bb7",
   assetStatus: "pending",
+  removedReference: false,
   primaryAssetId: "7a3b32b6-c3a5-4dcf-adb0-8d37e39c2bb7",
   title: "Product shoot",
   firstFinalization: true,
@@ -51,6 +52,7 @@ describe("naming the first saved product photo", () => {
   beforeEach(async () => {
     state.original = await sharp({ create: { width: 64, height: 64, channels: 3, background: "blue" } }).png().toBuffer();
     state.assetStatus = "pending";
+    state.removedReference = false;
     state.primaryAssetId = state.assetId;
     state.title = "Product shoot";
     state.firstFinalization = true;
@@ -58,7 +60,7 @@ describe("naming the first saved product photo", () => {
     state.suggest.mockReset().mockResolvedValue("Cobalt ceramic mug");
     state.update.mockReset().mockReturnValue({ set: () => ({ where: async () => undefined }) });
     state.select.mockReset().mockImplementation(() => ({ from: (table: Table) => ({ where: () => ({ limit: async () => getTableName(table) === "assets" ? [{
-      id: state.assetId, status: state.assetStatus, r2Key: "private/source", sizeBytes: state.original.length,
+      id: state.assetId, status: state.assetStatus, failureCode: state.removedReference ? "removed_reference" : null, r2Key: "private/source", sizeBytes: state.original.length,
       mimeType: "image/png", checksumSha256: createHash("sha256").update(state.original).digest("hex"),
     }] : [] }) }) }));
     state.insert.mockReset().mockImplementation(() => ({ values: (values: { title: string }) => ({ returning: async () => [{
@@ -70,6 +72,14 @@ describe("naming the first saved product photo", () => {
     const response = await createProject(new Request("https://reshoot.test/api/projects", { method: "POST", body: "{}" }));
     expect(response.status).toBe(201);
     expect((await response.json()).project.title).toBe("Product shoot");
+  });
+
+  it("does not restore a removed reference through upload finalization replay", async () => {
+    state.assetStatus = "failed";
+    state.removedReference = true;
+    expect((await finalizePhoto()).status).toBe(409);
+    expect(state.update).not.toHaveBeenCalled();
+    expect(state.suggest).not.toHaveBeenCalled();
   });
 
   it("names only the first primary photo and protects concurrent edits and ownership", async () => {
