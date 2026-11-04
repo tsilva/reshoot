@@ -93,7 +93,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
   walletRevision?: number;
   walletButton: ReactNode;
   pageError: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   const router = useRouter();
   const [project, setProject] = useState(initialProject);

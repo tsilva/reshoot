@@ -12,10 +12,9 @@ import {
   WarningCircle,
   X,
 } from "@phosphor-icons/react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CreditLedgerEntry, CreditSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
-import { Dialog } from "@/components/Dialog";
 
 type CheckoutStep = "confirm" | "success";
 
@@ -39,15 +38,11 @@ function activitySign(entry: CreditLedgerEntry) {
 export function AccountClient({
   initialCredits,
   initialActivity,
-  displayName,
-  email,
   isDemo,
   onCreditsChange,
 }: {
   initialCredits: CreditSummary;
   initialActivity: CreditLedgerEntry[];
-  displayName: string;
-  email: string;
   isDemo: boolean;
   onCreditsChange?: (credits: CreditSummary) => void;
 }) {
@@ -61,12 +56,19 @@ export function AccountClient({
   const [paymentOutcome, setPaymentOutcome] = useState<"succeeded" | "declined">("succeeded");
   const checkoutKey = useRef<string | null>(null);
   const submitting = useRef(false);
+  const checkoutRef = useRef<HTMLElement>(null);
+  const checkoutTrigger = useRef<HTMLElement | null>(null);
   const selectedPack = useMemo(
     () => credits.packs.find((pack) => pack.slug === selectedSlug) ?? null,
     [credits.packs, selectedSlug],
   );
 
+  useEffect(() => {
+    if (selectedSlug) checkoutRef.current?.focus();
+  }, [selectedSlug, checkoutStep]);
+
   function openCheckout(slug: string) {
+    checkoutTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     checkoutKey.current = crypto.randomUUID();
     setPaymentOutcome("succeeded");
     setSelectedSlug(slug);
@@ -79,6 +81,7 @@ export function AccountClient({
     setSelectedSlug(null);
     setCheckoutStep("confirm");
     setError(null);
+    requestAnimationFrame(() => checkoutTrigger.current?.focus());
   }
 
   async function checkout() {
@@ -122,19 +125,15 @@ export function AccountClient({
   }
 
   return (
-    <section className="product-main account-page">
+    <section className="account-page account-credits-page">
       <header className="page-heading-row account-heading">
         <div>
-          <div className="page-kicker">Account & credits</div>
-          <h2>Your wallet</h2>
+          <h2>Credits</h2>
           <p className="page-lede">{isDemo ? "Add test credits with a simulated payment. No card is needed and no money is charged." : "Manage purchase credits and review every balance change."}</p>
-        </div>
-        <div className="account-identity">
-          <strong>{displayName}</strong>
-          <span>{email}</span>
         </div>
       </header>
 
+      <div hidden={selectedPack !== null}>
       <section className="account-metrics" aria-label="Credit balance">
         <article className="metric-card balance-card">
           <Coins size={24} weight="duotone" />
@@ -172,7 +171,7 @@ export function AccountClient({
         <div className="section-heading-row">
           <div>
             <div className="page-kicker">Credit packs</div>
-            <h2>Choose the right runway</h2>
+            <h3>Add credits</h3>
             <p>Every pack keeps the same simple exchange rate with no expiring bonus credits.</p>
           </div>
           {credits.demoCheckoutAvailable ? (
@@ -213,7 +212,7 @@ export function AccountClient({
         <div className="section-heading-row">
           <div>
             <div className="page-kicker">History</div>
-            <h2>Credit activity</h2>
+            <h3>Credit activity</h3>
           </div>
           <ClockCounterClockwise size={24} />
         </div>
@@ -242,9 +241,11 @@ export function AccountClient({
         )}
       </section>
 
+      </div>
       {selectedPack ? (
-        <Dialog labelledBy="checkout-title" busy={checkingOut} onClose={closeCheckout}>
-          <section className="checkout-modal">
+          <section className="checkout-modal" ref={checkoutRef} tabIndex={-1} aria-labelledby="checkout-title" aria-busy={checkingOut || undefined} onKeyDown={(event) => {
+            if (event.key === "Escape") { event.stopPropagation(); if (!checkingOut) closeCheckout(); }
+          }}>
             <button className="icon-button checkout-close" onClick={closeCheckout} aria-label="Close checkout" disabled={checkingOut}>
               <X size={20} />
             </button>
@@ -285,7 +286,6 @@ export function AccountClient({
               </div>
             )}
           </section>
-        </Dialog>
       ) : null}
     </section>
   );

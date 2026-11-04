@@ -124,7 +124,7 @@ export function AppShell({
             {currentUser.isDemo ? (
               <p>Projects and test credits are private to your account.</p>
             ) : null}
-            <AccountMenu />
+            <AccountMenu isDemo={currentUser.isDemo} />
           </section>
         </details> : <Link href="/login" className="home-wallet-button">Sign in</Link>}
       </header>

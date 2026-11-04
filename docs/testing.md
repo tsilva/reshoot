@@ -37,6 +37,16 @@ forged prices/owners, declines, duplicate delivery, concurrent purchases, and
 preservation of held credits and other accounts. They use synthetic database
 fixtures and do not connect to Clerk, Stripe, Neon, or image providers.
 
+Verify that the avatar’s Manage account panel contains Account, Security and
+Credits. The header balance shortcut and the studio’s **Add credits** action must
+open Credits directly. Existing `/account` and `?wallet=open` links must also
+open that tab after sign-in, without adding an inline wallet to the workspace.
+Check lazy loading, retry after a failed wallet request, closing/reopening for a
+fresh balance, and the compact layout at desktop and phone widths. Pack selection
+opens its confirmation within Credits; cancel/Done restores focus to the selected
+pack. A successful simulated purchase must update the header balance and refresh
+the studio quote without a page reload.
+
 For configured browser verification, use two separate Clerk accounts. Confirm
 that each sees only its own shoots and balance, then buy a test pack, cancel a
 checkout, simulate a decline, and retry a successful purchase after a lost response.

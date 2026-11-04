@@ -4898,6 +4898,49 @@ body:has(.home-page) { min-width: 0; }
 .auth-page .cl-rootBox { max-width: 100%; }
 .auth-payment-note { max-width: 360px; color: var(--text-muted, #666); font-size: 13px; }
 .home-account-controls { display: flex; align-items: center; gap: 16px; }
+
+/* Credit management lives within Clerk's account panel. Size to the panel,
+   rather than the viewport, so its desktop sidebar leaves enough room. */
+.account-credits-page { container-type: inline-size; min-width: 0; width: 100%; padding: 0; color: var(--ink); }
+.account-credits-page .account-heading { margin: 0 0 24px; }
+.account-credits-page .account-heading h2 { margin: 0 0 8px; font-size: 24px; line-height: 1.2; }
+.account-credits-page .page-lede { margin: 0; font-size: 14px; line-height: 1.6; }
+.account-credits-page .account-metrics { grid-template-columns: 1fr; gap: 10px; }
+.account-credits-page .metric-card { min-width: 0; min-height: 100px; padding: 16px; }
+.account-credits-page .metric-card > strong { font-size: 32px; }
+.account-credits-page .metric-card > small { overflow-wrap: anywhere; }
+.account-credits-page .credit-value-note { margin-bottom: 24px; font-size: 13px; }
+.account-credits-page .account-section { margin-top: 28px; }
+.account-credits-page .section-heading-row { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+.account-credits-page .section-heading-row h3 { margin: 4px 0 8px; font-size: 20px; }
+.account-credits-page .section-heading-row p { font-size: 13px; line-height: 1.5; }
+.account-credits-page .pack-grid { grid-template-columns: 1fr; gap: 18px; }
+.account-credits-page .pack-card { min-width: 0; min-height: 0; gap: 12px; padding: 18px; }
+.account-credits-page .pack-card > div > strong { font-size: 25px; }
+.account-credits-page .pack-card > p { margin: 0; font-size: 13px; }
+.account-credits-page .pack-card > footer { flex-wrap: wrap; }
+.account-credits-page .activity-section { padding-top: 24px; }
+.account-credits-page .activity-row { grid-template-columns: minmax(0, 1fr) auto; }
+.account-credits-page .activity-row > div { overflow-wrap: anywhere; }
+.account-credits-page .checkout-modal { max-width: none; padding: 44px 0 0; }
+.account-credits-page .checkout-modal:focus { outline: none; }
+.account-credits-page .checkout-close { top: 0; right: 0; }
+.account-credits-page .checkout-modal h2 { font-size: 26px; }
+.account-credits-page .checkout-total { padding: 16px; }
+.account-credits-status { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 14px; }
+.account-credits-status > p { flex-basis: 100%; }
+.studio-topbar .home-wallet-button.is-quiet { gap: 6px; font-size: 12px; }
+.studio-topbar .home-account-controls { grid-area: wallet; justify-self: end; min-width: 0; gap: 8px; }
+@media (max-width: 600px) {
+  .has-studio .studio-topbar { grid-template-columns: 44px auto minmax(0, 1fr) auto; grid-template-areas: "back brand title wallet"; }
+  .has-studio .studio-topbar:has(.studio-rotation-controls) { grid-template-areas: "back brand title title" "rotation rotation download wallet"; }
+}
+@container (min-width: 460px) {
+  .account-credits-page .account-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .account-credits-page .metric-card { grid-template-columns: 1fr; gap: 8px; }
+  .account-credits-page .metric-card > svg { grid-row: auto; }
+  .account-credits-page .metric-card > span, .account-credits-page .metric-card > strong, .account-credits-page .metric-card > small { grid-column: 1; }
+}
 .simulated-payment-options { display: grid; gap: 12px; margin: 20px 0; padding: 16px; border: 1px solid var(--border); }
 .simulated-payment-options legend { padding: 0 6px; font-size: 13px; font-weight: 600; }
 .simulated-payment-options label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
