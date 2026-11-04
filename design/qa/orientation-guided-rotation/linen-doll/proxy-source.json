@@ -14,7 +14,7 @@
     "role": "derived-foreground-cutout"
   },
   "elapsedSeconds": 21.896498918533325,
-  "originalExport": "/Users/tsilva/Documents/Codex/2026-10-31/reshoot-other-rotations/doll-shape/dc5babd17a60ed7f7b59cc9d36152df1d277a4c8cf8d8bca8d1db27bb43315ac/white_mesh.glb",
+  "originalExport": null,
   "stats": {
     "model": {
       "shapegen": "tencent/Hunyuan3D-2.1/hunyuan3d-dit-v2-1",
