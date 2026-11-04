@@ -19,3 +19,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Internal reports
+
+Keep session QA reports in `.internal/qa/YYYY-MM-DD-<topic>.md`, reusable private
+notes in `.internal/reference/`, and browser captures/measurements in
+`.internal/evidence/`, all beneath the Git root. Verify `/.internal/` is ignored
+and contains no tracked files before writing. Public testing/development docs
+retain reproducible checks and known limitations; do not link them to private
+reports or add machine paths and operator/session details.

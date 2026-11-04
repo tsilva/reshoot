@@ -6,7 +6,7 @@ import sharp from "sharp";
 // Run after capturing fresh, paused browser frames in this directory.
 // Detect the unobstructed body edges just above the foot, below every handle.
 // This measures rendered pixels rather than checking the configured offsets.
-const directory = process.argv[2] ?? "design/qa/ceramic-mug/alignment";
+const directory = process.argv[2] ?? ".internal/evidence/design/ceramic-mug/alignment";
 
 async function measure(name, geometry) {
   const screenshot = sharp(join(directory, `${name}.png`));

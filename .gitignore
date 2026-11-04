@@ -23,3 +23,6 @@ __pycache__/
 .workflow-local/
 /INBOX.md
 /.local/repo-inbox/
+
+# Private working reports and QA evidence
+/.internal/

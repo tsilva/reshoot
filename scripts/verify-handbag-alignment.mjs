@@ -3,9 +3,9 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import sharp from "sharp";
 
-// Capture fresh paused frames and per-frame geometry in Brave before running.
+// Capture fresh paused frames and per-frame geometry in the configured test browser before running.
 // Detect the leather silhouette in rendered screenshots, independently of CSS.
-const directory = process.argv[2] ?? "design/qa/leather-handbag/alignment";
+const directory = process.argv[2] ?? ".internal/evidence/design/leather-handbag/alignment";
 
 async function measure(surface) {
   const geometry = JSON.parse(await readFile(join(directory, `${surface}.json`), "utf8"));

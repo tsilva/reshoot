@@ -99,7 +99,7 @@ The approved October 31, 2026 security exception pins `minimatch` 11.0.1, `glob`
 - The image service and model are private server configuration and are intentionally absent from public APIs, browser bundles, filenames, and customer-facing diagnostics.
 - The shared workspace skips automatic imports from the legacy browser database.
 - The deployment target is the Vercel project `tsilvas-projects/reshoot` at `reshoot.tsilva.eu`.
-- The preserved Stitch export and visual verification notes are in [`design/stitch-source`](./design/stitch-source) and [`design-qa.md`](./design-qa.md).
+- The preserved Stitch export is in [`design/stitch-source`](./design/stitch-source). See [testing guidance](docs/testing.md) for repeatable UI and rotation checks.
 
 ## Image generation evaluation
 

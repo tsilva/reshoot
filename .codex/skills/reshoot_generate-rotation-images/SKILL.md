@@ -9,7 +9,7 @@ Generate the final photographs with the native image-generation tool. The origin
 
 This follows the user's 2026-10-31 correction: direct mesh renders were rejected for low photographic quality. The 2026-10-30 bag also failed visual rigidity despite centered silhouettes. Preserve both lessons: photographic fidelity and coherent rotation are separate requirements; neither a centered image nor a fixed guide mesh certifies the final AI photographs.
 
-Resolve this checkout from the skill location and follow its current `AGENTS.md`. Read `lib/generation/request.ts`, `lib/client/sample-products.ts`, `docs/image-generation-evaluation.md`, and the current manifests under `design/qa/original-rotation/`. Keep previous selected assets until replacement photographs pass review.
+Resolve this checkout from the skill location and follow its current `AGENTS.md`. Read `lib/generation/request.ts`, `lib/client/sample-products.ts`, `docs/image-generation-evaluation.md`, and the current manifests under `design/qa/original-rotation/`. Keep previous selected assets until replacement photographs pass review. Keep source/output provenance and guide assets needed by automated checks tracked; session reports, screenshots and measurements belong in ignored `.internal/`.
 
 ## 1. Prepare the original and orientation guides
 
@@ -46,7 +46,7 @@ Measure body-axis and floor registration separately from geometry/photographic r
 
 For accepted replacements, update the existing generation/framing manifests with exact prompts, original and guide roles/paths/hashes, final output hashes, selected generation artifacts and rejected attempts. Preserve historical evidence. Verify source/guide/output provenance and measured framing; report those checks separately from visual coherence. Do not use direct-render mesh/camera checks to certify AI-generated final photographs.
 
-Run the relevant framing check, lint, type check, tests and build. Review the local carousel on desktop and phone before delivery when available. Update authoritative docs and `design-qa.md` with observations and limits.
+Run the relevant framing check, lint, type check, tests and build. Review the local carousel on desktop and phone before delivery when available. Keep reusable checks and limitations in `docs/testing.md`; keep session observations and limits in `.internal/qa/YYYY-MM-DD-rotation.md`. Verify `/.internal/` is ignored and untracked before writing.
 
 ## 4. Deploy within scope and verify the live rotations
 
@@ -54,6 +54,6 @@ A generation request alone does not authorize publication. When deployment is au
 
 Use Brave's Agents profile to inspect the actual live carousel at desktop and phone sizes. For every product, visit all eight views in order, confirm the expected image is fully loaded before each capture, let scrolling settle, and keep the whole product visible below sticky headers. Compare each sequence with its original: material detail, body dimensions, fixed camera/perspective, center vertical axis, floor contact, component attachments, near/far occlusions, adjacent rear views and the last-to-first transition. A dimension jump, camera orbit or changed construction is a failed candidate even when centering metrics pass.
 
-Check autoplay through every product, pause/play, forward and reverse navigation, product boundaries and wraps, original-photo dialogs and browser errors. Retain labeled desktop/phone captures and a review record identifying the live URL, exact commit/deployment, loaded views, observed behavior, photographic/coherence verdict and remaining limits. Use `design/qa/orientation-guided-rotation/live-review.json` and `design-qa.md` as the existing evidence format; keep historical verdicts tied to their reviewed assets and commit.
+Check autoplay through every product, pause/play, forward and reverse navigation, product boundaries and wraps, original-photo dialogs and browser errors. Retain labeled desktop/phone captures and a review record identifying the live URL, exact commit/deployment, loaded views, observed behavior, photographic/coherence verdict and remaining limits. Store the review record and desktop/phone captures under `.internal/evidence/design/orientation-guided-rotation/`, with the written report in `.internal/qa/YYYY-MM-DD-rotation.md`; keep historical verdicts tied to their reviewed assets and commit.
 
 HTTP image hashes, framing values and deployment READY status verify delivery, not natural rotation or working playback. Do not report the live visual review as passed without inspecting the carousel. If Brave discovery or tab control fails, inspect the available-browser inventory and follow the bundled browser troubleshooting/Brave extension and native-host diagnostics before asking the user to reconnect; an enabled extension can coexist with missing browser discovery. Stay with Brave, preserve browser settings and report the unverified portion honestly. A later explicit deployment instruction may authorize publication while that review remains pending; it does not count as a visual pass.

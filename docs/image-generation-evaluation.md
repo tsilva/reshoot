@@ -27,7 +27,7 @@ All three home-page samples now use an original-first, orientation-guided photog
 
 The exact [photographic prompts and original/guide roles](../design/qa/orientation-guided-rotation/photographs.json), proxy source/parameters, input hashes, neutral captures and guide rigs are under `design/qa/orientation-guided-rotation/`. Source/output provenance, measured body-axis/floor registration and minimum 10% margins are checked for all 24 displayed photos. All 24 new photos also verify hint hashes and their capture rigs. These guide checks do not certify output geometry or photographic quality: actual directions, occlusions, proportions, material detail, neighboring views and the wrap require visual review. The bag was regenerated with a textureless trapezoidal body/two-handle scaffold to address the earlier dimension drift; the original supplies its leather, stitching and front hardware. Historical pre-change [generation](../design/qa/orientation-guided-rotation/generation-before-2026-10-31.json) and [framing](../design/qa/orientation-guided-rotation/framing-before-2026-10-31.json) records are retained.
 
-The 2026-10-30 user review rejected the bag's visual rigidity despite these passing registration measurements. Independently generated views change apparent body dimensions, handle proportions and perspective. Registration tests must not be presented as geometric reconstruction or natural-rotation acceptance. Replacement artwork must pass a separate identity/geometry review; shared geometry and a fixed render rig, or a real turntable capture, provide a coherent basis for that review. See the follow-up in [design QA](../design-qa.md).
+The 2026-10-30 user review rejected the bag's visual rigidity despite these passing registration measurements. Independently generated views change apparent body dimensions, handle proportions and perspective. Registration tests must not be presented as geometric reconstruction or natural-rotation acceptance. Replacement artwork must pass a separate identity/geometry review; shared geometry and a fixed render rig, or a real turntable capture, provide a coherent basis for that review. Use the [sample rotation review](testing.md#sample-rotation-review) to check geometry and playback separately from registration.
 
 The 2026-11-03 ceramic mug set uses the eight selected native-generated RGBA PNGs. The carousel supplies the white background, and the art contains no baked studio shadow. The same source and angle hints were used as for the earlier JPEGs. Framing excludes transparent pixels and registers the mug to its previous displayed body height and floor anchor. The opaque comparison files are retained, with the previous selection recorded at commit `6fff0e7`.
 
@@ -51,7 +51,7 @@ Tests exercise the actual generated raster's neutrality, opacity and changing po
 
 ## Capture sample-specific textureless orientation hints
 
-This local utility produces guide images only. It does not generate final product photographs, use application credits, or add Three.js to the website's runtime dependencies. Prepare a fresh tool directory, then open the printed loopback URL in Brave’s Agents profile:
+This local utility produces guide images only. It does not generate final product photographs, use application credits, or add Three.js to the website's runtime dependencies. Prepare a fresh tool directory, then open the printed loopback URL in the configured test browser:
 
 ```sh
 orientation_tools_dir="$(mktemp -d)"
