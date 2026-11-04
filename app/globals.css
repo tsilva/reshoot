@@ -4679,6 +4679,14 @@ dialog.native-modal:has(> .sample-original-modal) { align-items: center; justify
 /* Quiet photo canvas: the generated image is the working surface. */
 .has-studio { --studio-bar-height: 64px; }
 .studio-workspace { min-height: 100svh; }
+.studio-workspace.is-empty { display: flex; flex-direction: column; }
+.studio-workspace.is-empty > .home-header { flex: none; }
+.studio-workspace.is-empty > .home-content { display: flex; flex-direction: column; flex: 1; width: 100%; margin: 0; }
+.studio-workspace.is-empty .quiet-studio { display: flex; flex-direction: column; flex: 1; padding-bottom: 12px; }
+.studio-workspace.is-empty .studio-photo-canvas { display: flex; flex-direction: column; flex: 1; }
+.studio-workspace.is-empty .studio-photo-stage { flex: 1; height: auto; min-height: 320px; }
+.studio-empty-camera { position: absolute; bottom: 24px; left: 50%; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; transform: translateX(-50%); color: var(--ink); font-size: 15px; cursor: pointer; }
+.studio-empty-camera.is-disabled { opacity: .5; cursor: wait; }
 .has-studio .studio-topbar {
   --studio-title-size: clamp(22px, 3vw, 32px);
   min-height: var(--studio-bar-height);

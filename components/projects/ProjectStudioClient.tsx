@@ -138,6 +138,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     (asset) => asset.kind === "original" && asset.status === "ready",
   );
   const generationStarted = project.shots.length > 0 || Boolean(batch) || Boolean(initialProject.activeBatchId);
+  const emptySetup = !generationStarted && readyOriginals.length === 0;
   const busy = submitting || uploading.length > 0 || removingPhoto !== null;
   const generating = Boolean(batch && !batchIsTerminal(batch.status)) || Boolean(initialProject.activeBatchId && !batch);
 
@@ -494,7 +495,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
             />;
           })}</div> : canvasImage ? (
             <Image unoptimized src={canvasImage} fill sizes="(max-width: 720px) 95vw, 640px" alt={`${project.title}, reference photo: ${previewReference?.filename}`} />
-          ) : (
+          ) : (<>
             <label className={`studio-canvas-empty${!canAddPhotos ? " is-disabled" : ""}`}>
               <UploadSimple size={32} weight="light" aria-hidden="true" />
               <strong>{uploading.length ? "Adding your photos…" : "Add reference photos"}</strong>
@@ -503,7 +504,11 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
               <small>JPG, PNG or WebP · up to 25 photos · 20 MB each</small>
               <input type="file" aria-label="Add reference photos" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadMore} disabled={!canAddPhotos} />
             </label>
-          )}
+            {cameraAvailable && !generationStarted ? <label className={`studio-empty-camera${!canAddPhotos ? " is-disabled" : ""}`}>
+              <Camera size={22} aria-hidden="true" /><span>Take a photo</span>
+              <input type="file" aria-label="Take a product photo" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onChange={uploadMore} disabled={!canAddPhotos} />
+            </label> : null}
+          </>)}
           {generating ? <div className="studio-canvas-status" role="status"><SpinnerGap className="spin" size={18} />
             {batch ? `${batch.completedJobs} of ${batch.jobs.length} views ready` : "Resuming generation…"}
           </div> : null}
@@ -511,7 +516,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
         <p className="sr-only" aria-live={playback.enabled && completedShots.length > 1 ? "off" : "polite"}>{activeShot && activeVersion ? `${activeShot.label}, version ${activeVersion.version}` : previewReference ? `Reference photo: ${previewReference.filename}. Generate studio views when your photos are ready.` : "Add reference photos to start."}</p>
       </div>
 
-      {!generationStarted ? <>
+      {!generationStarted && readyOriginals.length > 0 ? <>
         <div className="studio-utility-row">
           <div className="studio-reference-row" role="group" aria-label="Reference photos">
             <div className="studio-reference-thumbnails">
@@ -568,7 +573,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
   );
 
   return (
-    <div className="studio-workspace" onDragEnter={enterPhotos} onDragLeave={leavePhotos} onDragOver={dragPhotos} onDrop={dropPhotos}>
+    <div className={`studio-workspace${emptySetup ? " is-empty" : ""}`} onDragEnter={enterPhotos} onDragLeave={leavePhotos} onDragOver={dragPhotos} onDrop={dropPhotos}>
       <header className="home-header">
         <div className="home-header-inner studio-topbar">
           <Link href="/projects" className="quiet-back" aria-label="All shoots"><ArrowLeft size={22} /></Link>
