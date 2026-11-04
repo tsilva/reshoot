@@ -5,7 +5,7 @@ export function clerkConfigured() {
 export function requireProductionClerkConfiguration(environment: Record<string, string | undefined>) {
   if (environment.VERCEL_ENV === "production" &&
       !(environment.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && environment.CLERK_SECRET_KEY)) {
-    throw new Error("Production requires NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY. Configure Clerk through the reviewed delivery mapping before deploying.");
+    throw new Error("Production requires NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY. Connect the native Clerk/Vercel integration before deploying.");
   }
 }
 

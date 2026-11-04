@@ -17,6 +17,13 @@ Use [$reshoot_generate-rotation-images](.codex/skills/reshoot_generate-rotation-
 
 Use the human Infisical CLI login and pinned development project in `.infisical.json`. Default dev fetches the application allowlist into memory; never log credentials or create plaintext exports. Production is isolated in `reshoot-production`, Production `/`, synced only to this Vercel project’s Production environment. Redeploy after changes, retain Preview settings, and keep Keychain originals until verification/rotation is complete. Do not invoke reconciliation, retention cleanup, database migrations, credit minting, or paid image generation merely to test secret access. Run `pnpm test:secrets` and normal lint/type/app checks after changing this path.
 
+Clerk API keys are an explicitly approved exception: the native Clerk/Vercel
+integration owns `CLERK_SECRET_KEY` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+for Production and Preview. Do not mirror or overwrite these keys through
+Infisical delivery. All other application secrets retain their existing source
+and isolation policy. `RESHOOT_PAYMENTS_MODE` is public configuration from the
+Production vault; `simulated` enables no-charge top-ups, never real charges.
+
 For Neon migration inspection, run `pnpm db:check-migrations`. The reviewed
 service mapping is Agent Vault bundle `local-reshoot-migration-audit`, service
 `reshoot-neon-ledger`, for `reshoot-neon` → `main` → `neondb`, using

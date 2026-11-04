@@ -2,36 +2,39 @@
 
 ## Clerk accounts and simulated payments
 
-The application supports Clerk sign-in with private per-user wallets. Before
-deploying this change, apply `0003_flimsy_joseph` through the authorized migration
-procedure and review the trusted delivery mapping for these settings:
+The native Clerk/Vercel integration supplies private, environment-specific API
+keys to the connected Production and Preview environments. This is the approved
+exception to the Infisical source policy. Do not copy these keys into Infisical,
+add them to the shared sync allowlist, or overwrite the provider-managed values.
+Production and Preview use separate Clerk instances and keys.
 
-| Setting | Classification | Purpose |
+| Setting | Source | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Public configuration | Environment-specific Clerk frontend |
-| `CLERK_SECRET_KEY` | Server-only Secret | Verify sessions and read account profiles |
-| `RESHOOT_PAYMENTS_MODE` | Public configuration | Set to `simulated` only to enable no-charge Production top-ups; `disabled` disables them |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Native Clerk/Vercel integration | Public Clerk frontend identifier |
+| `CLERK_SECRET_KEY` | Native Clerk/Vercel integration | Server-only Clerk backend access |
+| `RESHOOT_PAYMENTS_MODE` | Production Infisical vault, public configuration | `simulated` enables no-charge top-ups; `disabled` disables them |
 
-The application change does not update the centrally owned allowlist, provision
-these settings, apply the migration, or deploy. Keep Clerk Development and
-Production applications separate, including their domains and credentials.
 Clerk settings must be present at build and runtime. Production builds reject
 missing keys. Unconfigured local or Preview builds close private access while
-retaining the public sample gallery. Complete Clerk domain checks
-before delivery; do not bypass required integration checks.
+retaining public samples. Complete Clerk domain and certificate verification
+before delivery. Clerk CNAMEs must resolve directly to the provider; required
+integration and Production assignment checks remain enforced.
 
-Test accounts begin with an empty wallet. Only the server catalog determines
-credit grants, and repeated delivery of a purchase cannot grant twice. A decline
-or cancellation adds no credits. Existing shared-demo and legacy records remain
-unchanged. Verify sign-in, sign-out, two-account isolation, a no-charge purchase,
-and declined/cancelled checkout in a configured non-production environment first.
-Live Stripe payments and automatic recharge remain disabled.
+Migration `0003_flimsy_joseph` adds the nullable, unique Clerk user ID and retains
+all existing users, projects, and balances. Apply it through the authorized
+migration procedure before using the new account code; the read-only migration
+check verifies its ledger timestamp and hash without applying it again.
+
+New accounts begin with empty wallets. Only the server catalog determines credit
+grants, and repeated delivery of a purchase cannot grant twice. A decline or
+cancellation adds no credits. Live Stripe payments and automatic recharge remain
+disabled. Existing shared-demo and legacy records are preserved.
 
 ## Neon Realtime rollout
 
 Development uses Realtime on the `development` branch of `reshoot-neon`; its URL and sealing secret live in Development `/` in the existing Reshoot Infisical project. Production uses the separate `main` branch, migration `0002_generation_realtime`, and that branch's `NEON_REALTIME_URL` and `NEON_REALTIME_SECRET` in `reshoot-production`, Production `/`. Both branches are enabled and migrated; their sealing secrets differ. The secret stays server-only; only sealed, owner-and-batch-scoped capabilities reach browsers.
 
-The pinned trusted shared workflow includes both names in Reshoot's allowlist: `NEON_REALTIME_URL` is public configuration and `NEON_REALTIME_SECRET` is a private Secret. Production delivery synchronizes them before deploying the exact app commit. Infisical's OIDC policy permits the reviewed `c4ec8c69f883e84aba8ee8604f75c579ae40460b` pin and retains the previous `e0c6d64d4fc917ea0e108d27ce8d1a5304aeb3c6` pin for callers that have not migrated; caller identity, main-branch, Production-subject and 900-second TTL restrictions remain enforced. Removing the previous pin requires a separate caller migration. Scheduled pricing reconciliation, retention cleanup and real billing remain disabled.
+The pinned trusted shared workflow includes both names in Reshoot's allowlist: `NEON_REALTIME_URL` is public configuration and `NEON_REALTIME_SECRET` is a private Secret. Production delivery synchronizes them before deploying the exact app commit. Infisical's OIDC policy permits the reviewed `1daa3f918e5d6948722a9146db0062f9594a8583` pin and retains `c4ec8c69f883e84aba8ee8604f75c579ae40460b` and `e0c6d64d4fc917ea0e108d27ce8d1a5304aeb3c6` for callers that have not migrated; caller identity, main-branch, Production-subject and 900-second TTL restrictions remain enforced. Removing the previous pin requires a separate caller migration. Scheduled pricing reconciliation, retention cleanup and real billing remain disabled.
 
 After a rollout, verify the exact commit's READY state and domain assignment, authenticated subscription sealing, workspace isolation, live batch changes and reconnects. Use isolated, temporary workspace fixtures with no jobs or credit grants for the Production smoke check; remove their exact records afterward. Paid execution and credit settlement are covered by the disposable-database and mocked accounting tests, without issuing paid image requests during deployment verification.
 
@@ -39,9 +42,9 @@ For rollback, retain the additive revision table and triggers while rolling appl
 
 Push to `main` triggers `.github/workflows/production-delivery.yml`. After secret scanning, it calls the trusted workflow in public `tsilva/.github`, pinned to a reviewed full commit SHA. The privileged job checks out only the shared implementation, waits for the same latest main commit's CI, syncs its fixed Production allowlist, deploys that exact commit, and verifies the resulting READY deployment. Vercel's automatic Git deployments remain disabled so they cannot race synchronization.
 
-Infisical remains the source of application secrets. Development uses the existing human CLI login. The shared GitHub reader has Viewer access to the assigned production vaults, and the completed rollout requires its server-side OIDC policy to match the exact approved reusable workflow revision, caller repository IDs, owner ID, main branch and Production context. The trusted `apps.json` selects the source vault and destination from the immutable caller repository ID; app files and inputs cannot change that mapping. The reader itself can access all assigned vaults inside the trusted job. Its token and fetched values never leave that job. The Vercel deployment credential remains in this repository's GitHub Production environment.
+Infisical remains the source of application secrets except the two native Clerk keys described above. Development uses the existing human CLI login. The shared GitHub reader has Viewer access to the assigned production vaults, and the completed rollout requires its server-side OIDC policy to match the exact approved reusable workflow revision, caller repository IDs, owner ID, main branch and Production context. The trusted `apps.json` selects the source vault and destination from the immutable caller repository ID; app files and inputs cannot change that mapping. The reader itself can access all assigned vaults inside the trusted job. Its token and fetched values never leave that job. The Vercel deployment credential remains in this repository's GitHub Production environment.
 
-The pinned shared source and [trust contract](https://github.com/tsilva/.github/blob/c4ec8c69f883e84aba8ee8604f75c579ae40460b/.github/actions/production-delivery/README.md) are authoritative. App repositories retain only the pinned caller workflow. Source/destination mappings, credential handling and boundary tests are maintained centrally; no app code executes in the privileged job.
+The pinned shared source and [trust contract](https://github.com/tsilva/.github/blob/1daa3f918e5d6948722a9146db0062f9594a8583/.github/actions/production-delivery/README.md) are authoritative. App repositories retain only the pinned caller workflow. Source/destination mappings, credential handling and boundary tests are maintained centrally; no app code executes in the privileged job.
 
 The workflow does not run on pull requests or forks, export `.env` files, upload secret artifacts, delete secret variables, or change preview/development variables. All required source keys and destination targets are checked before writes. Failed CI or sync prevents deployment. Existing production remains live on failure.
 

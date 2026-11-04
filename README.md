@@ -68,8 +68,10 @@ for the source vaults, rotation procedure, and rollback boundary.
 
 ## Authentication and simulated payments
 
-Configure an environment-specific Clerk application with `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-and server-only `CLERK_SECRET_KEY` through the reviewed credential flow. Sign-in is at
+The native Clerk/Vercel integration supplies environment-specific
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and server-only `CLERK_SECRET_KEY` values to
+Production and Preview. These two keys are an approved exception to the Infisical
+source policy: keep them managed by Clerk and do not mirror them into secret sync. Sign-in is at
 `/login`; sign-up is at `/sign-up`. Clerk user IDs, rather than email matching or
 browser cookies, identify account ownership. Missing Clerk configuration leaves
 public samples available and private access closed; it never restores the shared demo.
@@ -83,13 +85,13 @@ ID without changing existing users, projects, or balances. Configure
 Each purchase takes its credit amount and displayed price from the server catalog;
 retries of the same purchase add credits only once.
 
-The current trusted Production delivery mapping must be reviewed and extended for
-both Clerk keys and the public payment-mode setting before deployment. This checkout
-has no reviewed local application-service proxy route yet; the existing migration-audit
-route is read-only and does not supply application credentials. Do not use raw secret
-injection or the application database URL to bypass these prerequisites. Keep
-Development and Production Clerk instances and credentials separate. Stripe keys,
-real charges, subscriptions, and automatic recharges are not used by this version.
+The trusted Production delivery mapping supplies the public payment-mode setting
+from the isolated Production Infisical vault, while preserving native Clerk keys.
+Local application-service access still requires a separately reviewed credential
+route; the existing migration-audit route is read-only and does not supply
+application credentials. Do not bypass that boundary with raw secret injection.
+Stripe keys, real charges, subscriptions, and automatic recharges are not used by
+this version.
 
 ## Commands
 
