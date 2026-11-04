@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { LegalLinks } from "@/components/legal/LegalLinks";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, Aperture, Coins, Plus, SpinnerGap, User, X,
@@ -190,7 +191,7 @@ export function StudioHome({ initialCredits, initialProjects, currentUser, proje
         {walletPanel}
         <ProjectsClient key={initialProjects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={initialProjects} />
       </main>
-      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span></footer>
+      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span><LegalLinks /></footer>
     </div>
   );
 }

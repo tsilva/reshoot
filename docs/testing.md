@@ -18,6 +18,14 @@ not establish natural rotation, photographic quality or identical 3D geometry.
 
 ## Accounts and simulated checkout
 
+Open `/privacy` and `/terms` without an account. Verify each page's title,
+canonical URL, revision date, contact link, section navigation and links to the
+other policy and home page. Check both policies and the home-page footer at
+desktop and phone widths for readable text and no horizontal overflow. The
+home and authentication pages must expose both policy links. Confirm that
+`/sitemap.xml` includes their canonical URLs. Policy review and deployment are
+separate from Google's OAuth branding verification and publishing status.
+
 `pnpm typecheck` regenerates current Next.js route declarations before TypeScript.
 Generated declarations belonging to previous development servers are excluded;
 no running server needs to be stopped when a route changes.

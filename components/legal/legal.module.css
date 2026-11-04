@@ -1,0 +1,33 @@
+.page { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 88px; border-bottom: 1px solid var(--border); }
+.header :global(.home-brand) { order: 0; }
+.page a { color: inherit; }
+.header > a:last-child { font-size: 14px; color: var(--text-soft); }
+.article { max-width: 720px; margin: 64px auto 80px; overflow-wrap: anywhere; }
+.eyebrow { font-size: 11px; letter-spacing: 0.16em; color: var(--text-soft); }
+.article h1 { margin: 12px 0 16px; font-family: var(--font-display-stack); font-size: clamp(44px, 7vw, 64px); line-height: 1.05; font-weight: 400; }
+.updated { font-size: 13px; color: var(--text-soft); }
+.description { margin: 28px 0; font-size: 20px; line-height: 1.5; }
+.contents { display: flex; flex-wrap: wrap; gap: 10px 20px; margin: 32px 0 48px; padding: 22px 0; border-block: 1px solid var(--border); font-size: 14px; }
+.article section { margin: 36px 0; scroll-margin-top: 24px; }
+.article h2 { margin: 0 0 14px; font-size: 22px; font-weight: 500; }
+.article section p, .article li, .contact { font-size: 16px; line-height: 1.75; }
+.article section p { margin: 14px 0; }
+.article ul { padding-left: 24px; }
+.article a, .header > a:last-child { text-decoration: underline; text-underline-offset: 4px; }
+.article a:hover, .header > a:last-child:hover, .links a:hover { color: var(--coral-strong); }
+.page a:focus-visible, .links a:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; border-radius: 2px; }
+.contact { border-top: 1px solid var(--border); margin-top: 40px; padding-top: 24px; }
+.footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-top: 1px solid var(--border); padding: 22px 0; font-size: 12px; color: var(--text-soft); }
+.links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; font-size: inherit; }
+.links a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 600px) {
+  .page { padding: 0 20px; }
+  .header { min-height: 72px; gap: 12px; }
+  .header > a:last-child { font-size: 12px; }
+  .article { margin: 40px auto 56px; }
+  .description { font-size: 18px; }
+  .contents { gap: 12px 18px; margin-bottom: 36px; }
+  .footer { align-items: flex-start; flex-wrap: wrap; }
+  .links { gap: 8px 14px; }
+}

@@ -30,6 +30,44 @@ grants, and repeated delivery of a purchase cannot grant twice. A decline or
 cancellation adds no credits. Live Stripe payments and automatic recharge remain
 disabled. Existing shared-demo and legacy records are preserved.
 
+### Google sign-in
+
+Google authentication is a Clerk social connection. The existing `/login` and
+`/sign-up` components render enabled providers automatically, and account
+ownership remains tied to the verified Clerk user ID.
+
+For Production, create a dedicated Google OAuth web client and configure its
+custom credentials in the Production Clerk instance. Use the exact **Authorized
+Redirect URI** shown by Clerk; for the current Production domain this is
+`https://clerk.reshoot.tsilva.eu/v1/oauth_callback`. The JavaScript origin is
+`https://reshoot.tsilva.eu`. Enable the connection and **Enable for sign-up and
+sign-in**. Retain only the default `openid`, `userinfo.email`, and
+`userinfo.profile` scopes. Google client secrets stay in Clerk and must not be
+copied into application variables, source, or delivery logs. Preview and
+Development use their own Clerk instance settings.
+
+Prefer Google's **In production** publishing status. Publishing requires the
+app's public branding and policy links to be complete. After deploying reviewed
+policy text, set the Google branding homepage to `https://reshoot.tsilva.eu`,
+privacy link to `https://reshoot.tsilva.eu/privacy`, and terms link to
+`https://reshoot.tsilva.eu/terms`. Verify that the home page links to both policies,
+that they open without sign-in and return HTTP 200, and that Google has accepted
+any required branding/domain verification before publishing the OAuth app.
+Never substitute a missing policy URL or claim Google's publishing status changed
+until the console confirms **In production**. Google's documented
+exception for identity-only scopes also allows sign-in while the OAuth app is
+in **Testing**, without requiring a test-user list or expiring authorization
+after seven days. Adding other scopes removes that exception. See
+[Google's audience rules](https://support.google.com/cloud/answer/15549945) and
+[Clerk's Google setup guide](https://clerk.com/docs/guides/configure/auth-strategies/social-connections/google).
+
+Verify the button on both authentication pages, the redirect to Google with the
+expected client, callback and scopes, and a completed return to Reshoot after
+the user finishes any passkey or consent prompts. Button visibility and an
+account chooser alone do not establish a completed sign-in. Use the configured
+external browser; Google OAuth does not support embedded WebViews. A provider
+configuration change takes effect without rebuilding the application.
+
 ## Neon Realtime rollout
 
 Development uses Realtime on the `development` branch of `reshoot-neon`; its URL and sealing secret live in Development `/` in the existing Reshoot Infisical project. Production uses the separate `main` branch, migration `0002_generation_realtime`, and that branch's `NEON_REALTIME_URL` and `NEON_REALTIME_SECRET` in `reshoot-production`, Production `/`. Both branches are enabled and migrated; their sealing secrets differ. The secret stays server-only; only sealed, owner-and-batch-scoped capabilities reach browsers.

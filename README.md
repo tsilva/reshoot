@@ -78,6 +78,18 @@ public samples available and private access closed; it never restores the shared
 Production builds require both Clerk keys and fail if either is missing.
 The SDK is not used to provision keyless applications.
 
+Google sign-in uses the same Clerk account flow as email sign-in. Enable the
+Google social connection in the matching Clerk instance; the existing sign-in
+and sign-up components display it automatically. Google OAuth credentials belong
+in Clerk, not in application environment variables. See
+[Google sign-in configuration](docs/production-delivery.md#google-sign-in).
+
+The public [privacy policy](https://reshoot.tsilva.eu/privacy) and
+[terms of service](https://reshoot.tsilva.eu/terms) are available without an
+account and linked from the home and authentication pages. Their source text is
+maintained in `lib/legal.ts`. Review policy changes before publication and keep
+Google OAuth's branding links aligned with these canonical URLs.
+
 Apply the additive `0003_flimsy_joseph` migration through the authorized database
 migration procedure before enabling sign-in. It adds a unique, nullable Clerk user
 ID without changing existing users, projects, or balances. Configure
