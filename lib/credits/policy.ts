@@ -1,16 +1,10 @@
-export function demoCheckoutEnabledForEnvironment(input: {
+export function stripeTestCheckoutEnabledForEnvironment(input: {
   isDemoUser: boolean;
-  nodeEnv?: string;
-  vercelEnv?: string;
   paymentsMode?: string;
+  stripeKey?: string;
+  webhookSecret?: string;
 }) {
-  if (!input.isDemoUser) return false;
-  if (input.paymentsMode !== undefined && input.paymentsMode !== "simulated") return false;
-  if (input.vercelEnv === "production") return input.paymentsMode === "simulated";
-  return (
-    input.vercelEnv === undefined ||
-    input.vercelEnv === "development" ||
-    input.vercelEnv === "preview" ||
-    input.nodeEnv !== "production"
-  );
+  return input.isDemoUser && input.paymentsMode === "stripe_test"
+    && /^(?:rk|sk)_test_\S+$/.test(input.stripeKey ?? "")
+    && /^whsec_\S+$/.test(input.webhookSecret ?? "");
 }

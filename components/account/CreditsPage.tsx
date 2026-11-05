@@ -22,7 +22,7 @@ export function CreditsPage({ isDemo, onCreditsChange }: {
     ]).then(([{ credits }, { activity }]) => {
       if (!cancelled) setWallet({ credits, activity });
     }).catch(() => {
-      if (!cancelled) setError("Your credits could not load. Please try again.");
+      if (!cancelled) setError("Your plan could not load. Please try again.");
     });
     return () => { cancelled = true; };
   }, [attempt]);
@@ -31,7 +31,7 @@ export function CreditsPage({ isDemo, onCreditsChange }: {
     <p>{error}</p>
     <button className="button" onClick={() => { setError(null); setAttempt((value) => value + 1); }}>Try again</button>
   </div>;
-  if (!wallet) return <p className="account-credits-status" role="status"><SpinnerGap className="spin" /> Loading your credits…</p>;
+  if (!wallet) return <p className="account-credits-status" role="status"><SpinnerGap className="spin" /> Loading your plan…</p>;
 
   return <AccountClient initialCredits={wallet.credits} initialActivity={wallet.activity} isDemo={isDemo} onCreditsChange={onCreditsChange} />;
 }

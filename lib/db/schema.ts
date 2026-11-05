@@ -349,6 +349,8 @@ export const generationJobs = pgTable(
     version: integer("version").notNull(),
     referenceCount: integer("reference_count").notNull(),
     quotedCredits: integer("quoted_credits").notNull(),
+    monthlyCredits: integer("monthly_credits").default(0).notNull(),
+    monthlyPeriodEnd: timestamp("monthly_period_end", { withTimezone: true }),
     workflowRunId: text("workflow_run_id"),
     leaseOwner: text("lease_owner"),
     leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
@@ -368,6 +370,7 @@ export const generationJobs = pgTable(
       "generation_jobs_reference_range",
       sql`${table.referenceCount} between 1 and 5`,
     ),
+    check("generation_jobs_monthly_range", sql`${table.monthlyCredits} >= 0 and ${table.monthlyCredits} <= ${table.quotedCredits} and (${table.monthlyCredits} = 0 or ${table.monthlyPeriodEnd} is not null)`),
   ],
 );
 
@@ -518,6 +521,9 @@ export const creditAccounts = pgTable(
       .references(() => users.id, { onDelete: "restrict" }),
     availableCredits: integer("available_credits").default(0).notNull(),
     heldCredits: integer("held_credits").default(0).notNull(),
+    monthlyAvailableCredits: integer("monthly_available_credits").default(0).notNull(),
+    monthlyPeriodStart: timestamp("monthly_period_start", { withTimezone: true }),
+    monthlyPeriodEnd: timestamp("monthly_period_end", { withTimezone: true }),
     lifetimeGrantedCredits: integer("lifetime_granted_credits")
       .default(0)
       .notNull(),
@@ -533,6 +539,7 @@ export const creditAccounts = pgTable(
       "credit_accounts_held_nonnegative",
       sql`${table.heldCredits} >= 0`,
     ),
+    check("credit_accounts_monthly_range", sql`${table.monthlyAvailableCredits} >= 0 and ${table.monthlyAvailableCredits} <= ${table.availableCredits}`),
   ],
 );
 
@@ -651,6 +658,41 @@ export const testPurchases = pgTable(
     ),
   ],
 );
+
+// Stripe owns billing. These records are the local, webhook-maintained projection
+// and immutable invoice receipts used to grant each paid month exactly once.
+export const subscriptions = pgTable("subscriptions", {
+  userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: "restrict" }),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeCreatedAt: timestamp("stripe_created_at", { withTimezone: true }),
+  planSlug: text("plan_slug"),
+  status: text("status").default("none").notNull(),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false).notNull(),
+  periodEnd: timestamp("period_end", { withTimezone: true }),
+  checkoutKey: text("checkout_key"),
+  checkoutPlanSlug: text("checkout_plan_slug"),
+  checkoutExpiresAt: timestamp("checkout_expires_at", { withTimezone: true }),
+  checkoutSessionId: text("checkout_session_id"),
+  ...timestamps,
+}, table => [
+  uniqueIndex("subscriptions_stripe_subscription_unique").on(table.stripeSubscriptionId),
+  uniqueIndex("subscriptions_stripe_customer_unique").on(table.stripeCustomerId),
+]);
+
+export const subscriptionInvoices = pgTable("subscription_invoices", {
+  stripeInvoiceId: text("stripe_invoice_id").primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+  stripeSubscriptionId: text("stripe_subscription_id").notNull(),
+  planSlug: text("plan_slug").notNull(),
+  credits: integer("credits").notNull(),
+  periodStart: timestamp("period_start", { withTimezone: true }).notNull(),
+  periodEnd: timestamp("period_end", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  uniqueIndex("subscription_invoices_period_unique").on(table.stripeSubscriptionId, table.periodStart),
+  check("subscription_invoices_valid_period", sql`${table.credits} > 0 and ${table.periodEnd} > ${table.periodStart}`),
+]);
 
 export type User = typeof users.$inferSelect;
 export type Project = typeof projects.$inferSelect;

@@ -24,15 +24,15 @@ export function AccountMenu({ ref, initialWalletOpen = false, isDemo, onCreditsC
   // Share the same custom page between the avatar menu and direct shortcuts.
   // Portals retain React state while Clerk owns the panel DOM.
   const customPages = useMemo(() => [{
-    label: "Credits",
-    url: "credits",
+    label: "Plan & usage",
+    url: "plan",
     mount: (element: HTMLDivElement) => setContent(element),
     unmount: () => setContent(null),
     mountIcon: (element: HTMLDivElement) => setIcon(element),
     unmountIcon: () => setIcon(null),
   }], []);
   const openCredits = useCallback(() => {
-    clerk.openUserProfile({ customPages, __experimental_startPath: "/credits" });
+    clerk.openUserProfile({ customPages, __experimental_startPath: "/plan" });
   }, [clerk, customPages]);
 
   useImperativeHandle(ref, () => ({ openCredits }), [openCredits]);
@@ -49,7 +49,7 @@ export function AccountMenu({ ref, initialWalletOpen = false, isDemo, onCreditsC
 
   return <>
     <UserButton>
-      <UserButton.UserProfilePage label="Credits" url="credits" labelIcon={<Coins size={18} aria-hidden="true" />}>
+      <UserButton.UserProfilePage label="Plan & usage" url="plan" labelIcon={<Coins size={18} aria-hidden="true" />}>
         <CreditsPage isDemo={isDemo} onCreditsChange={onCreditsChange} />
       </UserButton.UserProfilePage>
     </UserButton>

@@ -548,7 +548,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
                   {submitting ? <SpinnerGap className="spin" size={18} /> : null}
                   <span className="studio-generate-label"><span>{submitting ? "Starting…" : "Generate"}</span>{costCaption}</span>
                 </button> : checkoutAvailable ? (
-                  onOpenWallet ? <button className="button primary-button" onClick={onOpenWallet}><span className="studio-generate-label"><span>Add credits</span>{costCaption}</span></button> : <Link href="/?wallet=open#wallet" className="button primary-button"><span className="studio-generate-label"><span>Add credits</span>{costCaption}</span></Link>
+                  onOpenWallet ? <button className="button primary-button" onClick={onOpenWallet}><span className="studio-generate-label"><span>View plans</span>{costCaption}</span></button> : <Link href="/?wallet=open#wallet" className="button primary-button"><span className="studio-generate-label"><span>View plans</span>{costCaption}</span></Link>
                 ) : <button className="button primary-button" disabled><span className="studio-generate-label"><span>Generate</span>{costCaption}</span></button>}
               </>
             ) : <button className="button primary-button" onClick={() => void requestQuote()} disabled={quoting || busy || !primary || photosStale}>
@@ -556,7 +556,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
             </button>}
           </div>
         </div>
-        {quote && !quote.affordable ? <p className="studio-helper-text" role="status">You need {quote.totalCredits - quote.availableCredits} more credits.{!checkoutAvailable ? " Top-ups are unavailable in this workspace." : ""}</p> : null}
+        {quote && !quote.affordable ? <p className="studio-helper-text" role="status">You need {quote.totalCredits - quote.availableCredits} more credits.{!checkoutAvailable ? " Open Plan & usage to review your monthly allowance." : ""}</p> : null}
         {readyOriginals.length > references.length && primary ? <p className="studio-helper-text">Up to {references.length} photos are used per view. All {readyOriginals.length} stay saved.</p> : null}
       </> : null}
       {generationStarted && !completedShots.length && !generating && !resumeError ? <p className="studio-helper-text" role="status">No views were generated. Start a new shoot to try again.</p> : null}

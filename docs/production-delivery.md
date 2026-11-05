@@ -1,6 +1,25 @@
 # Production delivery
 
-## Clerk accounts and simulated payments
+## Provider cost ledger
+
+Migration `0005_provider_cost_tracking` must be applied through the authorized
+database migration procedure before deploying the cost-tracking worker and
+automatic naming code. It adds `provider_calls` and imports recorded image
+attempts without changing customer credits, pricing or subscription records.
+Historical zero/unknown costs remain unresolved; historical naming spend is
+unavailable. No migration is applied automatically during startup or delivery.
+
+The operator reporting/reconciliation endpoint
+`/api/internal/provider-costs?projectId=<uuid>` requires `CRON_SECRET` in every
+environment. GET reads stored costs only; POST performs bounded read-only usage
+metadata checks with the matching hosted provider account. Neither invokes the
+existing general reconciliation/cleanup route. The existing credential-delivery
+allowlist and agent service bindings remain unchanged; configuration metadata
+does not grant agent access to the operator token or application database.
+No cron schedule is enabled. See the README's Provider cost accounting section
+for completeness rules and the distinction between provider spend and credits.
+
+## Clerk accounts and Stripe test payments
 
 The native Clerk/Vercel integration supplies private, environment-specific API
 keys to the connected Production and Preview environments. This is the approved
@@ -12,7 +31,7 @@ Production and Preview use separate Clerk instances and keys.
 | --- | --- | --- |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Native Clerk/Vercel integration | Public Clerk frontend identifier |
 | `CLERK_SECRET_KEY` | Native Clerk/Vercel integration | Server-only Clerk backend access |
-| `RESHOOT_PAYMENTS_MODE` | Production Infisical vault, public configuration | `simulated` enables no-charge top-ups; `disabled` disables them |
+| `RESHOOT_PAYMENTS_MODE` | Production Infisical vault, public configuration | `stripe_test` enables sandbox checkout; all other values disable it |
 
 Clerk settings must be present at build and runtime. Production builds reject
 missing keys. Unconfigured local or Preview builds close private access while
@@ -29,6 +48,41 @@ New accounts begin with empty wallets. Only the server catalog determines credit
 grants, and repeated delivery of a purchase cannot grant twice. A decline or
 cancellation adds no credits. Live Stripe payments and automatic recharge remain
 disabled. Existing shared-demo and legacy records are preserved.
+
+### Stripe test checkout
+
+Monthly plans use Stripe-hosted subscription Checkout and a Stripe-hosted customer portal. Stripe is authoritative for billing, customer IDs, subscription IDs, renewal dates and cancellation status. Reshoot mirrors these in `subscriptions`; `subscription_invoices` deduplicates paid billing periods, while the existing Neon credit ledger enforces usage. The additive `0004_monthly_subscriptions` migration must be applied through the authorized database procedure before deploying this code. It does not convert or expire existing one-time credits.
+
+The current integration is **test-only**. No account, product, recurring price, portal configuration, subscription or webhook destination is created by the repository. The user must perform Stripe account/billing setup and any Checkout submissions directly, including in a sandbox. Do not submit payments or change payment methods through agent tools.
+
+Required runtime configuration:
+
+| Setting | Required value |
+| --- | --- |
+| `RESHOOT_PAYMENTS_MODE` | `stripe_test`; all other modes disable checkout |
+| `STRIPE_TEST_SECRET_KEY` | Restricted sandbox key; live keys are rejected |
+| `STRIPE_TEST_WEBHOOK_SECRET` | Signing secret for this environment's endpoint |
+| `STRIPE_TEST_STARTER_MONTHLY_PRICE_ID` | USD $15, recurring every one month, quantity 1 |
+| `STRIPE_TEST_STUDIO_MONTHLY_PRICE_ID` | USD $29, recurring every one month, quantity 1 |
+| `STRIPE_TEST_PRO_MONTHLY_PRICE_ID` | USD $89, recurring every one month, quantity 1 |
+| `STRIPE_TEST_PORTAL_CONFIGURATION_ID` | Active sandbox portal configuration, cancellation at period end enabled, subscription updates disabled |
+
+Each Price must use licensed recurring billing and match the server catalog exactly. The allowances are respectively 750, 3,000 and 8,000 credits. No trials, discounts, prorations, mid-cycle changes, top-ups or annual plans are supported. Studio has the lowest price per credit. Checkout validates the chosen Price and portal configuration before creating a session; a missing cancellation path disables new subscriptions. The portal may display invoices and payment settings; all account changes remain customer-operated.
+
+Use separate sandbox bindings for Development/Preview and Production. Store secret values in each matching Infisical vault. Price and portal IDs are non-secret server configuration. The pinned trusted delivery allowlist supplies these names from the isolated Production vault; source changes do not provision credentials or expand access. Preserve native Clerk keys and Require Separate Values. Ordinary local agent access requires a separately reviewed sandboxed Stripe proxy and a compatible incoming-signature flow; do not use raw injection or cached credentials as a fallback.
+
+The endpoint `/api/stripe/webhook` verifies the raw-body signature and rejects live events. Configure snapshot events using API version `2026-10-28.endive`:
+
+- `invoice.paid`: retrieve and validate the paid invoice; grant one monthly allowance only for initial/cycle invoices matching the server catalog, customer and subscription.
+- `invoice.payment_failed`, `invoice.payment_action_required`: refresh subscription state without granting credits.
+- `customer.subscription.created`, `.updated`, `.deleted`, `.paused`, `.resumed`: retrieve current state while holding the account lock, so delayed events cannot restore stale state.
+- `checkout.session.completed`, `checkout.session.async_payment_succeeded`: refresh state for subscriptions. Existing one-time paid test sessions retain their original fulfillment path.
+
+Invoice ID and subscription/period uniqueness prevent duplicate grants. Old invoices cannot refresh a newer allowance. The account lock serializes renewal, expiry, reservation and settlement. Expiry is enforced both by quote affordability and at generation confirmation, even without a cron job. Held jobs retain their original funding period; failure refunds only still-valid monthly credits and any legacy portion. Legacy credit balances never expire. Scheduled cancellation preserves paid usage through its allowance expiry. A failed renewal does not grant another month.
+
+`POST /api/account/subscription-checkouts` authenticates and checks same origin, reserves one pending checkout per account, then redirects to `checkout.stripe.com`. Retries use the same persisted idempotency key and expiry. Pending sessions last about 31 minutes. Before allowing another checkout, the server inspects the prior session for a subscription that may still be awaiting its webhook. An unresolved create whose session ID was never recorded fails closed for operator reconciliation. `GET /api/account/subscription-checkouts/<session-id>` verifies ownership and reads fulfillment; it never grants credits. `POST /api/account/subscription-portal` opens only the account's Stripe customer and the reviewed configuration on `billing.stripe.com`. Plan switching is disabled in this initial release. The previous top-up POST routes return 410.
+
+Before activation, apply and audit the migration, supply the reviewed configuration, and verify webhook delivery and the customer return flow against the exact deployed commit. Offline tests cover the lifecycle without making Stripe calls. Real sandbox delivery, database migration, and real-money billing are separate verification/activation steps. Refunds, disputes and out-of-band catalog changes require operator review; this release does not automatically reverse an already-used allowance.
 
 ### Google sign-in
 
@@ -72,7 +126,7 @@ configuration change takes effect without rebuilding the application.
 
 Development uses Realtime on the `development` branch of `reshoot-neon`; its URL and sealing secret live in Development `/` in the existing Reshoot Infisical project. Production uses the separate `main` branch, migration `0002_generation_realtime`, and that branch's `NEON_REALTIME_URL` and `NEON_REALTIME_SECRET` in `reshoot-production`, Production `/`. Both branches are enabled and migrated; their sealing secrets differ. The secret stays server-only; only sealed, owner-and-batch-scoped capabilities reach browsers.
 
-The pinned trusted shared workflow includes both names in Reshoot's allowlist: `NEON_REALTIME_URL` is public configuration and `NEON_REALTIME_SECRET` is a private Secret. Production delivery synchronizes them before deploying the exact app commit. Infisical's OIDC policy permits the reviewed `1daa3f918e5d6948722a9146db0062f9594a8583` pin and retains `c4ec8c69f883e84aba8ee8604f75c579ae40460b` and `e0c6d64d4fc917ea0e108d27ce8d1a5304aeb3c6` for callers that have not migrated; caller identity, main-branch, Production-subject and 900-second TTL restrictions remain enforced. Removing the previous pin requires a separate caller migration. Scheduled pricing reconciliation, retention cleanup and real billing remain disabled.
+The pinned trusted shared workflow includes both names in Reshoot's allowlist: `NEON_REALTIME_URL` is public configuration and `NEON_REALTIME_SECRET` is a private Secret. Production delivery synchronizes them before deploying the exact app commit. Infisical's OIDC policy must permit the reviewed `96ac6c21c4db6087757d4d65907119fec0f8f26f` pin before deployment, retaining `1daa3f918e5d6948722a9146db0062f9594a8583`, `c4ec8c69f883e84aba8ee8604f75c579ae40460b` and `e0c6d64d4fc917ea0e108d27ce8d1a5304aeb3c6` for callers that have not migrated; caller identity, main-branch, Production-subject and 900-second TTL restrictions remain enforced. Removing the previous pin requires a separate caller migration. Scheduled pricing reconciliation, retention cleanup and real billing remain disabled.
 
 After a rollout, verify the exact commit's READY state and domain assignment, authenticated subscription sealing, workspace isolation, live batch changes and reconnects. Use isolated, temporary workspace fixtures with no jobs or credit grants for the Production smoke check; remove their exact records afterward. Paid execution and credit settlement are covered by the disposable-database and mocked accounting tests, without issuing paid image requests during deployment verification.
 
@@ -82,7 +136,7 @@ Push to `main` triggers `.github/workflows/production-delivery.yml`. After secre
 
 Infisical remains the source of application secrets except the two native Clerk keys described above. Development uses the existing human CLI login. The shared GitHub reader has Viewer access to the assigned production vaults, and the completed rollout requires its server-side OIDC policy to match the exact approved reusable workflow revision, caller repository IDs, owner ID, main branch and Production context. The trusted `apps.json` selects the source vault and destination from the immutable caller repository ID; app files and inputs cannot change that mapping. The reader itself can access all assigned vaults inside the trusted job. Its token and fetched values never leave that job. The Vercel deployment credential remains in this repository's GitHub Production environment.
 
-The pinned shared source and [trust contract](https://github.com/tsilva/.github/blob/1daa3f918e5d6948722a9146db0062f9594a8583/.github/actions/production-delivery/README.md) are authoritative. App repositories retain only the pinned caller workflow. Source/destination mappings, credential handling and boundary tests are maintained centrally; no app code executes in the privileged job.
+The pinned shared source and [trust contract](https://github.com/tsilva/.github/blob/96ac6c21c4db6087757d4d65907119fec0f8f26f/.github/actions/production-delivery/README.md) are authoritative. App repositories retain only the pinned caller workflow. Source/destination mappings, credential handling and boundary tests are maintained centrally; no app code executes in the privileged job.
 
 The workflow does not run on pull requests or forks, export `.env` files, upload secret artifacts, delete secret variables, or change preview/development variables. All required source keys and destination targets are checked before writes. Failed CI or sync prevents deployment. Existing production remains live on failure.
 

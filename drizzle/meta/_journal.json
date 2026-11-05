@@ -29,6 +29,13 @@
       "when": 1793803959041,
       "tag": "0003_flimsy_joseph",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793896665521,
+      "tag": "0004_monthly_subscriptions",
+      "breakpoints": true
     }
   ]
 }

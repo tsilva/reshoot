@@ -86,22 +86,17 @@ export type GenerationBatchStatus = {
 };
 
 export type CreditSummary = {
+  subscription?: SubscriptionSummary;
+  monthlyAvailableCredits?: number;
+  monthlyPeriodEnd?: string | null;
   availableCredits: number;
   heldCredits: number;
-  purchaseValueUsd: number;
   estimatedShots: { min: number; max: number };
-  creditsPerUsd: 100;
-  packs: Array<{
-    slug: string;
-    name: string;
-    credits: number;
-    usd: number;
-    recommended: boolean;
-  }>;
-  demoCheckoutAvailable: boolean;
+
 };
 
 export type CreditLedgerEntry = {
+  availableDelta?: number;
   id: string;
   type: "grant" | "hold" | "capture" | "release" | "adjustment";
   amountCredits: number;
@@ -109,4 +104,12 @@ export type CreditLedgerEntry = {
   heldAfter: number;
   description: string;
   createdAt: string;
+};
+
+export type SubscriptionSummary = {
+  plans: Array<{ slug: "starter" | "studio" | "pro"; name: string; description: string; usd: number; credits: number; badge: string | null }>;
+  current: { planSlug: string | null; status: string; cancelAtPeriodEnd: boolean; periodEnd: string | null } | null;
+  checkoutAvailable: boolean;
+  portalAvailable: boolean;
+  testMode: boolean;
 };

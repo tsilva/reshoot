@@ -1,4 +1,4 @@
-export const LEGAL_UPDATED = "4 November 2026";
+export const LEGAL_UPDATED = "5 November 2026";
 export const LEGAL_CONTACT = "mouth-lip-campsite@duck.com";
 
 export type LegalDocument = {
@@ -28,7 +28,7 @@ export const privacyPolicy: LegalDocument = {
       title: "What we collect",
       paragraphs: [
         "Account information: your account identifier, email address and display name. Clerk manages authentication. When you choose Google sign-in, Google shares your basic profile and email with Clerk. Reshoot does not receive your Google password or request access to Gmail, Drive or contacts.",
-        "Shoot information: photos you upload, shoot names, generation instructions, generated images, downloads and related processing records. We also store credit balances, generation usage and simulated purchase history. Do not upload personal documents, sensitive information or photos you are not entitled to use.",
+        "Shoot information: photos you upload, shoot names, generation instructions, generated images, downloads and related processing records. We also store credit balances, generation usage and test purchase history. Do not upload personal documents, sensitive information or photos you are not entitled to use.",
         "Technical information: hosting and error-monitoring services process request, device, browser and diagnostic information to deliver the site and investigate failures. Information you send when contacting support is also processed.",
       ],
     },
@@ -47,6 +47,7 @@ export const privacyPolicy: LegalDocument = {
       title: "Who processes data",
       paragraphs: [
         "We use Vercel for hosting, Clerk for authentication, Neon for database services, Cloudflare R2 for private image storage, and Sentry for error monitoring. Generating images sends the selected photos and instructions through OpenRouter to the model providers that fulfil the request. Those providers process that content under their applicable terms; do not assume that every provider has the same retention or training policy.",
+        "Stripe hosts test-mode Checkout and processes the test checkout details entered there. Reshoot sends Stripe an internal account reference and the selected credit pack, and stores the checkout reference and credit grant. Do not enter real payment details in a test checkout.",
         "Service providers may process data outside your country, including outside the European Economic Area. Contact us for information about the providers involved in your request and applicable transfer safeguards. We may also disclose information when legally required or necessary to protect the service or other people's rights. Your private shoots are not published as public examples simply because you upload them.",
       ],
     },
@@ -88,7 +89,7 @@ export const privacyPolicy: LegalDocument = {
 
 export const termsOfService: LegalDocument = {
   title: "Terms of service",
-  description: "The terms for using Reshoot's product-photography workspace and simulated credits.",
+  description: "The terms for using Reshoot's product-photography workspace and test credits.",
   sections: [
     {
       id: "service",
@@ -108,10 +109,10 @@ export const termsOfService: LegalDocument = {
     },
     {
       id: "credits",
-      title: "Simulated payments and credits",
+      title: "Monthly plans and test credits",
       paragraphs: [
-        "The current wallet uses simulated payments. No card is required and no money is charged. New accounts begin with zero credits. Test credits have no cash value, cannot be redeemed for money and do not represent a paid balance or a promise of future service.",
-        "Generation reserves credits based on the quote shown before confirmation. Completed work consumes credits; failed or cancelled work is handled by the service's credit-accounting rules. Test credits still use real computing resources. Any future real-money purchases will require clearly stated pricing and terms before you pay; these terms do not authorise a charge, subscription or automatic recharge.",
+        "The current monthly plans use Stripe test-mode Checkout. Use test payment details only; no real money is charged. Stripe hosts the checkout form and Reshoot does not receive card details. New accounts begin with zero credits. Test credits have no cash value, cannot be redeemed for money and do not represent a paid balance or a promise of future service.",
+        "Monthly allowances expire at the end of their billing period and do not roll over. Existing one-time credits retain their original expiry terms. Plans renew monthly unless cancelled; cancellation takes effect at the end of the paid period. New top-ups and annual plans are not offered. Generation reserves credits based on the quote shown before confirmation. Completed work consumes credits; failed work restores any still-valid reserved credits; expired monthly credits are not restored. Test credits still use real computing resources. Any future real-money purchases will require clearly stated pricing and terms before you pay; these terms do not authorise a charge, subscription or automatic recharge.",
       ],
     },
     {

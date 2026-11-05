@@ -22,7 +22,19 @@ integration owns `CLERK_SECRET_KEY` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 for Production and Preview. Do not mirror or overwrite these keys through
 Infisical delivery. All other application secrets retain their existing source
 and isolation policy. `RESHOOT_PAYMENTS_MODE` is public configuration from the
-Production vault; `simulated` enables no-charge top-ups, never real charges.
+Production vault; `stripe_test` enables monthly Stripe sandbox subscriptions only. Legacy
+`simulated` and other values disable checkout. Never enable real charges.
+
+Stripe test checkout requires environment-specific `STRIPE_TEST_SECRET_KEY` and
+`STRIPE_TEST_WEBHOOK_SECRET` in the matching vault and reviewed hosted delivery
+allowlist. The reviewed trusted delivery pin supplies these names only to Production.
+Local agent access needs a separately reviewed sandboxed API route and incoming
+webhook-signature secret flow; do not add these names to the legacy injection
+launcher or fetch them directly. Source/fixture checks use synthetic credentials.
+Only verified paid monthly invoices may grant allowances, through the webhook; the
+return page is read-only. The retired simulator must not grant credits. The user
+must submit any external test Checkout themselves. See the Stripe test checkout
+section in `docs/production-delivery.md` for activation prerequisites.
 
 For Neon migration inspection, run `pnpm db:check-migrations`. The reviewed
 service mapping is Agent Vault bundle `local-reshoot-migration-audit`, service

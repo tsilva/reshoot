@@ -17,6 +17,7 @@ import { turntableAngles } from "@/lib/generation/phone-turntable";
 import { productGuideKind, shotOrientation } from "@/lib/generation/request";
 import { MAX_BATCH_SHOTS } from "@/lib/projects/limits";
 import { requireOwnedProject } from "@/lib/projects/service";
+import { spendableBalance } from "@/lib/subscriptions/allowance";
 
 type RouteContext = { params: Promise<{ projectId: string }> };
 
@@ -168,8 +169,8 @@ export async function POST(request: Request, context: RouteContext) {
       id: quote.id,
       expiresAt: expiresAt.toISOString(),
       totalCredits,
-      availableCredits: account.availableCredits,
-      affordable: account.availableCredits >= totalCredits,
+      availableCredits: spendableBalance(account),
+      affordable: spendableBalance(account) >= totalCredits,
       shots: publicShots,
     };
     return Response.json({ quote: response }, { status: 201 });

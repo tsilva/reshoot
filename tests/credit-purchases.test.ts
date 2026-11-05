@@ -5,11 +5,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const transactionMock = vi.hoisted(() => vi.fn());
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db: { transaction: transactionMock } }));
-import { createDemoPurchase } from "../lib/credits/service";
+import { grantStripeTestCredits } from "../lib/credits/service";
 
 type Row = { id: string; [key: string]: unknown };
 function purchaseDatabase() {
   const tables: Record<string, Row[]> = {
+    users: ["one", "two"].map(id => ({ id, isDemo: true })),
     credit_accounts: ["one", "two"].map((userId) => ({ id: `account-${userId}`, userId, availableCredits: 100, heldCredits: 50, lifetimeGrantedCredits: 150 })),
     credit_packs: [
       { id: "pack-starter", slug: "starter", name: "Starter", credits: 1000, usdMicros: 10000000, active: true },
@@ -46,16 +47,18 @@ function purchaseDatabase() {
   });
   return tables;
 }
-const input = { userId: "one", isDemoUser: true, packSlug: "starter", idempotencyKey: "attempt-one" };
+const input = { userId: "one", packSlug: "starter", packId: "pack-starter", credits: 1000, usdMicros: 10000000, sessionId: "cs_test_one" };
 
 describe("test purchase accounting", () => {
   beforeEach(() => {
     transactionMock.mockReset();
-    vi.stubEnv("RESHOOT_PAYMENTS_MODE", "simulated");
+    vi.stubEnv("RESHOOT_PAYMENTS_MODE", "stripe_test");
+    vi.stubEnv("STRIPE_TEST_SECRET_KEY", "rk_test_fixture");
+    vi.stubEnv("STRIPE_TEST_WEBHOOK_SECRET", "whsec_fixture");
   });
   it("serializes concurrent retries into exactly one purchase and ledger grant", async () => {
     const tables = purchaseDatabase();
-    const results = await Promise.all([createDemoPurchase(input), createDemoPurchase(input), createDemoPurchase(input)]);
+    const results = await Promise.all([grantStripeTestCredits(input), grantStripeTestCredits(input), grantStripeTestCredits(input)]);
     expect(new Set(results.map((row) => row.id)).size).toBe(1);
     expect(tables.test_purchases).toHaveLength(1);
     expect(tables.credit_ledger).toHaveLength(1);
@@ -64,26 +67,38 @@ describe("test purchase accounting", () => {
   });
   it("adds distinct simultaneous purchases without losing either grant", async () => {
     const tables = purchaseDatabase();
-    await Promise.all([createDemoPurchase(input), createDemoPurchase({ ...input, idempotencyKey: "attempt-two" })]);
+    await Promise.all([grantStripeTestCredits(input), grantStripeTestCredits({ ...input, sessionId: "cs_test_two" })]);
     expect(tables.credit_accounts[0]).toMatchObject({ availableCredits: 2100, heldCredits: 50 });
     expect(tables.test_purchases).toHaveLength(2);
     expect(tables.credit_ledger.map((row) => row.availableAfter)).toEqual([1100, 2100]);
   });
   it("scopes idempotency keys to the account", async () => {
     const tables = purchaseDatabase();
-    await Promise.all([createDemoPurchase(input), createDemoPurchase({ ...input, userId: "two" })]);
+    await Promise.all([grantStripeTestCredits(input), grantStripeTestCredits({ ...input, userId: "two" })]);
     expect(tables.test_purchases).toHaveLength(2);
     expect(tables.credit_accounts.map((row) => row.availableCredits)).toEqual([1100, 1100]);
   });
   it("rejects reusing a successful checkout for a different pack", async () => {
     const tables = purchaseDatabase();
-    await createDemoPurchase(input);
-    await expect(createDemoPurchase({ ...input, packSlug: "pro" })).rejects.toMatchObject({ status: 409 });
+    await grantStripeTestCredits(input);
+    await expect(grantStripeTestCredits({ ...input, packSlug: "pro", packId: "pack-pro" })).rejects.toMatchObject({ status: 409 });
     expect(tables.credit_accounts[0].availableCredits).toBe(1100);
     expect(tables.test_purchases).toHaveLength(1);
   });
-  it("cannot mint credits into a non-test account even with simulated mode enabled", async () => {
-    await expect(createDemoPurchase({ ...input, isDemoUser: false })).rejects.toMatchObject({ status: 503 });
-    expect(transactionMock).not.toHaveBeenCalled();
+  it("cannot mint credits into a non-test account even with Stripe test mode enabled", async () => {
+    const tables = purchaseDatabase();
+    tables.users[0].isDemo = false;
+    await expect(grantStripeTestCredits(input)).rejects.toMatchObject({ status: 409 });
+    expect(tables.test_purchases).toHaveLength(0);
   });
+});
+
+it("honors the verified session snapshot when a catalog price changes", async () => {
+  const tables = purchaseDatabase();
+  tables.credit_packs[0].credits = 1500;
+  tables.credit_packs[0].usdMicros = 15000000;
+  tables.credit_packs[0].active = false;
+  await grantStripeTestCredits(input);
+  expect(tables.credit_accounts[0].availableCredits).toBe(1100);
+  expect(tables.test_purchases[0]).toMatchObject({ credits: 1000, usdMicros: 10000000 });
 });

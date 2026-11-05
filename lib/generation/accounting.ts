@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, count, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { refundableCredits } from "@/lib/subscriptions/allowance";
 import {
   creditAccounts,
   creditHolds,
@@ -293,12 +294,14 @@ export async function releaseGeneration(input: {
         updatedAt: new Date(),
       })
       .where(eq(creditHolds.id, hold.id));
-    const availableAfter = account.availableCredits + job.quotedCredits;
+    const refund = refundableCredits(job, account.monthlyPeriodEnd);
+    const availableAfter = account.availableCredits + refund.total;
     const heldAfter = Math.max(0, account.heldCredits - job.quotedCredits);
     await tx
       .update(creditAccounts)
       .set({
         availableCredits: availableAfter,
+        monthlyAvailableCredits: (account.monthlyAvailableCredits ?? 0) + refund.monthly,
         heldCredits: heldAfter,
         updatedAt: new Date(),
       })
@@ -312,11 +315,11 @@ export async function releaseGeneration(input: {
         sourceType: "generation_job",
         sourceId: job.id,
         amountCredits: job.quotedCredits,
-        availableDelta: job.quotedCredits,
+        availableDelta: refund.total,
         heldDelta: -job.quotedCredits,
         availableAfter,
         heldAfter,
-        description: "Generation failed — credits released",
+        description: refund.total === job.quotedCredits ? "Generation failed — credits released" : "Generation failed — expired monthly credits not restored",
       })
       .onConflictDoNothing();
     await updateBatchCompletion(tx, job.batchId);

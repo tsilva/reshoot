@@ -104,12 +104,12 @@ export function StudioHome({ initialCredits, initialProjects, currentUser, proje
 
   const pageError = error ? <div className="home-error" role="alert"><span>{error}</span><button className="icon-button" onClick={() => setError(null)} aria-label="Dismiss error"><X size={18} /></button></div> : null;
   if (activeProject && credits && currentUser) {
-    const walletButton = <div className="home-account-controls"><button type="button" className="home-wallet-button is-quiet" aria-label={`Open credits, ${credits.availableCredits.toLocaleString()} test credits`} onClick={openWallet} disabled={busy !== null}>
+    const walletButton = <div className="home-account-controls"><button type="button" className="home-wallet-button is-quiet" aria-label={`Open Plan & usage, ${credits.availableCredits.toLocaleString()} credits`} onClick={openWallet} disabled={busy !== null}>
       <Coins size={17} /><span>{credits.availableCredits.toLocaleString()}</span><Plus size={14} />
     </button>{accountMenu}</div>;
     return (
       <div className="one-page-studio has-studio" ref={studioRef}>
-        <ProjectStudioClient key={activeProject.id} initialProject={activeProject} checkoutAvailable={credits.demoCheckoutAvailable} onOpenWallet={openWallet} onBalanceChange={refreshBalance} walletRevision={walletRevision} walletButton={walletButton} pageError={pageError} />
+        <ProjectStudioClient key={activeProject.id} initialProject={activeProject} checkoutAvailable={credits.subscription?.checkoutAvailable ?? false} onOpenWallet={openWallet} onBalanceChange={refreshBalance} walletRevision={walletRevision} walletButton={walletButton} pageError={pageError} />
       </div>
     );
   }
@@ -121,9 +121,9 @@ export function StudioHome({ initialCredits, initialProjects, currentUser, proje
           <Link href={showLibrary ? "/" : "#"} className="home-brand" aria-label="Reshoot home">
             <Aperture size={24} weight="light" aria-hidden="true" />reshoot.
           </Link>
-          {currentUser && credits ? <div className="home-account-controls"><button className="home-wallet-button" aria-label={`Open credits, ${credits.availableCredits.toLocaleString()} test credits`} onClick={openWallet} disabled={busy !== null}>
+          {currentUser && credits ? <div className="home-account-controls"><button className="home-wallet-button" aria-label={`Open Plan & usage, ${credits.availableCredits.toLocaleString()} credits`} onClick={openWallet} disabled={busy !== null}>
             <Coins size={17} />
-            <span>{credits.availableCredits.toLocaleString()} test credits</span><Plus size={14} />
+            <span>{credits.availableCredits.toLocaleString()} credits</span><Plus size={14} />
           </button>{accountMenu}</div> : <Link className="home-wallet-button" href="/login">Sign in <User size={18} /></Link>}
         </div>
       </header>
@@ -141,7 +141,7 @@ export function StudioHome({ initialCredits, initialProjects, currentUser, proje
                   <span>{busy === "shoot" ? "Opening shoot…" : "Add photos"}</span>
                   {busy === "shoot" ? <SpinnerGap className="spin" size={20} /> : <ArrowRight size={20} />}
                 </button>
-                <p className="home-start-note">{currentUser ? "Private to your account. Payments are simulated." : "Sign in to save your shoots. Explore the samples for free."}</p>
+                <p className="home-start-note">{currentUser ? "Private to your account. Stripe checkout uses test mode." : "Sign in to save your shoots. Explore the samples for free."}</p>
               </div>
             </div>
           </section>

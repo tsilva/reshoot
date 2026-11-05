@@ -31,6 +31,7 @@ import {
   workflowOutbox,
 } from "@/lib/db/schema";
 import { generationJobWorkflow } from "@/workflows/generation";
+import { expireMonthlyAllowance } from "@/lib/subscriptions/service";
 
 export async function createGenerationBatch(input: {
   userId: string;
@@ -83,12 +84,13 @@ export async function createGenerationBatch(input: {
     if (existingShot || quote.shots.some((shot) => shot.shotId)) {
       throw new ApiError(409, "regeneration_not_allowed", "Each shoot can be generated once. Start a new shoot to generate more views.");
     }
-    const [account] = await tx
+    const [accountRow] = await tx
       .select()
       .from(creditAccounts)
       .where(eq(creditAccounts.userId, input.userId))
       .limit(1);
-    if (!account) throw new Error("Credit account is missing.");
+    if (!accountRow) throw new Error("Credit account is missing.");
+    const account = await expireMonthlyAllowance(tx, accountRow);
     if (account.availableCredits < quote.totalCredits) {
       throw new ApiError(
         409,
@@ -117,6 +119,7 @@ export async function createGenerationBatch(input: {
       .returning();
 
     let recalculatedTotal = 0;
+    let monthlyRemaining = account.monthlyAvailableCredits ?? 0;
     for (const requested of quote.shots) {
       let shotId = requested.shotId;
       if (shotId) {
@@ -184,6 +187,8 @@ export async function createGenerationBatch(input: {
       }
       const referencesById = new Map(referenceRows.map((row) => [row.assetId, row]));
       const jobId = crypto.randomUUID();
+      const monthlyCredits = Math.min(monthlyRemaining, quotedCredits);
+      monthlyRemaining -= monthlyCredits;
       await tx.insert(generationJobs).values({
         id: jobId,
         ownerId: input.userId,
@@ -192,6 +197,8 @@ export async function createGenerationBatch(input: {
         version,
         referenceCount: requested.referenceAssetIds.length,
         quotedCredits,
+        monthlyCredits,
+        monthlyPeriodEnd: monthlyCredits ? account.monthlyPeriodEnd : null,
       });
       await tx.insert(generationInputs).values(
         requested.referenceAssetIds.map((assetId, ordinal) => {
@@ -222,6 +229,7 @@ export async function createGenerationBatch(input: {
       .update(creditAccounts)
       .set({
         availableCredits: availableAfter,
+        monthlyAvailableCredits: monthlyRemaining,
         heldCredits: heldAfter,
         updatedAt: new Date(),
       })

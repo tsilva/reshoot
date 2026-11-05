@@ -16,7 +16,15 @@ The provenance manifests and guide assets under `design/qa/` are test inputs;
 they remain tracked so these checks work in a fresh clone. These measurements do
 not establish natural rotation, photographic quality or identical 3D geometry.
 
-## Accounts and simulated checkout
+## Monthly subscription lifecycle
+
+Run `pnpm exec vitest run tests/subscriptions.test.ts tests/accounting.test.ts` for credential-free allowance accounting checks. They cover duplicate/concurrent invoices, renewal expiry, failed payment without a grant, cancellation through the paid period, delayed invoices/events, customer isolation, retained legacy balances, in-flight holds and late refunds. Run the full suite for existing generation and authentication boundaries.
+
+Use a synthetic visual fixture for desktop and phone panel checks when application credentials are unavailable. Test empty, active, payment-attention and ending-plan states; inspect the Best value/Most usage hierarchy, monthly amounts, expiry terms, focus, disabled states and responsive overflow. Fixture checks do not certify Clerk's hosted panel, database migration or Stripe delivery.
+
+For a user-operated sandbox run, verify initial and renewal `invoice.paid` delivery, idempotent replay, failed renewal without allowance, period-end cancellation, customer portal isolation and the return page's pending/confirmed states. Never submit a Checkout payment or change billing settings through agent tools. Setup requirements are in [production delivery](production-delivery.md#stripe-test-checkout).
+
+## Accounts and Stripe test checkout
 
 Open `/privacy` and `/terms` without an account. Verify each page's title,
 canonical URL, revision date, contact link, section navigation and links to the
@@ -32,29 +40,35 @@ no running server needs to be stopped when a route changes.
 
 The account tests verify that a legacy demo cookie cannot authenticate a user,
 Clerk IDs isolate account lookups, and racing first requests create only one empty
-wallet. Simulated checkout tests cover authentication, same-origin requests,
-forged prices/owners, declines, duplicate delivery, concurrent purchases, and
-preservation of held credits and other accounts. They use synthetic database
-fixtures and do not connect to Clerk, Stripe, Neon, or image providers.
+wallet. Stripe tests use synthetic fixtures and never connect to Stripe, Clerk,
+Neon or image providers. They cover same-origin/authentication boundaries,
+server-side pricing, test-only configuration, live-session rejection, genuine SDK
+signature verification, altered/stale signatures, amount/owner/line-item
+mismatches, unpaid sessions, delayed success, idempotency, concurrent delivery,
+held-credit preservation and account isolation. The old simulator route must
+return 410 without granting credits.
 
-Verify that the avatar’s Manage account panel contains Account, Security and
-Credits. The header balance shortcut and the studio’s **Add credits** action must
-open Credits directly. Existing `/account` and `?wallet=open` links must also
-open that tab after sign-in, without adding an inline wallet to the workspace.
-Check lazy loading, retry after a failed wallet request, closing/reopening for a
-fresh balance, and the compact layout at desktop and phone widths. Pack selection
-opens its confirmation within Credits; cancel/Done restores focus to the selected
-pack. A successful simulated purchase must update the header balance and refresh
-the studio quote without a page reload.
+Verify that Manage account contains Plan & usage, and that the header balance shortcut,
+studio View plans and existing `/account` and `?wallet=open` links open that tab.
+Primary buttons and the Best value badge must retain readable light-on-olive
+colors outside the studio DOM. Test desktop and narrow-phone layouts, including
+pending, delayed, error, failed, expired, cancelled and completed checkout states.
+Return content stays within 480px, without a nested modal frame or horizontal
+scrolling. Back to plans/Done restores focus to the Plan & usage heading.
 
-For configured browser verification, use two separate Clerk accounts. Confirm
-that each sees only its own shoots and balance, then buy a test pack, cancel a
-checkout, simulate a decline, and retry a successful purchase after a lost response.
-Only a successful new purchase should raise the balance. Check sign-out and return
-navigation, desktop and phone layout, and keyboard dismissal of checkout. The
-simulator must never ask for card details. Full sign-in verification requires a
-reviewed credential route and the additive account migration; source tests do not
-establish that those external prerequisites are configured.
+Use synthetic status responses for browser layout and polling checks. Check again
+must restart bounded polling, unmount must stop it, and a forged success URL must
+never grant credits. A completed receipt refreshes the header balance, activity
+and studio quote. Checkout unavailable must leave plan actions disabled.
+
+External verification requires the reviewed Stripe credential and webhook routes
+in [Production delivery](production-delivery.md#stripe-test-checkout). The user
+completes test Checkout directly; agent verification must not submit a payment or
+change payment methods. Read the resulting session and webhook delivery, then
+confirm exactly one ledger grant and the updated account balance. Check cancel,
+decline, delayed fulfillment and duplicate delivery with isolated fixtures.
+Full account isolation also requires two separate Clerk accounts. Passing source
+or fixture tests does not establish external configuration or delivery.
 
 ## Studio and gallery checks
 
@@ -71,9 +85,6 @@ height below the header, with no lower Add photos or Generate controls. Verify
 that those controls appear after the first saved reference, disappear after the
 last is removed, and show the quoted credits in smaller text below Generate inside the button, without a view count or explanatory label. Select each thumbnail with mouse and keyboard to verify that the large preview changes without changing the quoted cost. Check the top-left remove control and preview fallback after removing the selected reference. Check that adding and removing saved photos refreshes the quoted cost, including removing the primary, removing the last reference and crossing the five-reference cap. The drag target must contain no price. Removal must check ownership, serialize with generation confirmation and reject generated shoots. A removed photo must not be restored by replaying upload finalization.
 Verify that busy or completed shoots reject drops without navigating to the file.
-On supported touch devices, check the rear-facing **Take a photo** chooser.
-Test preset controls,
-original-image dialogs, completed gallery, ZIP download and error/empty states.
 Extract the ZIP and verify its `reshoot_<hyphenated-project-name>_<short-project-id>.zip`
 name, matching top-level folder, perspective-only filenames and original image
 formats. Include older cached shoots, registered phone views and repeated labels.
