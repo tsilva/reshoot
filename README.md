@@ -160,6 +160,46 @@ This protects the SQL client, not full-access processes elsewhere on the host.
 The shared token broker is unnecessary for this static Neon credential. Test a
 new route with synthetic credentials before a bounded authenticated check.
 
+## Provider cost accounting
+
+Apply additive migration `0005_provider_cost_tracking` before deploying provider
+cost tracking. Every application image-generation and automatic shoot-naming
+request creates a `provider_calls` record before contacting the provider. If the
+record cannot be saved, inference is not sent. Records retain the actual gateway,
+routed/requested model, reported model/provider when available, both request and
+response IDs, HTTP outcome, timestamps, and provider-reported USD cost in micros.
+They never store credentials, prompts, response bodies or image payloads.
+
+Usage is committed before decoding or validating images, writing storage, or
+settling customer credits. Rejected images and failed requests can still incur
+provider costs. Missing, null, invalid or negative costs remain unresolved;
+they never become zero. An explicit provider-reported zero is valid. Missing
+OpenRouter costs with a generation ID get one bounded read-only metadata lookup
+through the same hosted provider account. Operator reconciliation can retry
+metadata lookups without generating anything. AgentBridge credentials are never
+sent to OpenRouter history endpoints. Unsupported or unavailable history stays
+unresolved, including timeouts without a recoverable ID.
+
+Operator-only `GET /api/internal/provider-costs?projectId=<uuid>` reports the
+recorded subtotal, unresolved/pending counts, per-call details and durations.
+`totalCostMicros` is null until all recorded calls are finished and priced; an
+empty ledger also has no certified total. The scope is recorded provider calls,
+not infrastructure cost or customer credit value. `POST` to the same URL retries
+at most 25 eligible metadata checks, throttled to once per minute per record.
+Both methods require the existing `CRON_SECRET` bearer authorization in every
+environment and disable response caching. This endpoint never changes pricing,
+credits or subscriptions, dispatches generation, or runs retention cleanup.
+No schedule is enabled by this change. Ordinary agent access still needs a
+reviewed sandboxed service route; do not retrieve the bearer secret directly.
+
+The migration preserves previously recorded positive image costs. Historical
+zero amounts are unresolved because older code could coerce invalid usage to
+zero. Historical requests without recoverable IDs and pre-migration naming
+spend cannot be reconstructed reliably. Recorded-call totals do not certify
+complete historical project spend. Elapsed durations include response transfer
+and parsing, not just model inference; interrupted records can lack a finish time.
+
+
 ## Notes
 
 Sentry 11 uses the `@sentry/nextjs/config` build entry point and enables logs by default. Client and server integrations retain their configured log levels and explicitly disable personal, request, queue, and content data collection.

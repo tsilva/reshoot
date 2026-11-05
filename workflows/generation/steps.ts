@@ -12,6 +12,7 @@ import {
   shots,
 } from "@/lib/db/schema";
 import { captureGeneration, releaseGeneration } from "@/lib/generation/accounting";
+import { callProviderJson } from "@/lib/generation/provider-calls";
 import { actualImageMime, recoverGenerationOutput } from "@/lib/generation/recovery";
 import { buildImageRequest, shotOrientation } from "@/lib/generation/request";
 import { MAX_PHONE_LEAN_DEGREES, phoneLeanDegrees } from "@/lib/generation/phone-alignment";
@@ -174,6 +175,8 @@ export async function executeGenerationJob(
   }
 
   let providerStarted = false;
+  let providerRequestId: string | undefined;
+  let usageCostMicros: number | undefined;
   try {
     const referenceBuffers = await Promise.all(
       inputs.map((input) => getObjectBuffer(input.frozenR2Key)),
@@ -208,29 +211,26 @@ export async function executeGenerationJob(
     if (!started) return { status: "duplicate" as const };
     providerStarted = true;
 
-    const response = await fetch(imageProviderConfig.endpoint, {
-      method: "POST",
+    const response = await callProviderJson({
+      ownerId: job.ownerId,
+      projectId: shot.projectId,
+      generationAttemptId: attemptId,
+      purpose: "image",
+      endpoint: imageProviderConfig.endpoint,
+      apiKey: providerKey,
       headers: {
-        Authorization: `Bearer ${providerKey}`,
-        "Content-Type": "application/json",
         "HTTP-Referer": imageProviderConfig.referer,
         "X-OpenRouter-Title": imageProviderConfig.title,
       },
-      body: JSON.stringify({ ...request, model: providerModel(request.model) }),
-      signal: AbortSignal.timeout(280_000),
+      body: { ...request, model: providerModel(request.model) },
+      timeoutMs: 280_000,
     });
-    const requestId = response.headers.get("x-request-id") ?? undefined;
-    const result = (await response.json().catch(() => null)) as {
-      id?: string;
+    const result = response.result as {
       data?: Array<{ b64_json?: string; media_type?: string }>;
-      usage?: { cost?: number | string };
       error?: { message?: string };
     } | null;
-    const usageCost = Number(result?.usage?.cost);
-    const usageCostMicros = Number.isFinite(usageCost)
-      ? Math.max(0, Math.round(usageCost * 1_000_000))
-      : undefined;
-    const providerRequestId = requestId ?? result?.id;
+    usageCostMicros = response.usageCostMicros;
+    providerRequestId = response.providerRequestId;
 
     if (!response.ok) {
       await releaseGeneration({
@@ -351,6 +351,8 @@ export async function executeGenerationJob(
       failureCode: providerStarted ? "ambiguous_provider_call" : "technical_failure",
       publicError: "This shot could not be generated. Credits were released.",
       privateError: message,
+      providerRequestId,
+      usageCostMicros,
     });
     return { status: "failed" as const };
   }

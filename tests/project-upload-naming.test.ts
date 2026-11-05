@@ -88,6 +88,7 @@ describe("naming the first saved product photo", () => {
     state.update.mockReturnValue({ set });
     expect((await finalizePhoto()).status).toBe(200);
     expect(state.suggest).toHaveBeenCalledOnce();
+    expect(state.suggest.mock.calls[0][1]).toEqual({ ownerId: state.owner, projectId: state.projectId });
     const supplied = state.suggest.mock.calls[0][0];
     expect((await sharp(supplied).metadata()).format).toBe("webp");
     expect(set).toHaveBeenCalledWith(expect.objectContaining({ title: "Cobalt ceramic mug" }));

@@ -438,6 +438,41 @@ export const generationAttempts = pgTable(
   ],
 );
 
+// Financial telemetry is independent of image acceptance and customer credits.
+// A null cost means unknown, including timeouts; only the provider can report 0.
+export const providerCalls = pgTable("provider_calls", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: uuid("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "restrict" }),
+  generationAttemptId: uuid("generation_attempt_id").references(() => generationAttempts.id, { onDelete: "restrict" }),
+  purpose: text("purpose", { enum: ["image", "project_naming"] }).notNull(),
+  provider: text("provider").notNull(),
+  endpoint: text("endpoint").notNull(),
+  requestedModel: text("requested_model").notNull(),
+  responseModel: text("response_model"),
+  upstreamProvider: text("upstream_provider"),
+  requestId: text("request_id"),
+  responseId: text("response_id"),
+  state: text("state", { enum: ["started", "completed", "http_error", "transport_error", "invalid_response", "interrupted", "legacy"] }).notNull(),
+  httpStatus: integer("http_status"),
+  usageCostMicros: bigint("usage_cost_micros", { mode: "number" }),
+  costSource: text("cost_source", { enum: ["response", "generation_lookup", "legacy"] }),
+  startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+  respondedAt: timestamp("responded_at", { withTimezone: true }),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
+  costCheckedAt: timestamp("cost_checked_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("provider_calls_attempt_unique").on(table.generationAttemptId),
+  index("provider_calls_project_started_idx").on(table.projectId, table.startedAt),
+  check("provider_calls_purpose", sql`${table.purpose} in ('image', 'project_naming')`),
+  check("provider_calls_state", sql`${table.state} in ('started', 'completed', 'http_error', 'transport_error', 'invalid_response', 'interrupted', 'legacy')`),
+  check("provider_calls_cost_source", sql`${table.costSource} in ('response', 'generation_lookup', 'legacy')`),
+  check("provider_calls_cost_range", sql`${table.usageCostMicros} between 0 and 9007199254740991`),
+  check("provider_calls_cost_pair", sql`(${table.usageCostMicros} is null) = (${table.costSource} is null)`),
+  check("provider_calls_attempt_purpose", sql`(${table.purpose} = 'image') = (${table.generationAttemptId} is not null)`),
+]);
+
 export const generationOutputs = pgTable(
   "generation_outputs",
   {

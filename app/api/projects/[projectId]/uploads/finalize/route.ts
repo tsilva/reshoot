@@ -232,7 +232,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (firstFinalization && savedProject?.primaryAssetId === asset.id && savedProject.title === AUTO_PROJECT_TITLE) {
       try {
-        const title = await suggestPhotoTitle(preview.data);
+        const title = await suggestPhotoTitle(preview.data, { ownerId: user.id, projectId });
         if (title) {
           await db.update(projects).set({ title, updatedAt: new Date() }).where(and(
             eq(projects.id, projectId),

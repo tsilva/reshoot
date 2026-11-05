@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { providerApiKey, providerBaseUrl, providerModel } from "@/lib/generation/agentbridge";
+import { callProviderJson } from "@/lib/generation/provider-calls";
 
 export const AUTO_PROJECT_TITLE = "Product shoot";
 const PHOTO_TITLE_MODEL = "openai/gpt-4.1-mini";
@@ -13,18 +14,19 @@ const titleSchema = z.object({
 
 // Receives only a validated, normalized preview, with no signed storage URL,
 // filename or owner details. Naming failure must never fail a saved upload.
-export async function suggestPhotoTitle(preview: Uint8Array): Promise<string | null> {
+export async function suggestPhotoTitle(preview: Uint8Array, context: { ownerId: string; projectId: string }): Promise<string | null> {
   try {
-    const response = await fetch(`${providerBaseUrl()}/chat/completions`, {
-      method: "POST",
+    const response = await callProviderJson({
+      ...context,
+      purpose: "project_naming",
+      endpoint: `${providerBaseUrl()}/chat/completions`,
+      apiKey: providerApiKey(),
       headers: {
-        Authorization: `Bearer ${providerApiKey()}`,
-        "Content-Type": "application/json",
         "HTTP-Referer": "https://reshoot.tsilva.eu",
         "X-Title": "Reshoot",
       },
-      signal: AbortSignal.timeout(8_000),
-      body: JSON.stringify({
+      timeoutMs: 8_000,
+      body: {
         model: providerModel(PHOTO_TITLE_MODEL),
         max_tokens: 80,
         temperature: 0.2,
@@ -42,10 +44,10 @@ export async function suggestPhotoTitle(preview: Uint8Array): Promise<string | n
             ],
           },
         ],
-      }),
+      },
     });
     if (!response.ok) return null;
-    const result = await response.json();
+    const result = response.result as { choices?: Array<{ message?: { content?: unknown } }> } | null;
     const content = result?.choices?.[0]?.message?.content;
     if (typeof content !== "string") return null;
     const parsed = titleSchema.safeParse(JSON.parse(content));

@@ -6,6 +6,7 @@ const state = vi.hoisted(() => ({
   quoteShots: [] as Array<{ orientationGuideKind: OrientationGuideKind }>,
   getObjectBuffer: vi.fn(), headObject: vi.fn(), putObject: vi.fn(),
   capture: vi.fn(), release: vi.fn(), fetch: vi.fn(), updates: [] as unknown[],
+  calls: [] as unknown[], ledgerAvailable: true,
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("workflow", () => ({ RetryableError: Error }));
@@ -26,13 +27,18 @@ vi.mock("@/lib/db", () => ({ db: {
     }) }) }),
     where: () => ({ orderBy: async () => selection ? [] : state.inputs.map((frozenR2Key) => ({ frozenR2Key })) }),
   }) }),
-  update: () => ({ set: (values: unknown) => { state.updates.push(values); return { where: () => ({ then: (resolve: (value: undefined) => void) => resolve(undefined), returning: async () => state.transitionWon ? [{ id: "attempt" }] : [] }) }; } }),
+  insert: () => ({ values: (values: Record<string, unknown>) => ({ onConflictDoNothing: () => ({ returning: async () => {
+    if (!state.ledgerAvailable) throw new Error("Ledger unavailable");
+    state.calls.push(values); return [{ ...values, startedAt: new Date() }];
+  } }) }) }),
+  update: () => ({ set: (values: Record<string, unknown>) => { state.updates.push(values); return { where: () => ({ then: (resolve: (value: undefined) => void) => resolve(undefined), returning: async () => state.transitionWon ? [{ id: "attempt", ...values }] : [] }) }; } }),
 } }));
 import { executeGenerationJob } from "../workflows/generation/steps";
 
 describe("durable generation dispatch", () => {
   beforeEach(() => {
     state.attemptState = "claimed"; state.transitionWon = true; state.inputs = ["primary", "supporting"]; state.updates = []; state.quoteShots = [];
+    state.calls = []; state.ledgerAvailable = true;
     vi.clearAllMocks();
     state.headObject.mockRejectedValue({ $metadata: { httpStatusCode: 404 } });
     state.getObjectBuffer.mockImplementation(async (key) => Buffer.from(key));
@@ -168,5 +174,24 @@ describe("durable generation dispatch", () => {
     expect(state.fetch).not.toHaveBeenCalled();
     expect(state.updates).toEqual([]);
     expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ attemptState: "failed" }));
+  });
+
+  it("does not send paid inference if the cost ledger cannot be opened", async () => {
+    state.ledgerAvailable = false;
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "failed" });
+    expect(state.fetch).not.toHaveBeenCalled();
+    expect(state.capture).not.toHaveBeenCalled();
+  });
+
+  it.each(["invalid image", "storage failure"])("preserves paid usage after %s", async (failure) => {
+    const png = failure === "invalid image" ? Buffer.from("invalid raster") : await sharp({
+      create: { width: 16, height: 16, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    }).composite([{ input: { create: { width: 8, height: 8, channels: 3, background: "blue" } }, gravity: "centre" }]).png().toBuffer();
+    state.fetch.mockResolvedValue(Response.json({ id: "paid-response", data: [{ b64_json: png.toString("base64") }], usage: { cost: 0.071 } }));
+    if (failure === "storage failure") state.putObject.mockRejectedValueOnce(new Error("Storage unavailable"));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "failed" });
+    expect(state.updates).toContainEqual(expect.objectContaining({ usageCostMicros: 71000, costSource: "response" }));
+    expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ providerRequestId: "paid-response", usageCostMicros: 71000 }));
+    expect(state.fetch).toHaveBeenCalledOnce();
   });
 });

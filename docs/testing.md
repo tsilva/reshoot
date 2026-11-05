@@ -16,6 +16,26 @@ The provenance manifests and guide assets under `design/qa/` are test inputs;
 they remain tracked so these checks work in a fresh clone. These measurements do
 not establish natural rotation, photographic quality or identical 3D geometry.
 
+## Provider cost accounting
+
+Run `pnpm exec vitest run tests/provider-cost.test.ts tests/provider-calls.test.ts tests/provider-cost-route.test.ts tests/generation-execution.test.ts tests/project-naming.test.ts tests/project-upload-naming.test.ts`
+for credential-free provider-cost coverage. Fixtures verify pre-request ledger
+creation, duplicate-call protection, valid zero versus missing/invalid usage,
+paid HTTP errors and rejected/undecodable images, storage failures, timeouts,
+both provider IDs, naming attribution, subtotal completeness, and bounded
+read-only usage reconciliation. They also verify operator authorization even
+in development, cache prevention, and that GET reporting never reconciles or
+triggers inference. No test calls an external provider or needs real credentials.
+
+Apply `0005_provider_cost_tracking` only through an authorized migration route
+before deploying this code. On a disposable local PostgreSQL database, verify
+historical positive costs are preserved, old zero/missing costs stay unresolved,
+unstarted attempts are excluded, and the unique attempt and cost/source checks
+reject invalid records. Source tests do not prove migration application or
+complete provider usage for existing projects. Never run paid generation merely
+to verify the ledger. Reporting and historical limitations are documented in
+the README's Provider cost accounting section.
+
 ## Monthly subscription lifecycle
 
 Run `pnpm exec vitest run tests/subscriptions.test.ts tests/accounting.test.ts` for credential-free allowance accounting checks. They cover duplicate/concurrent invoices, renewal expiry, failed payment without a grant, cancellation through the paid period, delayed invoices/events, customer isolation, retained legacy balances, in-flight holds and late refunds. Run the full suite for existing generation and authentication boundaries.
