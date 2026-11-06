@@ -153,6 +153,10 @@ export function buildImageRequest(input: {
     n: 1,
     aspect_ratio: "1:1",
     quality: "high",
+    // OpenRouter passthrough is keyed by provider slug; legacy attempts keep their request shape.
+    ...(input.model === "openai/gpt-image-2.6-sunburst" ? {
+      provider: { options: { openai: { complexity: "high" } } },
+    } : {}),
     background: "transparent",
     input_references: [...input.referenceImages, ...(input.orientationGuide ? [input.orientationGuide.image] : [])].map((url) => ({
       type: "image_url",

@@ -2,7 +2,7 @@ import { providerBaseUrl, providerApiKey } from "./agentbridge";
 import "server-only";
 
 export const supportedImageModels = [
-  "openai/gpt-image-2.6-flare",
+  "openai/gpt-image-2.6-sunburst",
 ] as const;
 
 export function selectImageModel(override = process.env.RESHOOT_IMAGE_MODEL) {

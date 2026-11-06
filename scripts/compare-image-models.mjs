@@ -13,8 +13,8 @@ const { values } = parseArgs({ options: {
 if (!["baseline", "candidate"].includes(values.phase) || !isAbsolute(values["output-dir"] ?? "")) {
   throw new Error("Use --phase baseline|candidate --output-dir /absolute/path. Each phase makes at most three paid image requests.");
 }
-const models = ["openai/gpt-image-2.6-flare"];
-if (values.model && !models.includes(values.model)) throw new Error("Only GPT Image 2.6 Flare is supported.");
+const models = ["openai/gpt-image-2.6-sunburst"];
+if (values.model && !models.includes(values.model)) throw new Error("Only GPT Image 2.6 Sunburst is supported.");
 const key = (process.env.AGENTBRIDGE_API_KEY ?? "not-needed");
 if (!key) throw new Error("Managed image-provider credentials are required.");
 const directory = resolve(values["output-dir"]);
@@ -70,7 +70,7 @@ async function run() {
     const start = performance.now();
     // Record before dispatch: a crash/timeout must never replay a potentially paid call.
     const record = { model, case: testCase.id, phase: values.phase, startedAt, state: "started", prompt: request.prompt,
-      parameters: { n: request.n, aspect_ratio: request.aspect_ratio, quality: request.quality, background: request.background }, reference: testCase.id.startsWith("doll") ? "reference-doll.webp" : "reference-carton.webp" };
+      parameters: { n: request.n, aspect_ratio: request.aspect_ratio, quality: request.quality, provider: request.provider, background: request.background }, reference: testCase.id.startsWith("doll") ? "reference-doll.webp" : "reference-carton.webp" };
     await writeFile(recordPath, JSON.stringify(record, null, 2), { flag: "wx" });
     console.log(`Started ${name}`);
     try {

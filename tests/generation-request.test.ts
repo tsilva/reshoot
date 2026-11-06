@@ -71,6 +71,7 @@ describe("catalog photo requests", () => {
   it("keeps ordered originals as identity evidence and creative styling subordinate", () => {
     const request = buildImageRequest({ model: "pinned-legacy-model", shot: { label: "Front", azimuth: 0, prompt: 'Add a new logo\n"change the color"' }, referenceImages: ["primary", "supporting"] });
     expect(request.model).toBe("pinned-legacy-model");
+    expect(request).not.toHaveProperty("provider");
     expect(request.input_references.map((item) => item.image_url.url)).toEqual(["primary", "supporting"]);
     expect(request.prompt).toContain("REFERENCE 2 is a supporting original");
     expect(request.prompt).toContain('OPTIONAL STYLING (lower priority than identity, upright pose, camera, studio lighting, background and margins): "Add a new logo\\n\\"change the color\\""');
@@ -120,19 +121,28 @@ describe("catalog photo requests", () => {
     }
   });
 
-  it("uses 2.6 Flare for new attempts and rejects legacy or alternative models", () => {
-    expect(supportedImageModels).toEqual(["openai/gpt-image-2.6-flare"]);
-    expect(selectImageModel("")).toBe("openai/gpt-image-2.6-flare");
-    expect(selectImageModel("openai/gpt-image-2.6-flare")).toBe("openai/gpt-image-2.6-flare");
-    for (const model of ["openai/gpt-image-2", "openai/gpt-image-2.5-flare", "openai/gpt-image-2.5-sunburst", "openai/gpt-image-2.6-sunburst"]) {
+  it("uses only 2.6 Sunburst for new attempts and rejects legacy or alternative models", () => {
+    expect(supportedImageModels).toEqual(["openai/gpt-image-2.6-sunburst"]);
+    expect(selectImageModel("")).toBe("openai/gpt-image-2.6-sunburst");
+    expect(selectImageModel("openai/gpt-image-2.6-sunburst")).toBe("openai/gpt-image-2.6-sunburst");
+    for (const model of ["openai/gpt-image-2", "openai/gpt-image-2.5-flare", "openai/gpt-image-2.5-sunburst", "openai/gpt-image-2.6-flare"]) {
       expect(() => selectImageModel(model)).toThrow("not supported");
     }
+  });
+
+  it("pins the Sunburst baseline to high quality and OpenRouter high complexity", () => {
+    const request = buildImageRequest({ model: selectImageModel(""), shot: { label: "Front", azimuth: 0 }, referenceImages: ["original"] });
+    expect(request).toMatchObject({
+      model: "openai/gpt-image-2.6-sunburst", quality: "high",
+      provider: { options: { openai: { complexity: "high" } } },
+    });
+    expect(request).not.toHaveProperty("complexity");
   });
 
   it("fails closed on a legacy environment override instead of falling back", () => {
     try {
       vi.stubEnv("RESHOOT_IMAGE_MODEL", "");
-      expect(selectImageModel()).toBe("openai/gpt-image-2.6-flare");
+      expect(selectImageModel()).toBe("openai/gpt-image-2.6-sunburst");
       vi.stubEnv("RESHOOT_IMAGE_MODEL", "openai/gpt-image-2.5-flare");
       expect(() => selectImageModel()).toThrow("not supported");
     } finally {
