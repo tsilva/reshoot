@@ -105,6 +105,21 @@ describe("physical rotation acceptance", () => {
 });
 
 describe("blind anchored orientation review", () => {
+  it("does not reject a verified true profile for an inapplicable broad-face edge label", () => {
+    const actualLeftObservation = review({ physical_side: "left", front_visible: false, rear_visible: false,
+      side_image_edge: "right", same_view_as: null, evidence: "Only the thin edge opposite the asymmetric control is visible." });
+    expect(rotationReviewFailure(actualLeftObservation, { label: "Left", azimuth: 270 }, "verified-rotation-v2")).toBeUndefined();
+    expect(rotationReviewFailure(review({ physical_side: "right", front_visible: false, rear_visible: false,
+      side_image_edge: "left", same_view_as: null }), { label: "Right", azimuth: 90 }, "verified-rotation-v2")).toBeUndefined();
+    // The correction does not excuse an exposed front face or the wrong side.
+    expect(rotationReviewFailure(review({ physical_side: "left", front_visible: true, side_image_edge: "right", same_view_as: null }),
+      { label: "Left", azimuth: 270 }, "verified-rotation-v2")).toContain("wrong physical side");
+    expect(rotationReviewFailure(review({ physical_side: "right", side_image_edge: "right", same_view_as: null }),
+      { label: "Left", azimuth: 270 }, "verified-rotation-v2")).toContain("wrong physical side");
+    expect(rotationReviewFailure(review({ physical_side: "left", side_image_edge: "right", same_view_as: 90 }),
+      { label: "Left", azimuth: 270 }, "verified-rotation-v2")).toContain("repeats another angle");
+  });
+
   it("can bootstrap the front without anchors using the generator's coordinate frame and display pose", async () => {
     state.call.mockResolvedValue({ ok: true, result: { choices: [{ message: { content: review({
       front_visible: true, physical_side: "neither", side_image_edge: "neither", same_view_as: null,
@@ -144,6 +159,10 @@ describe("blind anchored orientation review", () => {
     expect(request.body.model).toContain("gpt-4.1");
     expect(JSON.stringify(request.body)).not.toContain("SECRET TARGET");
     expect(JSON.stringify(request.body)).not.toContain("TARGET-GUIDE");
-    expect(request.body.messages[1].content.slice(1).map((i:{image_url:{url:string}})=>i.image_url.url)).toEqual(["original","front","opposite","candidate"]);
+    expect(request.body.messages[1].content.filter((i:{type:string})=>i.type==="image_url").map((i:{image_url:{url:string}})=>i.image_url.url)).toEqual(["candidate","original","front","opposite"]);
+    expect(request.body.messages[1].content[0].text).toContain("IMAGE 1 IS THE CANDIDATE");
+    expect(JSON.stringify(request.body.messages[1].content)).toContain("IMAGE 2: AUTHORITATIVE ORIGINAL 1");
+    expect(JSON.stringify(request.body.messages[1].content)).toContain("IMAGE 3: ACCEPTED 0-degree ANCHOR");
+    expect(request.body.messages[1].content.at(-1).text).toContain("inspect IMAGE 1");
   });
 });

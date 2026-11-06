@@ -70,6 +70,10 @@ Tests cover category-independent request construction, all eight direction raste
 
 ### Edge-on profiles and rejected-view inspection
 
+Blind v2 review puts the candidate first and labels each later original and anchor immediately beside its image. All observations must refer to image 1; the requested yaw and guide remain withheld. This prevents the original or an accepted front anchor from being mistaken for the candidate. Legacy v1 input ordering is preserved. Acceptance still checks the independent observations against the frozen target.
+
+The side-image-edge check applies only when a side is visible beside a broad front/rear face, at a quarter view. At a true profile, straight front or straight back that relation is undefined and does not override correct physical-side and broad-face observations. Duplicate-angle detection, identity, rigid pose and confidence checks still apply at every angle.
+
 True profiles show physical depth/thickness with both broad front/rear presentation faces edge-on. Thin components can become very narrow. Source lettering must disappear when its surface is hidden; preserving identity does not mean preserving the source photo's projected width or readable markings at every angle. Review distinguishes a narrow rim, bevel or seam from an exposed broad presentation face. The acceptance predicates still reject broad-face exposure at a profile and require the correct physical side.
 
 On orientation rejection, the worker preserves a review-sized preview at the attempt's private preview key and a bounded, validated observation in its private error record. It never writes the accepted output key or creates an accepted gallery/export record for that image. Crash recovery therefore cannot accept the preview. Failed diagnostic storage still releases the held credits. Project retention cleanup removes these rejected previews too; no new database migration is required.
