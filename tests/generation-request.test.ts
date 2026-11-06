@@ -1,22 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { buildGenerationPrompt, buildImageRequest, CATALOG_STUDIO_INSTRUCTIONS, productGuideKind } from "../lib/generation/request";
+import { buildGenerationPrompt, buildImageRequest, CATALOG_STUDIO_INSTRUCTIONS } from "../lib/generation/request";
 import { selectImageModel, supportedImageModels } from "../lib/generation/provider";
 
 describe("catalog photo requests", () => {
-  it("gives handled mugs explicit angle-dependent occlusions without telling the model to ignore the handle", () => {
-    expect(productGuideKind("Blue ceramic mug")).toBe("upright-mug-v1");
-    for (const title of ["Travel mug", "Handleless mug", "Mug holder", "Ceramic bowl"]) {
-      expect(productGuideKind(title)).toBe("generic-cup-v1");
-    }
-    const expected = ["IMAGE RIGHT", "IMAGE RIGHT", "EDGE-ON", "IMAGE LEFT", "IMAGE LEFT", "BEHIND", "HIDDEN", "BEHIND"];
-    for (const [i, azimuth] of [0, 45, 90, 135, 180, 225, 270, 315].entries()) {
-      const body = buildImageRequest({ model: "pinned", shot: { label: "Mug", azimuth }, referenceImages: ["original"],
-        orientationGuide: { kind: "upright-mug-v1", azimuth, elevation: 0, image: "pose" } });
-      expect(body.prompt).toContain(`VISIBLE HANDLE CHECK: The handle`);
-      expect(body.prompt.split("VISIBLE HANDLE CHECK:")[1]).toContain(expected[i]);
-      expect(body.prompt).toContain("not the pose in REFERENCE 1");
-      expect(body.prompt).not.toContain("Ignore the guide's cup shape, handle");
+  it("uses only object-independent guidance for every angle", () => {
+    for (const azimuth of [0, 45, 90, 135, 180, 225, 270, 315]) {
+      const body = buildImageRequest({ model: "pinned", shot: { label: "Catalog", azimuth }, referenceImages: ["original"],
+        orientationGuide: { kind: "direction-frame-v1", azimuth, elevation: 0, image: "pose" } });
+      expect(body.prompt).not.toMatch(/\b(?:watch|watches|crown|dial|strap|mug|cup|phone|doll)\b/i);
+      expect(body.prompt).toContain("rigid assembly");
       expect(body.input_references.map((r) => r.image_url.url)).toEqual(["original", "pose"]);
     }
   });
@@ -31,28 +24,18 @@ describe("catalog photo requests", () => {
     expect(buildGenerationPrompt({ label: "Quarter", azimuth: -45, elevation: 4 }, 1)).toContain("FRONT-LEFT three-quarter view");
   });
 
-  it("uses the product's natural base and explicitly hides the phone screen at 135 degrees", () => {
+  it("uses one natural display pose and hides front-facing features at rear quarters", () => {
     const front = buildGenerationPrompt({ label: "Front right", azimuth: 45 }, 1);
     const rear = buildGenerationPrompt({ label: "Rear right", azimuth: 135 }, 1, {
-      kind: "upright-phone-v1", azimuth: 135, elevation: 0, image: "guide",
+      kind: "direction-frame-v1", azimuth: 135, elevation: 0, image: "guide",
     });
-    expect(front).toContain("A phone stands vertically on its bottom edge");
+    expect(front).toContain("natural stable display orientation");
     expect(front).toContain("Ignore any lean, sideways roll");
-    expect(front).not.toMatch(/preserve the product.s pose/i);
     expect(rear).toContain("Both the rear and the right side face the fixed camera");
     expect(rear).toContain("on the image-left edge of the rear face");
-    expect(buildGenerationPrompt({ label: "Rear left", azimuth: 225 }, 1))
-      .toContain("on the image-right edge of the rear face");
-    expect(rear).toContain("Hide its front screen");
-    expect(rear).toContain("its light broad face denotes the rear");
-    const codedRear = buildGenerationPrompt({ label: "Rear right", azimuth: 135 }, 1, {
-      kind: "upright-phone-v2", azimuth: 135, elevation: 0, image: "guide",
-    });
-    expect(codedRear).toContain("ORANGE marks the physical right rail");
-    expect(codedRear).toContain("LEFT margin of the device silhouette");
-    expect(codedRear).toContain("The image-right outline belongs to the rear panel itself");
-    expect(productGuideKind("Black smartphone in hand")).toBe("upright-phone-v2");
-    expect(productGuideKind("iPhone case")).toBe("generic-cup-v1");
+    expect(buildGenerationPrompt({ label: "Rear left", azimuth: 225 }, 1)).toContain("on the image-right edge of the rear face");
+    expect(rear).toContain("Hide its front-facing features");
+    expect(rear).toContain("BLUE identifies physical LEFT");
   });
 
   it("keeps the camera and central pivot fixed for every angle, including label-only shots", () => {
@@ -101,14 +84,14 @@ describe("catalog photo requests", () => {
 
   it("keeps five originals ordered and labels a sixth image as direction-only guidance", () => {
     const shot = { label: "Back", azimuth: 180, elevation: 0 };
-    const guide = { kind: "generic-cup-v1" as const, image: "generic-guide", azimuth: 180, elevation: 0 };
+    const guide = { kind: "direction-frame-v1" as const, image: "generic-guide", azimuth: 180, elevation: 0 };
     const originals = ["primary", "detail-1", "detail-2", "detail-3", "detail-4"];
     const body = buildImageRequest({ model: "pinned-model", shot, referenceImages: originals, orientationGuide: guide });
     expect(body.input_references.map((r) => r.image_url.url)).toEqual([...originals, guide.image]);
     expect(body.prompt).toContain("REFERENCE 5 is a supporting original");
-    expect(body.prompt).toContain("REFERENCE 6 is a GENERIC TEXTURELESS CUP");
-    expect(body.prompt).toContain("NOT a reconstruction of it");
-    expect(body.prompt).toContain("Ignore the guide's cup shape, handle, rim");
+    expect(body.prompt).toContain("REFERENCE 6 is an annotated coordinate frame");
+    expect(body.prompt).toContain("NOT a reconstruction of the object");
+    expect(body.prompt).toContain("Ignore its dimensions, corners, proportions and silhouette");
     expect(body.prompt).not.toContain("REFERENCE 6 is a supporting original");
     expect(() => buildImageRequest({ model: "pinned-model", shot, referenceImages: [...originals, "extra-original"], orientationGuide: guide })).toThrow(RangeError);
   });
@@ -117,7 +100,7 @@ describe("catalog photo requests", () => {
     const shot = { label: "Right", azimuth: 90, elevation: 0 };
     for (const orientation of [{ azimuth: 0, elevation: 0 }, { azimuth: 90, elevation: 8 }]) {
       expect(() => buildImageRequest({ model: "pinned-model", shot, referenceImages: ["primary"],
-        orientationGuide: { kind: "generic-cup-v1", image: "guide", ...orientation } })).toThrow(RangeError);
+        orientationGuide: { kind: "direction-frame-v1", image: "guide", ...orientation } })).toThrow(RangeError);
     }
   });
 

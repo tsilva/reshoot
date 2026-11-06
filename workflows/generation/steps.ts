@@ -14,10 +14,10 @@ import {
 import { captureGeneration, releaseGeneration } from "@/lib/generation/accounting";
 import { callProviderJson } from "@/lib/generation/provider-calls";
 import { actualImageMime, recoverGenerationOutput } from "@/lib/generation/recovery";
-import { buildImageRequest, shotOrientation } from "@/lib/generation/request";
-import { MAX_PHONE_LEAN_DEGREES, phoneLeanDegrees } from "@/lib/generation/phone-alignment";
-import { mugOrientationFailure } from "@/lib/generation/mug-alignment";
+import { buildImageRequest } from "@/lib/generation/request";
 import { createOrientationGuide } from "@/lib/generation/orientation-guide";
+import { ROTATION_POLICY } from "@/lib/generation/rotation";
+import { reviewRotationOutput } from "@/lib/generation/rotation-review";
 import {
   imageProviderConfig,
   requireImageProviderKey,
@@ -153,7 +153,6 @@ export async function executeGenerationJob(
   ]);
   if (!job || !attempt || !shotRecord) return { status: "duplicate" as const };
   const { shot, quoteShots } = shotRecord;
-  const guideKind = quoteShots[0]?.orientationGuideKind;
   if (job.status === "succeeded" || job.status === "failed") {
     return { status: "terminal" as const };
   }
@@ -181,12 +180,12 @@ export async function executeGenerationJob(
     const referenceBuffers = await Promise.all(
       inputs.map((input) => getObjectBuffer(input.frozenR2Key)),
     );
-    // The shared geometry uses the four straight views as appearance sources.
-    // Keep their guides neutral so the rail annotations cannot color those textures.
-    const angle = shotOrientation(shot)?.azimuth;
-    const guide = guideKind === "upright-phone-v2" && angle !== undefined && angle % 90 === 0
-      ? "upright-phone-v1" : guideKind;
-    const orientationGuide = await createOrientationGuide(shot, guide);
+    // Persisted legacy guide identifiers never select category-specific prompts.
+    const orientationGuide = await createOrientationGuide(shot);
+    const rotationPolicy = quoteShots[0]?.rotationPolicy;
+    if (rotationPolicy && (rotationPolicy !== ROTATION_POLICY || !orientationGuide)) {
+      throw new Error("The frozen rotation policy or orientation is unsupported.");
+    }
     const request = buildImageRequest({
       model: attempt.providerModel ?? imageProviderConfig.model,
       shot,
@@ -269,29 +268,19 @@ export async function executeGenerationJob(
       });
       return { status: "failed" as const };
     }
-    if (orientationGuide?.kind === "upright-mug-v1" && orientationGuide.elevation === 0) {
-      const failure = await mugOrientationFailure(image, orientationGuide.azimuth);
+    if (rotationPolicy === ROTATION_POLICY && orientationGuide) {
+      const candidate = await image.clone().resize({ width: 768, height: 768, fit: "inside", withoutEnlargement: true })
+        .flatten({ background: "white" }).webp({ quality: 90 }).toBuffer();
+      const failure = await reviewRotationOutput({
+        ownerId: job.ownerId, projectId: shot.projectId, generationAttemptId: attemptId,
+        shot, guide: orientationGuide, references: request.input_references.slice(0, referenceBuffers.length).map((reference) => reference.image_url.url),
+        candidate: `data:image/webp;base64,${candidate.toString("base64")}`,
+      });
       if (failure) {
         await releaseGeneration({
-          jobId, attemptId, attemptState: "failed", failureCode: "invalid_mug_orientation",
-          publicError: "This mug view did not match the requested handle position. Credits were released.",
+          jobId, attemptId, attemptState: "failed", failureCode: "invalid_rotation_output",
+          publicError: "This view could not be verified at the requested angle. Credits were released.",
           privateError: failure, providerRequestId, usageCostMicros,
-        });
-        return { status: "failed" as const };
-      }
-    }
-    if (orientationGuide?.kind.startsWith("upright-phone-") && orientationGuide.elevation === 0) {
-      const lean = await phoneLeanDegrees(image);
-      if (lean !== undefined && Math.abs(lean) > MAX_PHONE_LEAN_DEGREES) {
-        await releaseGeneration({
-          jobId,
-          attemptId,
-          attemptState: "failed",
-          failureCode: "invalid_upright_output",
-          publicError: "This phone view was tilted. Credits were released.",
-          privateError: `The phone silhouette leaned ${lean.toFixed(1)} degrees.`,
-          providerRequestId,
-          usageCostMicros,
         });
         return { status: "failed" as const };
       }

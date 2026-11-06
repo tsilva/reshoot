@@ -20,7 +20,7 @@ export function providerIdentifier(value: unknown): string | null {
 
 export type ProviderCostRow = {
   id: string;
-  purpose: "image" | "project_naming";
+  purpose: "image" | "project_naming" | "rotation_review";
   state: string;
   usageCostMicros: number | null;
   startedAt: Date;
@@ -44,6 +44,8 @@ export function summarizeProviderCosts(rows: ProviderCostRow[]) {
     imageCostMicros: rows.filter((row) => row.purpose === "image")
       .reduce((sum, row) => sum + (row.usageCostMicros ?? 0), 0),
     namingCostMicros: rows.filter((row) => row.purpose === "project_naming")
+      .reduce((sum, row) => sum + (row.usageCostMicros ?? 0), 0),
+    rotationReviewCostMicros: rows.filter((row) => row.purpose === "rotation_review")
       .reduce((sum, row) => sum + (row.usageCostMicros ?? 0), 0),
   };
 }

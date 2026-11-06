@@ -18,6 +18,24 @@ not establish natural rotation, photographic quality or identical 3D geometry.
 
 ## Provider cost accounting
 
+Rotation regression coverage is in `tests/rotation-review.test.ts`,
+`tests/orientation-guide.test.ts`, `tests/generation-request.test.ts`,
+`tests/generation-policy.test.ts` and `tests/generation-execution.test.ts`.
+Synthetic responses verify opposite-side acceptance for all eight angles,
+object-independent direction frames, symmetry handling, the new quote policy, rejection before storage or
+credit capture, failed/malformed reviews without retries, and separate review
+cost attribution. These fixtures test enforcement, not a real model's accuracy.
+Before claiming photographic success, evaluate a fresh complete set against its
+originals and inspect all transitions, both profiles and the wrap.
+
+Apply `0006_rotation_review` before deploying the new acceptance path. Its ledger
+uniqueness is per `(generation_attempt_id, purpose)`: one image and one review
+can be recorded, but neither can repeat. Review spend must not overwrite the
+legacy image-attempt amount. On a disposable local database, verify existing
+image rows survive, both duplicate purposes fail, and reviews without an image
+attempt and naming calls with an attempt are rejected. Never migrate a hosted
+database or request paid generation solely to run these checks.
+
 Run `pnpm exec vitest run tests/provider-cost.test.ts tests/provider-calls.test.ts tests/provider-cost-route.test.ts tests/generation-execution.test.ts tests/project-naming.test.ts tests/project-upload-naming.test.ts`
 for credential-free provider-cost coverage. Fixtures verify pre-request ledger
 creation, duplicate-call protection, valid zero versus missing/invalid usage,
@@ -131,13 +149,15 @@ The bar must follow actual settled jobs, including failures, and remain
 indeterminate if progress is unavailable. Verify live completion refreshes the
 card without starting or resuming generation.
 
-For handled mugs, compare all eight views against the original and the pose
-sequence: handle right at 0°, edge-on in front at 90°, left at 180°, hidden at
-270°, with the corresponding near/far quarter-view occlusions. Reject a repeated
-handle-right pose labeled as a profile or rear quarter. Check that body height,
-base, rim, handle attachments and glaze remain stable. The synthetic mug tests
-exercise right/left openings, hidden/edge-on silhouettes and release of a rejected
-output; they do not establish photographic quality or coherent 3D geometry.
+For any object, compare all eight views against the originals and the common
+physical coordinate frame. Opposite profiles must expose opposite sides, with
+asymmetric landmarks remaining attached to their original physical surfaces.
+Check near/far occlusion, component attachments, construction, scale and the
+stable display pose across the entire sequence. Allow visually equivalent
+orientations only when genuine rotational symmetry explains them. Missing
+evidence is uncertainty rather than proof of symmetry. Synthetic tests exercise
+these acceptance rules without establishing photographic quality or coherent
+3D geometry.
 
 ## Sample rotation review
 

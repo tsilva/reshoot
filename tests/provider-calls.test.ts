@@ -11,7 +11,8 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db", () => ({ db: {
   insert: () => ({ values: (values: Row) => ({ onConflictDoNothing: () => ({ returning: async () => {
     if (state.insertFailure) throw new Error("Ledger unavailable");
-    if (state.rows.has(String(values.id))) return [];
+    if (state.rows.has(String(values.id)) || (values.generationAttemptId && [...state.rows.values()].some((row) =>
+      row.generationAttemptId === values.generationAttemptId && row.purpose === values.purpose))) return [];
     const row: Row = { ...values, usageCostMicros: null, costSource: null, requestId: null, responseId: null,
       startedAt: new Date(), finishedAt: null, costCheckedAt: null };
     state.rows.set(String(row.id), row); state.events.push("insert"); return [row];
@@ -78,6 +79,19 @@ describe("durable provider spend", () => {
     await callProviderJson(context);
     await expect(callProviderJson(context)).rejects.toThrow("not replayed");
     expect(state.fetch).toHaveBeenCalledOnce();
+  });
+
+  it("records a separate review once per image attempt without overwriting its image cost", async () => {
+    state.fetch.mockResolvedValueOnce(Response.json({ usage: { cost: .07 } }))
+      .mockResolvedValueOnce(Response.json({ usage: { cost: .001 } }));
+    await callProviderJson(context);
+    // Review costs must not be mirrored into the legacy image attempt amount.
+    state.mirrorFailure = true;
+    const input = { ...context, purpose: "rotation_review" as const, endpoint: "https://openrouter.ai/api/v1/chat/completions" };
+    await expect(callProviderJson(input)).resolves.toMatchObject({ usageCostMicros: 1000 });
+    await expect(callProviderJson(input)).rejects.toThrow("not replayed");
+    expect(state.fetch).toHaveBeenCalledTimes(2);
+    expect(await projectProviderCosts("project")).toMatchObject({ totalCostMicros: 71000, imageCostMicros: 70000, rotationReviewCostMicros: 1000 });
   });
 
   it("keeps cost and response identity even if updating legacy attempt accounting fails", async () => {

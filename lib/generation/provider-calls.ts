@@ -10,7 +10,7 @@ type ProviderCall = typeof providerCalls.$inferSelect;
 type CallContext = {
   ownerId: string;
   projectId: string;
-  purpose: "image" | "project_naming";
+  purpose: "image" | "project_naming" | "rotation_review";
   generationAttemptId?: string;
 };
 
@@ -22,7 +22,7 @@ function providerName(endpoint: string) {
   return url.origin === "https://openrouter.ai" ? "openrouter" : "agentbridge";
 }
 
-async function saveCost(call: Pick<ProviderCall, "id" | "generationAttemptId">, patch: {
+async function saveCost(call: Pick<ProviderCall, "id" | "generationAttemptId" | "purpose">, patch: {
   usageCostMicros: number;
   costSource: "response" | "generation_lookup";
   responseModel?: string | null;
@@ -36,7 +36,7 @@ async function saveCost(call: Pick<ProviderCall, "id" | "generationAttemptId">, 
   const [saved] = await db.update(providerCalls).set({ ...patch, costCheckedAt: new Date(), updatedAt: new Date() })
     .where(and(eq(providerCalls.id, call.id), isNull(providerCalls.usageCostMicros)))
     .returning({ usageCostMicros: providerCalls.usageCostMicros });
-  if (saved && call.generationAttemptId && patch.usageCostMicros <= 2_147_483_647) {
+  if (saved && call.purpose === "image" && call.generationAttemptId && patch.usageCostMicros <= 2_147_483_647) {
     await db.update(generationAttempts).set({ usageCostMicros: saved.usageCostMicros, updatedAt: new Date() })
       .where(eq(generationAttempts.id, call.generationAttemptId));
   }
@@ -45,7 +45,7 @@ async function saveCost(call: Pick<ProviderCall, "id" | "generationAttemptId">, 
 
 // Read-only, bounded metadata lookup. Never replay inference to obtain a price,
 // and never send a gateway credential to an upstream OpenRouter endpoint.
-async function lookupCost(call: Pick<ProviderCall, "id" | "endpoint" | "responseId" | "requestId" | "generationAttemptId">, apiKey: string) {
+async function lookupCost(call: Pick<ProviderCall, "id" | "endpoint" | "responseId" | "requestId" | "generationAttemptId" | "purpose">, apiKey: string) {
   await db.update(providerCalls).set({ costCheckedAt: new Date(), updatedAt: new Date() }).where(eq(providerCalls.id, call.id));
   let endpoint: URL;
   try { endpoint = new URL(call.endpoint); } catch { return null; }
@@ -86,9 +86,9 @@ export async function callProviderJson(input: CallContext & {
   headers?: Record<string, string>;
   timeoutMs: number;
 }) {
-  if ((input.purpose === "image") !== Boolean(input.generationAttemptId)) throw new Error("Invalid provider call attribution.");
+  if ((input.purpose !== "project_naming") !== Boolean(input.generationAttemptId)) throw new Error("Invalid provider call attribution.");
   const provider = providerName(input.endpoint);
-  const id = input.generationAttemptId ?? crypto.randomUUID();
+  const id = input.purpose === "image" ? input.generationAttemptId! : crypto.randomUUID();
   // Serialization and credential resolution happen before marking paid work.
   const body = JSON.stringify(input.body);
   const [call] = await db.insert(providerCalls).values({
