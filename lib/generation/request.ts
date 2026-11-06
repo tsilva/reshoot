@@ -1,4 +1,4 @@
-import { rotationInstructions } from "./rotation";
+import { rotationInstructions, UPRIGHT_DISPLAY_POSE } from "./rotation";
 import { shotOrientation, type GenerationShot } from "./orientation";
 import { previousViewInstructions, type PreviousGenerationView } from "./sequence";
 import { MAX_BATCH_SHOTS } from "../projects/limits";
@@ -15,7 +15,7 @@ export type OrientationGuide = {
 
 export const CATALOG_STUDIO_INSTRUCTIONS = [
   "This image belongs to a consistent multi-angle ecommerce photo set. Keep the same upright display pose, scale and neutral white balance across every turntable view.",
-  "UPRIGHT DISPLAY POSE: place the product on its natural base with its intrinsic up direction vertical. Use its natural stable display orientation. Ignore any lean, sideways roll, forward/backward pitch, hand position or camera tilt in the uploads.",
+  UPRIGHT_DISPLAY_POSE,
   "ROTATION: the product turns as one rigid object around its own center vertical axis, like a centered turntable. Keep that axis at x = 50% of the canvas and its floor contact at the same position. Lock the camera position, distance, elevation, focal length and framing across the rotation; never orbit, pan, tilt or zoom the camera. Change yaw only. Never lean, roll, tip, or invert the product. All components and protrusions turn with the body.",
   "LIGHTING: use one large diffused key light above CAMERA LEFT, approximately 45 degrees left and 45 degrees above the camera, with neutral 5500 K daylight and gentle fill. Keep the light fixed relative to the image across views; highlights stay on the screen-left surfaces. Do not rotate the lighting with the product or copy uneven source lighting.",
   "BACKGROUND: return a true transparent background with alpha. Make the space outside the product and visible gaps between its parts fully transparent. Preserve the product’s own edges and material detail. Do not include a floor, baked cast shadow, opaque matte, checkerboard pattern, or decorative border.",

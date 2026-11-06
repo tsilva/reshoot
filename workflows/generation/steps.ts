@@ -19,7 +19,7 @@ import { buildImageRequest } from "@/lib/generation/request";
 import { createOrientationGuide } from "@/lib/generation/orientation-guide";
 import { ROTATION_POLICY } from "@/lib/generation/rotation";
 import { reviewRotationOutput } from "@/lib/generation/rotation-review";
-import { GENERATION_SEQUENCE_POLICY, previousSequenceShots, reviewContextShots, sequenceContextShots, type PreviousGenerationView } from "@/lib/generation/sequence";
+import { previousSequenceShots, requiredSequenceAnchors, reviewContextShots, sequenceContextShots, type PreviousGenerationView } from "@/lib/generation/sequence";
 import { shotOrientation } from "@/lib/generation/orientation";
 import {
   imageProviderConfig,
@@ -200,6 +200,7 @@ export async function executeGenerationJob(
       inputs.map((input) => getObjectBuffer(input.frozenR2Key)),
     );
     const contextShots = sequenceContextShots(quoteShots, shot.id);
+    const requiredAnchors = requiredSequenceAnchors(quoteShots, shot.id);
     const reviewShots = reviewContextShots(quoteShots, shot.id);
     const previous = [...new Map([...(contextShots ?? []), ...(reviewShots ?? [])].map((view) => [view.shotId!, view])).values()];
     const previousViews: PreviousGenerationView[] = [];
@@ -214,7 +215,7 @@ export async function executeGenerationJob(
       for (const prior of previous) {
         const row = rows.find((row) => row.shotId === prior.shotId);
         if (row?.status === "failed") {
-          if (quoteShots[0]?.sequencePolicy === GENERATION_SEQUENCE_POLICY && contextShots?.some((view) => view.shotId === prior.shotId)) {
+          if (requiredAnchors.some((view) => view.shotId === prior.shotId)) {
             missingAnchor = true;
             throw new Error("A required cardinal orientation anchor failed.");
           }
@@ -335,6 +336,9 @@ export async function executeGenerationJob(
         previousViews: reviewViews, policy: rotationPolicy,
       });
       if (failure) {
+        // The reviewer returns fixed application reasons, never provider text
+        // or image evidence. Keep rejection diagnosis available in runtime logs.
+        console.warn("Rotation output rejected", { jobId, attemptId, reason: failure });
         await releaseGeneration({
           jobId, attemptId, attemptState: "failed", failureCode: "invalid_rotation_output",
           publicError: "This view could not be verified at the requested angle. Credits were released.",

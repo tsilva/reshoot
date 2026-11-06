@@ -81,6 +81,42 @@ describe("durable generation dispatch", () => {
     expect(reviewer.messages[1].content.filter((c:{type:string})=>c.type==="image_url")).toHaveLength(8);
   });
 
+  it.each([180, 90, 270, 135, 225, 45, 315])("isolates a rejected front anchor from independent views (%s degrees)", async (azimuth) => {
+    state.azimuth = azimuth;
+    state.quoteShots = [0, 45, 90, 135, 180, 225, 270, 315].map(angle => ({
+      clientId: String(angle), shotId: angle === azimuth ? "shot" : String(angle), label: "View", azimuth: angle,
+      referenceAssetIds: ["primary", "supporting"], sequencePolicy: "cardinal-anchors-v2", rotationPolicy: "verified-rotation-v2",
+    }));
+    state.previousRows = [0, 180, 90, 270, 45, 135, 225].map(angle => ({
+      shotId: String(angle), status: angle === 0 ? "failed" : "succeeded", r2Key: `anchor-${angle}`, mimeType: "image/png",
+    }));
+    const png = await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
+    state.getObjectBuffer.mockResolvedValue(png);
+    state.fetch.mockResolvedValueOnce(Response.json({ data: [{ b64_json: png.toString("base64") }] }))
+      .mockResolvedValueOnce(Response.json({ choices: [{ message: { content: JSON.stringify({
+        confident: true, same_product: true, rigid_pose: true, front_visible: azimuth === 45 || azimuth === 315,
+        rear_visible: azimuth > 90 && azimuth < 270,
+        physical_side: azimuth === 180 ? "neither" : azimuth < 180 ? "right" : "left",
+        side_image_edge: azimuth % 90 === 0 ? "neither" : azimuth === 225 ? "right" : "left",
+        same_view_as: null, evidence: "Observed side agrees with the originals and available accepted anchors.",
+      }) } }] }));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    let result;
+    try { result = await executeGenerationJob("job", "attempt", "lease"); } finally { log.mockRestore(); }
+    const blocked = azimuth === 45 || azimuth === 315;
+    expect(result).toEqual({ status: blocked ? "failed" : "succeeded" });
+    if (blocked) {
+      expect(state.fetch).not.toHaveBeenCalled();
+      expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ failureCode: "missing_rotation_anchor" }));
+      expect(state.capture).not.toHaveBeenCalled();
+    } else {
+      expect(state.fetch).toHaveBeenCalledTimes(2);
+      expect(state.capture).toHaveBeenCalledOnce();
+      expect(state.release).not.toHaveBeenCalled();
+      expect(state.getObjectBuffer).not.toHaveBeenCalledWith("anchor-0");
+    }
+  });
+
   it.each([false, true])("loads accepted predecessors in frozen order, skips rejected views, and shares context with review (missing=%s)", async (missing) => {
     const png = await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
     state.quoteShots = [

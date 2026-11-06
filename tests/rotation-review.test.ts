@@ -3,7 +3,7 @@ vi.mock("server-only", () => ({}));
 const state = vi.hoisted(() => ({ call: vi.fn() }));
 vi.mock("@/lib/generation/provider-calls", () => ({ callProviderJson: state.call }));
 import { reviewRotationOutput, rotationReviewFailure } from "../lib/generation/rotation-review";
-import { rotationTarget } from "../lib/generation/rotation";
+import { ROTATION_COORDINATE_FRAME, UPRIGHT_DISPLAY_POSE, rotationTarget } from "../lib/generation/rotation";
 import { buildGenerationPrompt } from "../lib/generation/request";
 
 const observed = { confident: true, same_product: true, rigid_pose: true,
@@ -92,6 +92,26 @@ describe("physical rotation acceptance", () => {
 });
 
 describe("blind anchored orientation review", () => {
+  it("can bootstrap the front without anchors using the generator's coordinate frame and display pose", async () => {
+    state.call.mockResolvedValue({ ok: true, result: { choices: [{ message: { content: review({
+      front_visible: true, physical_side: "neither", side_image_edge: "neither", same_view_as: null,
+    }) } }] } });
+    expect(await reviewRotationOutput({ ownerId: "owner", projectId: "project", generationAttemptId: "attempt",
+      shot: { label: "SECRET-FRONT-TARGET", azimuth: 0 },
+      guide: { kind: "direction-frame-v1", azimuth: 0, elevation: 0, image: "TARGET-GUIDE" },
+      references: ["tilted-original"], candidate: "upright-candidate", policy: "verified-rotation-v2",
+    })).toBeUndefined();
+    const body = state.call.mock.calls.at(-1)![0].body;
+    expect(body.messages[0].content).toContain(ROTATION_COORDINATE_FRAME);
+    expect(body.messages[0].content).toContain(UPRIGHT_DISPLAY_POSE);
+    expect(body.messages[0].content).toContain("A rigid reorientation of the whole assembly");
+    expect(body.messages[0].content).toContain("Camera elevation to verify: 0 degrees");
+    expect(JSON.stringify(body)).not.toContain("SECRET-FRONT-TARGET");
+    expect(JSON.stringify(body)).not.toContain("TARGET-GUIDE");
+    expect(buildGenerationPrompt({ label: "View", azimuth: 0 }, 1)).toContain(ROTATION_COORDINATE_FRAME);
+    expect(buildGenerationPrompt({ label: "View", azimuth: 0 }, 1)).toContain(UPRIGHT_DISPLAY_POSE);
+  });
+
   it("rejects the reported rear-quarter duplicate even when physical-side words match the requested answer", () => {
     const content=review({rear_visible:true,physical_side:"left",side_image_edge:"left",same_view_as:135});
     expect(rotationReviewFailure(content,{label:"Rear left",azimuth:225},"verified-rotation-v2")).toContain("wrong image edge");

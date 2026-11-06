@@ -46,6 +46,15 @@ export function sequenceContextShots(quoteShots: QuoteShotInput[], shotId: strin
   }));
 }
 
+// Earlier cardinals improve continuity but can be reconstructed from originals
+// if one fails. Only diagonals require their two neighboring cardinal anchors.
+export function requiredSequenceAnchors(quoteShots: QuoteShotInput[], shotId: string) {
+  const context = sequenceContextShots(quoteShots, shotId);
+  if (quoteShots[0]?.sequencePolicy !== GENERATION_SEQUENCE_POLICY) return [];
+  const target = shotOrientation(quoteShots.find((shot) => shot.shotId === shotId)!)!;
+  return target.azimuth % 90 === 0 ? [] : context!;
+}
+
 export function reviewContextShots(quoteShots: QuoteShotInput[], shotId: string) {
   const previous = previousSequenceShots(quoteShots, shotId);
   if (quoteShots[0]?.sequencePolicy !== GENERATION_SEQUENCE_POLICY) return previous;
