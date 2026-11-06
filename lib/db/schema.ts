@@ -262,6 +262,7 @@ export type QuoteShotInput = {
   // Old identifiers remain readable for historical outputs and exports only.
   orientationGuideKind?: OrientationGuideKind | "generic-cup-v1" | "upright-mug-v1" | "upright-phone-v1" | "upright-phone-v2";
   rotationPolicy?: "verified-rotation-v1";
+  sequencePolicy?: "previous-views-v1";
 };
 
 export const generationQuotes = pgTable(

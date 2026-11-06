@@ -1,5 +1,5 @@
 import { providerModel } from "../../lib/generation/agentbridge";
-import { and, count, desc, eq, gt, ne, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import sharp from "sharp";
 import { RetryableError } from "workflow";
 import { db } from "@/lib/db";
@@ -8,6 +8,7 @@ import {
   generationBatches,
   generationInputs,
   generationJobs,
+  generationOutputs,
   generationQuotes,
   shots,
 } from "@/lib/db/schema";
@@ -18,6 +19,8 @@ import { buildImageRequest } from "@/lib/generation/request";
 import { createOrientationGuide } from "@/lib/generation/orientation-guide";
 import { ROTATION_POLICY } from "@/lib/generation/rotation";
 import { reviewRotationOutput } from "@/lib/generation/rotation-review";
+import { previousSequenceShots, type PreviousGenerationView } from "@/lib/generation/sequence";
+import { shotOrientation } from "@/lib/generation/orientation";
 import {
   imageProviderConfig,
   requireImageProviderKey,
@@ -29,7 +32,7 @@ import {
 } from "@/lib/storage/r2";
 
 type ClaimResult =
-  | { kind: "terminal" | "duplicate" }
+  | { kind: "terminal" | "duplicate" | "waiting" }
   | { kind: "execute"; attemptId: string; leaseOwner: string };
 
 export async function claimGenerationJob(jobId: string): Promise<ClaimResult> {
@@ -51,6 +54,21 @@ export async function claimGenerationJob(jobId: string): Promise<ClaimResult> {
     const now = new Date();
     if (job.status === "running" && job.leaseExpiresAt && job.leaseExpiresAt > now) {
       return { kind: "duplicate" as const };
+    }
+    const [quote] = await tx.select({ shots: generationQuotes.shots }).from(generationBatches)
+      .innerJoin(generationQuotes, eq(generationQuotes.id, generationBatches.quoteId))
+      .where(and(eq(generationBatches.id, job.batchId), eq(generationBatches.ownerId, job.ownerId),
+        eq(generationQuotes.ownerId, job.ownerId))).limit(1);
+    if (!quote) throw new Error("Generation quote is missing.");
+    const previous = previousSequenceShots(quote.shots, job.shotId);
+    if (previous?.length) {
+      const predecessors = await tx.select({ shotId: generationJobs.shotId, status: generationJobs.status })
+        .from(generationJobs).where(and(eq(generationJobs.batchId, job.batchId), eq(generationJobs.ownerId, job.ownerId),
+          inArray(generationJobs.shotId, previous.map((shot) => shot.shotId!))));
+      if (predecessors.length !== previous.length) throw new Error("Generation sequence jobs are missing.");
+      if (predecessors.some((row) => row.status !== "succeeded" && row.status !== "failed")) {
+        return { kind: "waiting" as const };
+      }
     }
     const [running] = await tx
       .select({ value: count() })
@@ -180,6 +198,27 @@ export async function executeGenerationJob(
     const referenceBuffers = await Promise.all(
       inputs.map((input) => getObjectBuffer(input.frozenR2Key)),
     );
+    const previous = previousSequenceShots(quoteShots, shot.id);
+    const previousViews: PreviousGenerationView[] = [];
+    if (previous?.length) {
+      const rows = await db.select({ shotId: generationJobs.shotId, status: generationJobs.status,
+        r2Key: generationOutputs.r2Key, mimeType: generationOutputs.mimeType })
+        .from(generationJobs).leftJoin(generationOutputs, and(eq(generationOutputs.jobId, generationJobs.id),
+          eq(generationOutputs.ownerId, job.ownerId), eq(generationOutputs.projectId, shot.projectId)))
+        .where(and(eq(generationJobs.batchId, job.batchId), eq(generationJobs.ownerId, job.ownerId),
+          inArray(generationJobs.shotId, previous.map((view) => view.shotId!))));
+      for (const prior of previous) {
+        const row = rows.find((row) => row.shotId === prior.shotId);
+        if (row?.status === "failed") continue;
+        if (row?.status !== "succeeded" || !row.r2Key || !row.mimeType) {
+          throw new Error("An earlier accepted generation is unavailable.");
+        }
+        const bytes = await getObjectBuffer(row.r2Key);
+        const image = await sharp(bytes).resize({ width: 768, height: 768, fit: "inside", withoutEnlargement: true })
+          .flatten({ background: "white" }).webp({ quality: 90 }).toBuffer();
+        previousViews.push({ ...shotOrientation(prior)!, image: `data:image/webp;base64,${image.toString("base64")}` });
+      }
+    }
     // Persisted legacy guide identifiers never select category-specific prompts.
     const orientationGuide = await createOrientationGuide(shot);
     const rotationPolicy = quoteShots[0]?.rotationPolicy;
@@ -193,6 +232,7 @@ export async function executeGenerationJob(
         (buffer) => `data:image/webp;base64,${buffer.toString("base64")}`,
       ),
       orientationGuide,
+      previousViews,
     });
     const providerKey = requireImageProviderKey();
 
@@ -275,6 +315,7 @@ export async function executeGenerationJob(
         ownerId: job.ownerId, projectId: shot.projectId, generationAttemptId: attemptId,
         shot, guide: orientationGuide, references: request.input_references.slice(0, referenceBuffers.length).map((reference) => reference.image_url.url),
         candidate: `data:image/webp;base64,${candidate.toString("base64")}`,
+        previousViews,
       });
       if (failure) {
         await releaseGeneration({

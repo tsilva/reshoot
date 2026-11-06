@@ -120,6 +120,7 @@ export async function createGenerationBatch(input: {
 
     let recalculatedTotal = 0;
     let monthlyRemaining = account.monthlyAvailableCredits ?? 0;
+    const boundShots = [];
     for (const requested of quote.shots) {
       let shotId = requested.shotId;
       if (shotId) {
@@ -218,6 +219,7 @@ export async function createGenerationBatch(input: {
         ownerId: input.userId,
         jobId,
       });
+      boundShots.push({ ...requested, shotId });
     }
     if (recalculatedTotal !== quote.totalCredits) {
       throw new Error("The frozen quote total is inconsistent.");
@@ -256,7 +258,7 @@ export async function createGenerationBatch(input: {
     });
     await tx
       .update(generationQuotes)
-      .set({ usedAt: new Date(), usedBatchId: batch.id, updatedAt: new Date() })
+      .set({ shots: boundShots, usedAt: new Date(), usedBatchId: batch.id, updatedAt: new Date() })
       .where(eq(generationQuotes.id, quote.id));
     await tx
       .update(projects)

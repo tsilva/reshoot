@@ -15,6 +15,7 @@ import {
 } from "@/lib/db/schema";
 import { ORIENTATION_GUIDE_KIND, shotOrientation } from "@/lib/generation/request";
 import { ROTATION_POLICY } from "@/lib/generation/rotation";
+import { GENERATION_SEQUENCE_POLICY } from "@/lib/generation/sequence";
 import { MAX_BATCH_SHOTS } from "@/lib/projects/limits";
 import { requireOwnedProject } from "@/lib/projects/service";
 import { spendableBalance } from "@/lib/subscriptions/allowance";
@@ -120,7 +121,7 @@ export async function POST(request: Request, context: RouteContext) {
     const frozenShots: QuoteShotInput[] = parsed.data.shots.map((shot) => ({
       clientId: shot.clientId,
       orientationGuideKind: ORIENTATION_GUIDE_KIND,
-      ...(verifyRotation ? { rotationPolicy: ROTATION_POLICY } : {}),
+      ...(verifyRotation ? { rotationPolicy: ROTATION_POLICY, sequencePolicy: GENERATION_SEQUENCE_POLICY } : {}),
       ...(shot.shotId ? { shotId: shot.shotId } : {}),
       label: shot.label,
       ...(shot.presetKey ? { presetKey: shot.presetKey } : {}),

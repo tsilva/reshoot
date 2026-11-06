@@ -3,7 +3,8 @@ import sharp from "sharp";
 import type { QuoteShotInput } from "../lib/db/schema";
 const state = vi.hoisted(() => ({
   attemptState: "claimed", providerModel: "openai/gpt-image-2.6-sunburst", transitionWon: true, inputs: ["primary", "supporting"],
-  quoteShots: [] as Array<{ orientationGuideKind: NonNullable<QuoteShotInput["orientationGuideKind"]>; rotationPolicy?: "verified-rotation-v1" }>,
+  quoteShots: [] as Partial<QuoteShotInput>[],
+  previousRows: [] as Array<{ shotId: string; status: string; r2Key?: string; mimeType?: string }>,
   azimuth: 90,
   getObjectBuffer: vi.fn(), headObject: vi.fn(), putObject: vi.fn(),
   capture: vi.fn(), release: vi.fn(), fetch: vi.fn(), updates: [] as unknown[],
@@ -16,10 +17,11 @@ vi.mock("@/lib/generation/accounting", () => ({ captureGeneration: state.capture
 vi.mock("@/lib/storage/r2", () => ({ getObjectBuffer: state.getObjectBuffer, headObject: state.headObject, putObject: state.putObject, sha256Hex: () => "checksum" }));
 vi.mock("@/lib/db", () => ({ db: {
   query: {
-    generationJobs: { findFirst: async () => ({ id: "job", status: "running", ownerId: "owner", version: 1 }) },
+    generationJobs: { findFirst: async () => ({ id: "job", batchId: "batch", status: "running", ownerId: "owner", version: 1 }) },
     generationAttempts: { findFirst: async () => ({ id: "attempt", state: state.attemptState, providerModel: state.providerModel, providerEndpoint: "https://pinned.example/images", outputR2Key: "output", previewR2Key: "preview" }) },
   },
   select: (selection?: unknown) => ({ from: () => ({
+    leftJoin: () => ({ where: async () => state.previousRows }),
     innerJoin: () => ({ innerJoin: () => ({ innerJoin: () => ({
       where: () => ({ limit: async () => [{
         shot: { id: "shot", projectId: "project", label: "Profile", azimuth: state.azimuth, elevation: 0 },
@@ -41,10 +43,44 @@ describe("durable generation dispatch", () => {
     state.attemptState = "claimed"; state.providerModel = "openai/gpt-image-2.6-sunburst"; state.transitionWon = true; state.inputs = ["primary", "supporting"]; state.updates = []; state.quoteShots = [];
     state.calls = []; state.ledgerAvailable = true;
     state.azimuth = 90;
+    state.previousRows = [];
     vi.clearAllMocks();
+    state.fetch.mockReset();
     state.headObject.mockRejectedValue({ $metadata: { httpStatusCode: 404 } });
     state.getObjectBuffer.mockImplementation(async (key) => Buffer.from(key));
     vi.stubGlobal("fetch", state.fetch);
+  });
+
+  it.each([false, true])("loads accepted predecessors in frozen order, skips rejected views, and shares context with review (missing=%s)", async (missing) => {
+    const png = await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
+    state.quoteShots = [
+      { shotId: "first", azimuth: 0 }, { shotId: "rejected", azimuth: 45 }, { shotId: "second", azimuth: 90 }, { shotId: "shot", azimuth: 180 },
+    ].map((shot) => ({ ...shot, sequencePolicy: "previous-views-v1", rotationPolicy: "verified-rotation-v1" }));
+    state.azimuth = 180;
+    // Database result order is intentionally different from the frozen quote.
+    state.previousRows = [{ shotId: "second", status: "succeeded", r2Key: "second-output", mimeType: "image/png" },
+      { shotId: "rejected", status: "failed", r2Key: "rejected-output" },
+      { shotId: "first", status: "succeeded", r2Key: missing ? undefined : "first-output", mimeType: "image/png" }];
+    state.getObjectBuffer.mockResolvedValue(png);
+    state.fetch.mockResolvedValueOnce(Response.json({ data: [{ b64_json: png.toString("base64") }] }))
+      .mockResolvedValueOnce(Response.json({ choices: [{ message: { content: JSON.stringify({
+        confident: true, same_product: true, rigid_pose: true, front_visible: false, rear_visible: true,
+        physical_side: "neither", evidence: "Same frozen component construction at the rear.",
+      }) } }] }));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: missing ? "failed" : "succeeded" });
+    if (missing) {
+      expect(state.fetch).not.toHaveBeenCalled();
+      expect(state.updates).toEqual([]);
+      expect(state.release).toHaveBeenCalledOnce();
+      return;
+    }
+    expect(state.getObjectBuffer.mock.calls.map(([key]) => key)).toEqual(["primary", "supporting", "first-output", "second-output"]);
+    const imageRequest = JSON.parse(state.fetch.mock.calls[0][1].body);
+    expect(imageRequest.input_references).toHaveLength(5);
+    expect(imageRequest.prompt).toContain("REFERENCE 4 is an earlier generated view at 0 degrees");
+    expect(imageRequest.prompt).toContain("REFERENCE 5 is an earlier generated view at 90 degrees");
+    const reviewRequest = JSON.parse(state.fetch.mock.calls[1][1].body);
+    expect(reviewRequest.messages[1].content.filter((item: { type: string }) => item.type === "image_url")).toHaveLength(6);
   });
 
   it.each(["left", "right", "unavailable", "malformed"])("reviews a new left profile before storage (%s)", async (side) => {

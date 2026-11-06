@@ -1,5 +1,7 @@
 import { rotationInstructions } from "./rotation";
 import { shotOrientation, type GenerationShot } from "./orientation";
+import { previousViewInstructions, type PreviousGenerationView } from "./sequence";
+import { MAX_BATCH_SHOTS } from "../projects/limits";
 export { shotOrientation, type GenerationShot } from "./orientation";
 
 export const ORIENTATION_GUIDE_KIND = "direction-frame-v1" as const;
@@ -36,7 +38,7 @@ function productDirection(azimuth: number | null | undefined) {
   return `BACK-${side.toUpperCase()} three-quarter view at ${angle} degrees. Both the rear and the ${side} side face the fixed camera. As seen by the viewer, the visible side is on the image-${edge} edge of the rear face. The front face is hidden behind the product. Hide its front-facing features.`;
 }
 
-export function buildGenerationPrompt(shot: GenerationShot, referenceCount: number, guide?: OrientationGuide) {
+export function buildGenerationPrompt(shot: GenerationShot, referenceCount: number, guide?: OrientationGuide, previousViews: PreviousGenerationView[] = []) {
   if (!Number.isInteger(referenceCount) || referenceCount < 1 || referenceCount > 5) {
     throw new RangeError("Generation requires one primary and up to four supporting originals.");
   }
@@ -45,6 +47,11 @@ export function buildGenerationPrompt(shot: GenerationShot, referenceCount: numb
   if (guide && (!orientation || guide.kind !== ORIENTATION_GUIDE_KIND ||
     guide.azimuth !== orientation.azimuth || guide.elevation !== orientation.elevation)) {
     throw new RangeError("The orientation guide must match the requested shot.");
+  }
+  if (previousViews.length >= MAX_BATCH_SHOTS || previousViews.some((view) =>
+    !view.image || !Number.isFinite(view.azimuth) || view.azimuth < 0 || view.azimuth >= 360 ||
+    !Number.isFinite(view.elevation) || Math.abs(view.elevation) > 90)) {
+    throw new RangeError("Invalid previous generation context.");
   }
   return [
     "Create exactly ONE photorealistic catalog photograph of the SAME physical object shown in the attached originals.",
@@ -60,13 +67,14 @@ export function buildGenerationPrompt(shot: GenerationShot, referenceCount: numb
       "Expose the corresponding surfaces of the original object. Orange and blue are opposite physical sides, not interchangeable image edges. At 90 the orange right side faces the camera; at 270 the blue left side does. At rear quarters those sides swap image edges without changing physical identity.",
       "The frame is NOT a reconstruction of the object. Ignore its dimensions, corners, proportions and silhouette. Keep the original object's shape, depth, openings and protrusions. Replace all annotation colors with its real materials; never add a box or colored markings to the photograph.",
     ].join("\n") : null,
+    previousViewInstructions(previousViews, referenceCount + (guide ? 1 : 0) + 1),
     "PRODUCT ROTATION — fixed camera, centered turntable:",
     `Requested shot label: ${JSON.stringify(shot.label)}.`,
     productDirection(orientation?.azimuth),
     elevation === 0
       ? "Camera elevation: level with the product's center, with no overhead or low-angle view."
       : `Camera elevation: ${Math.abs(elevation)} degrees ${elevation > 0 ? "above" : "below"} the product's center, looking ${elevation > 0 ? "slightly down" : "up"} toward it.`,
-    "Turn the entire object as one rigid assembly. Preserve all internal relationships, component poses and attachments. Do not articulate or reposition individual parts, mirror the source image, or paste its original front view into a new background. Near parts must occlude far parts consistently with the requested rotation.",
+    "Turn the entire object as one rigid assembly. Preserve all internal relationships, component poses and attachments, including the frozen curvature and inner/outer surfaces of flexible parts. Never invert, untwist or reshape a component during rotation. Do not articulate or reposition individual parts, mirror the source image, or paste its original front view into a new background. Near parts must occlude far parts consistently with the requested rotation.",
     "Prefer visible evidence from the originals. For an unseen surface, use only a conservative continuation of the observed materials and construction; introduce no new labels, decorative parts or accessories.",
     "STUDIO AND FRAMING:",
     CATALOG_STUDIO_INSTRUCTIONS,
@@ -80,10 +88,11 @@ export function buildImageRequest(input: {
   shot: GenerationShot;
   referenceImages: string[];
   orientationGuide?: OrientationGuide;
+  previousViews?: PreviousGenerationView[];
 }) {
   return {
     model: input.model,
-    prompt: buildGenerationPrompt(input.shot, input.referenceImages.length, input.orientationGuide),
+    prompt: buildGenerationPrompt(input.shot, input.referenceImages.length, input.orientationGuide, input.previousViews),
     n: 1,
     aspect_ratio: "1:1",
     quality: "high",
@@ -92,7 +101,7 @@ export function buildImageRequest(input: {
       provider: { options: { openai: { complexity: "high" } } },
     } : {}),
     background: "transparent",
-    input_references: [...input.referenceImages, ...(input.orientationGuide ? [input.orientationGuide.image] : [])].map((url) => ({
+    input_references: [...input.referenceImages, ...(input.orientationGuide ? [input.orientationGuide.image] : []), ...(input.previousViews ?? []).map((view) => view.image)].map((url) => ({
       type: "image_url",
       image_url: { url },
     })),

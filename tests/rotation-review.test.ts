@@ -74,4 +74,19 @@ describe("physical rotation acceptance", () => {
     expect(await reviewRotationOutput(input)).toBe("The orientation review could not be completed.");
     expect(state.call).toHaveBeenCalledOnce();
   });
+
+  it("reviews continuity against earlier accepted views and rejects component inversion", async () => {
+    state.call.mockResolvedValue({ ok: true, result: { choices: [{ message: { content: review({ rigid_pose: false,
+      evidence: "A flexible component has reversed curvature relative to the earlier views." }) } }] } });
+    expect(await reviewRotationOutput({ ownerId: "owner", projectId: "project", generationAttemptId: "attempt",
+      shot: { label: "Left", azimuth: 270 }, guide: { kind: "direction-frame-v1", azimuth: 270, elevation: 0, image: "guide" },
+      references: ["original"], previousViews: [{ image: "front", azimuth: 0, elevation: 0 }, { image: "rear", azimuth: 180, elevation: 0 }],
+      candidate: "inverted",
+    })).toContain("construction or rigid display pose changed");
+    const messages = state.call.mock.calls[0][0].body.messages;
+    expect(messages[1].content.slice(1).map((item: { image_url: { url: string } }) => item.image_url.url))
+      .toEqual(["original", "front", "rear", "guide", "inverted"]);
+    expect(messages[1].content[0].text).toContain("REFERENCE 2 is an earlier generated view at 0 degrees");
+    expect(messages[0].content).toContain("Set rigid_pose=false for an inside-out inversion");
+  });
 });

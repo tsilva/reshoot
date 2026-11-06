@@ -105,6 +105,7 @@ describe("one generation per shoot", () => {
     for (const frozen of tables.generation_quotes.at(-1)?.shots as Array<Record<string, unknown>>) {
       expect(frozen.orientationGuideKind).toBe(kind);
       expect(frozen.rotationPolicy).toBe(reviewed ? "verified-rotation-v1" : undefined);
+      expect(frozen.sequencePolicy).toBe(reviewed ? "previous-views-v1" : undefined);
     }
   });
   it("quotes and confirms all eight views in one batch and credit hold", async () => {
@@ -122,6 +123,8 @@ describe("one generation per shoot", () => {
     expect(tables.generation_batches).toHaveLength(1);
     expect(tables.shots.map((row) => row.azimuth)).toEqual([0, 45, 90, 135, 180, 225, 270, 315]);
     expect(tables.generation_jobs).toHaveLength(8);
+    expect((tables.generation_quotes.at(-1)?.shots as Array<{ shotId: string }>).map((shot) => shot.shotId))
+      .toEqual(tables.shots.map((shot) => shot.id));
     expect(tables.credit_holds).toHaveLength(1);
     expect(tables.credit_accounts[0]).toMatchObject({ availableCredits: 680, heldCredits: 320 });
   });

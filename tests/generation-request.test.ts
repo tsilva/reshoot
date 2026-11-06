@@ -4,6 +4,35 @@ import { buildGenerationPrompt, buildImageRequest, CATALOG_STUDIO_INSTRUCTIONS }
 import { selectImageModel, supportedImageModels } from "../lib/generation/provider";
 
 describe("catalog photo requests", () => {
+  it("labels all earlier views separately from originals and preserves flexible component topology", () => {
+    const request = buildImageRequest({ model: "pinned", shot: { label: "Back", azimuth: 180 },
+      referenceImages: ["original", "detail"],
+      orientationGuide: { kind: "direction-frame-v1", image: "guide", azimuth: 180, elevation: 0 },
+      previousViews: [{ image: "front", azimuth: 0, elevation: 0 }, { image: "quarter", azimuth: 45, elevation: 0 }],
+    });
+    expect(request.input_references.map((reference) => reference.image_url.url)).toEqual(["original", "detail", "guide", "front", "quarter"]);
+    expect(request.prompt).toContain("REFERENCE 4 is an earlier generated view at 0 degrees");
+    expect(request.prompt).toContain("REFERENCE 5 is an earlier generated view at 45 degrees");
+    expect(request.prompt).toContain("ABSOLUTE target angle");
+    expect(request.prompt).toContain("inner/outer surfaces");
+    expect(request.prompt).toContain("never flip them inside out");
+    expect(request.prompt).toContain("never propagate a generated defect");
+    expect(request.prompt).not.toContain("REFERENCE 4 is a supporting original");
+  });
+
+  it("bounds the complete ten-shot sequence within the provider's sixteen-reference limit", () => {
+    const request = buildImageRequest({ model: "pinned", shot: { label: "View", azimuth: 324 },
+      referenceImages: Array.from({ length: 5 }, (_, i) => `original-${i}`),
+      orientationGuide: { kind: "direction-frame-v1", image: "guide", azimuth: 324, elevation: 0 },
+      previousViews: Array.from({ length: 9 }, (_, i) => ({ image: `previous-${i}`, azimuth: i * 36, elevation: 0 })),
+    });
+    expect(request.input_references).toHaveLength(15);
+    expect(request.prompt).toContain("REFERENCE 15 is an earlier generated view at 288 degrees");
+    expect(() => buildImageRequest({ model: "pinned", shot: { label: "View", azimuth: 0 }, referenceImages: ["original"],
+      previousViews: Array.from({ length: 10 }, () => ({ image: "previous", azimuth: 0, elevation: 0 })),
+    })).toThrow(RangeError);
+  });
+
   it("uses only object-independent guidance for every angle", () => {
     for (const azimuth of [0, 45, 90, 135, 180, 225, 270, 315]) {
       const body = buildImageRequest({ model: "pinned", shot: { label: "Catalog", azimuth }, referenceImages: ["original"],

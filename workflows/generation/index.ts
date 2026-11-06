@@ -1,10 +1,17 @@
 import { claimGenerationJob, executeGenerationJob } from "./steps";
 import { prepareGenerationArchive } from "./archive-step";
+import { sleep } from "workflow";
 
 export async function generationJobWorkflow(jobId: string) {
   "use workflow";
   console.info("Generation workflow started", { jobId });
-  const claim = await claimGenerationJob(jobId);
+  let claim = await claimGenerationJob(jobId);
+  while (claim.kind === "waiting") {
+    // Waiting for predecessors is normal orchestration, not a failed attempt
+    // or a provider retry. Durable sleep survives page closes and long shoots.
+    await sleep("10s");
+    claim = await claimGenerationJob(jobId);
+  }
   if (claim.kind !== "execute") {
     console.info("Generation workflow exited without paid work", {
       jobId,
