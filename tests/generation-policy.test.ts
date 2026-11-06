@@ -104,8 +104,8 @@ describe("one generation per shoot", () => {
     expect(response.status).toBe(201);
     for (const frozen of tables.generation_quotes.at(-1)?.shots as Array<Record<string, unknown>>) {
       expect(frozen.orientationGuideKind).toBe(kind);
-      expect(frozen.rotationPolicy).toBe(reviewed ? "verified-rotation-v1" : undefined);
-      expect(frozen.sequencePolicy).toBe(reviewed ? "previous-views-v1" : undefined);
+      expect(frozen.rotationPolicy).toBe(reviewed ? "verified-rotation-v2" : undefined);
+      expect(frozen.sequencePolicy).toBe(reviewed ? "cardinal-anchors-v2" : undefined);
     }
   });
   it("quotes and confirms all eight views in one batch and credit hold", async () => {
@@ -117,7 +117,7 @@ describe("one generation per shoot", () => {
     const { quote } = await response.json();
     expect(quote.totalCredits).toBe(320);
     expect(tables.generation_quotes.at(-1)?.shots).toEqual(expect.arrayContaining([
-      expect.objectContaining({ rotationPolicy: "verified-rotation-v1", orientationGuideKind: "direction-frame-v1" }),
+      expect.objectContaining({ rotationPolicy: "verified-rotation-v2", orientationGuideKind: "direction-frame-v1" }),
     ]));
     await confirm(quote.id);
     expect(tables.generation_batches).toHaveLength(1);

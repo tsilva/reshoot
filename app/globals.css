@@ -4959,6 +4959,8 @@ body:has(.home-page) { min-width: 0; }
 .checkout-cancel { width: 100%; margin-top: 10px; }
 
 /* Monthly plans use the account panel's own width, including Clerk's sidebar. */
+.cl-modalContent:has(.subscription-page) { width: min(1280px, calc(100vw - 32px)); max-width: calc(100vw - 32px); }
+.cl-userProfile-root:has(.subscription-page) { width: 100%; min-width: 0; }
 .cl-userProfile-root .cl-cardBox:has(.subscription-page) { width: min(1280px, calc(100vw - 48px)); max-width: none; }
 .cl-userProfile-root .cl-pageScrollBox:has(.subscription-page) { padding: 32px; }
 .subscription-page { font-family: var(--font-body-stack); }

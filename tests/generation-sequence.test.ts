@@ -2,7 +2,7 @@ import { getTableName, type SQL, type Table } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { QuoteShotInput } from "../lib/db/schema";
-import { previousSequenceShots } from "../lib/generation/sequence";
+import { previousSequenceShots, reviewContextShots, sequenceContextShots } from "../lib/generation/sequence";
 
 const state = vi.hoisted(() => ({ transaction: vi.fn() }));
 vi.mock("server-only", () => ({}));
@@ -119,5 +119,37 @@ describe("durable sequential rotation claims", () => {
       shots.map((shot, index) => index ? shot : { ...shot, sequencePolicy: undefined }),
     ]) expect(() => previousSequenceShots(invalid, "right")).toThrow("sequence is invalid");
     expect(() => previousSequenceShots(shots, "foreign-shot")).toThrow("sequence is invalid");
+  });
+});
+
+describe("cardinal anchors before diagonals", () => {
+  const shots: QuoteShotInput[] = [0, 45, 90, 135, 180, 225, 270, 315].map((azimuth) => ({
+    clientId: String(azimuth), shotId: String(azimuth), label: "View", azimuth,
+    referenceAssetIds: ["original"], sequencePolicy: "cardinal-anchors-v2", rotationPolicy: "verified-rotation-v2",
+  }));
+
+  it("waits for front, back, right and left before generating any diagonal, independent of quote order", () => {
+    expect(previousSequenceShots(shots, "0")).toEqual([]);
+    expect(previousSequenceShots(shots, "180")?.map(s => s.azimuth)).toEqual([0]);
+    expect(previousSequenceShots(shots, "90")?.map(s => s.azimuth)).toEqual([0, 180]);
+    expect(previousSequenceShots(shots, "270")?.map(s => s.azimuth)).toEqual([0, 180, 90]);
+    expect(previousSequenceShots(shots, "45")?.map(s => s.azimuth)).toEqual([0, 180, 90, 270]);
+  });
+
+  it("uses only neighboring cardinal anchors for each diagonal, including the wrap", () => {
+    for (const [angle, pair] of [[45, [0, 90]], [135, [90, 180]], [225, [180, 270]], [315, [270, 0]]] as const) {
+      expect(sequenceContextShots(shots, String(angle))?.map(s => s.azimuth)).toEqual(pair);
+    }
+    expect(reviewContextShots(shots, "225")?.map(s => s.azimuth)).toEqual([0, 180, 90, 270, 135]);
+    expect(reviewContextShots(shots, "315")?.map(s => s.azimuth)).toEqual([0, 180, 90, 270, 45]);
+  });
+
+  it("never dispatches a diagonal while a cardinal is unfinished", async () => {
+    const { jobs, attempts } = database(shots);
+    jobs.splice(0, jobs.length, ...shots.map(s=>({id:`job-${s.shotId}`,shotId:s.shotId!,batchId:"batch",ownerId:"owner",status:"queued",leaseExpiresAt:null})));
+    expect(await claimGenerationJob("job-45")).toEqual({kind:"waiting"});
+    expect(attempts).toHaveLength(0);
+    for(const job of jobs) if(["0","180","90","270"].includes(job.shotId))job.status="succeeded";
+    expect(await claimGenerationJob("job-45")).toMatchObject({kind:"execute"});
   });
 });

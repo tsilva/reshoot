@@ -1,7 +1,13 @@
 import { shotOrientation, type GenerationShot } from "./orientation";
 
-export const ROTATION_POLICY = "verified-rotation-v1" as const;
+export const ROTATION_POLICY = "verified-rotation-v2" as const;
 export const ROTATION_REVIEW_MODEL = "openai/gpt-4.1-mini";
+export const ANCHORED_ROTATION_REVIEW_MODEL = "openai/gpt-4.1";
+
+export function targetSideImageEdge(azimuth: number) {
+  if (azimuth % 90 === 0) return "neither";
+  return azimuth < 90 || (azimuth > 180 && azimuth < 270) ? "right" : "left";
+}
 
 // Physical sides are named once from a straight-on front view, never renamed
 // relative to the current image. This convention matches the guide renderer.

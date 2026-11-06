@@ -90,3 +90,27 @@ describe("physical rotation acceptance", () => {
     expect(messages[0].content).toContain("Set rigid_pose=false for an inside-out inversion");
   });
 });
+
+describe("blind anchored orientation review", () => {
+  it("rejects the reported rear-quarter duplicate even when physical-side words match the requested answer", () => {
+    const content=review({rear_visible:true,physical_side:"left",side_image_edge:"left",same_view_as:135});
+    expect(rotationReviewFailure(content,{label:"Rear left",azimuth:225},"verified-rotation-v2")).toContain("wrong image edge");
+    expect(rotationReviewFailure(review({rear_visible:true,physical_side:"left",side_image_edge:"right",same_view_as:135}),
+      {label:"Rear left",azimuth:225},"verified-rotation-v2")).toContain("repeats another angle");
+    expect(rotationReviewFailure(review({rear_visible:true,physical_side:"left",side_image_edge:"right",same_view_as:null}),
+      {label:"Rear left",azimuth:225},"verified-rotation-v2")).toBeUndefined();
+  });
+
+  it("withholds the target label and guide, and supplies cardinal and opposite-quarter evidence", async () => {
+    state.call.mockResolvedValue({ok:true,result:{choices:[{message:{content:review({rear_visible:true,physical_side:"left",side_image_edge:"right",same_view_as:null})}}]}});
+    const result=await reviewRotationOutput({ownerId:"owner",projectId:"project",generationAttemptId:"attempt",
+      shot:{label:"SECRET TARGET rear-left",azimuth:225},guide:{kind:"direction-frame-v1",azimuth:225,elevation:0,image:"TARGET-GUIDE"},
+      references:["original"],previousViews:[{image:"front",azimuth:0,elevation:0},{image:"opposite",azimuth:135,elevation:0}],candidate:"candidate",policy:"verified-rotation-v2"});
+    expect(result).toBeUndefined();
+    const request=state.call.mock.calls.at(-1)![0];
+    expect(request.body.model).toContain("gpt-4.1");
+    expect(JSON.stringify(request.body)).not.toContain("SECRET TARGET");
+    expect(JSON.stringify(request.body)).not.toContain("TARGET-GUIDE");
+    expect(request.body.messages[1].content.slice(1).map((i:{image_url:{url:string}})=>i.image_url.url)).toEqual(["original","front","opposite","candidate"]);
+  });
+});

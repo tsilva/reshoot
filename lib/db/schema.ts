@@ -261,8 +261,8 @@ export type QuoteShotInput = {
   referenceAssetIds: string[];
   // Old identifiers remain readable for historical outputs and exports only.
   orientationGuideKind?: OrientationGuideKind | "generic-cup-v1" | "upright-mug-v1" | "upright-phone-v1" | "upright-phone-v2";
-  rotationPolicy?: "verified-rotation-v1";
-  sequencePolicy?: "previous-views-v1";
+  rotationPolicy?: "verified-rotation-v1" | "verified-rotation-v2";
+  sequencePolicy?: "previous-views-v1" | "cardinal-anchors-v2";
 };
 
 export const generationQuotes = pgTable(

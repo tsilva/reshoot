@@ -110,6 +110,8 @@ or fixture tests does not establish external configuration or delivery.
 
 ## Studio and gallery checks
 
+New shoots generate cardinal views before diagonals. Verify each intermediate angle against its two neighboring cardinal anchors, especially both rear quarters and the 270°/0° wrap. A partial set must retain its missing-angle warning on reopening, disable autoplay while preserving manual navigation, and release failed-view credits. The account panel must use the available phone width rather than shrinking to its text.
+
 Use synthetic/local fixtures for generation, credits and storage behavior. Browser
 verification alone does not authorize a paid request, credit minting, migration
 or changes to production data. Follow the repository's configured development

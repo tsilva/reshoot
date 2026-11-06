@@ -51,6 +51,28 @@ describe("durable generation dispatch", () => {
     vi.stubGlobal("fetch", state.fetch);
   });
 
+  it.each([false, true])("bounds diagonal context to its two cardinals and stops before paid work if an anchor failed (%s)", async (failed) => {
+    state.azimuth=225;
+    state.quoteShots=[0,45,90,135,180,225,270,315].map(azimuth=>({clientId:String(azimuth),shotId:azimuth===225?"shot":String(azimuth),label:"View",azimuth,
+      referenceAssetIds:["primary","supporting"],sequencePolicy:"cardinal-anchors-v2",rotationPolicy:"verified-rotation-v2"}));
+    state.previousRows=[0,180,90,270,135].map(angle=>({shotId:String(angle),status:failed&&angle===270?"failed":"succeeded",r2Key:`anchor-${angle}`,mimeType:"image/png"}));
+    const png=await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
+    state.getObjectBuffer.mockImplementation(async key=>String(key).startsWith("anchor-")?png:Buffer.from(key));
+    state.fetch.mockResolvedValueOnce(Response.json({data:[{b64_json:png.toString("base64")}]}))
+      .mockResolvedValueOnce(Response.json({choices:[{message:{content:JSON.stringify({confident:true,same_product:true,rigid_pose:true,
+        front_visible:false,rear_visible:true,physical_side:"left",side_image_edge:"right",same_view_as:null,evidence:"Rear face with side on image right, consistent with cardinal anchors."})}}]}));
+    const log=vi.spyOn(console,"error").mockImplementation(()=>{});
+    try { await executeGenerationJob("job","attempt","lease"); } finally {log.mockRestore();}
+    if(failed){expect(state.fetch).not.toHaveBeenCalled();expect(state.release).toHaveBeenCalledWith(expect.objectContaining({failureCode:"missing_rotation_anchor"}));return;}
+    expect(state.capture).toHaveBeenCalledOnce();
+    const request=JSON.parse(state.fetch.mock.calls[0][1].body);
+    expect(request.input_references).toHaveLength(5);
+    expect(request.prompt).toContain("at 180 degrees"); expect(request.prompt).toContain("at 270 degrees");
+    expect(request.prompt).not.toContain("at 135 degrees");
+    const reviewer=JSON.parse(state.fetch.mock.calls[1][1].body);
+    expect(reviewer.messages[1].content.filter((c:{type:string})=>c.type==="image_url")).toHaveLength(8);
+  });
+
   it.each([false, true])("loads accepted predecessors in frozen order, skips rejected views, and shares context with review (missing=%s)", async (missing) => {
     const png = await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
     state.quoteShots = [
