@@ -100,6 +100,10 @@ def main():
     thread = threading.Thread(target=fake.serve_forever, daemon=True)
     thread.start()
     bid = None
+    canary = launcher.BASE / (".sandbox-fixture-" + secrets.token_hex(8))
+    with canary.open("x") as f:
+        f.write("Synthetic filesystem isolation canary.\n")
+    canary.chmod(0o600)
     result = {"ok": False}
     try:
         with tempfile.TemporaryDirectory(prefix="reshoot-storage-fixture-") as tmp:
@@ -200,6 +204,7 @@ def main():
                     f"FIXTURE_CLERK_BASE=http://localhost:{server.server_port}",
                     f"CLERK_API_URL=http://localhost:{server.server_port}",
                     "FIXTURE_SESSION=" + fixture["token"],
+                    "FIXTURE_PRIVATE_CANARY=" + str(canary),
                     "RESHOOT_STORAGE_TRANSPORT=agent-vault",
                     "RESHOOT_STORAGE_TOKEN=reshoot_storage_public_placeholder",
                     f"RESHOOT_STORAGE_BASE_URL=http://127.0.0.1:{server.server_port}/",
@@ -249,6 +254,7 @@ def main():
         if bid:
             admin.api(token, "DELETE", admin.API + "/" + bid)
             result["disposable_bundle_deleted"] = True
+        canary.unlink(missing_ok=True)
     print(json.dumps(result))
     return 0 if result.get("ok") else 1
 

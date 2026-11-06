@@ -45,6 +45,8 @@ def main():
     profile, storage = launcher.load_services()
     if profile["clerk_publishable_key"] is not None:
         raise ValueError("Clerk is already configured; rotation needs explicit review")
+    metadata = load("metadata", ROOT / "scripts/infisical/provision_local_services.py")
+    fingerprint = metadata.public_key_hash(public)
     with (launcher.BASE / "session.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         token = admin.command(
@@ -101,15 +103,13 @@ def main():
             },
         )["service"]
         # Clear only the clipboard value this operation consumed, preserving concurrent copies.
-        if admin.command(["/usr/bin/pbpaste"]).strip() == key:
+        clipboard_cleared = admin.command(["/usr/bin/pbpaste"]).strip() == key
+        if clipboard_cleared:
             subprocess.run(
                 ["/usr/bin/pbcopy"], input="", text=True, env=admin.ENV, check=True
             )
         profile["clerk_publishable_key"] = public
-        metadata = load(
-            "metadata", ROOT / "scripts/infisical/provision_local_services.py"
-        )
-        profile["clerk_jwks_sha256"] = metadata.public_key_hash(public)
+        profile["clerk_jwks_sha256"] = fingerprint
         profile["clerk_source"] = launcher.CLERK_SOURCE
         profile["services"].append(service["id"])
         fd, name = tempfile.mkstemp(prefix=".clerk-setup-", dir=launcher.BASE)
@@ -128,7 +128,7 @@ def main():
                     "ok": True,
                     "clerk_development_connected": True,
                     "credential_stored_in_vault": True,
-                    "clipboard_cleared": True,
+                    "clipboard_cleared": clipboard_cleared,
                     "credentials_displayed": False,
                     "production_changed": False,
                     "defaults_changed": False,

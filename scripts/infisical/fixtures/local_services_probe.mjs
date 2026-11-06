@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRequire, registerHooks } from 'node:module';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { validateClerkSession, CLERK_PLACEHOLDER } from '../../../lib/auth/vault-session.mjs';
 registerHooks({ resolve(specifier, context, next) {
@@ -71,8 +71,9 @@ try {
     socket.on('error', () => resolve(true)); socket.on('connect', () => { socket.destroy(); resolve(false); });
   });
   assert.equal(direct, true);
+  assert.throws(()=>readFileSync(process.env.FIXTURE_PRIVATE_CANARY), error=>error.code==='EPERM'||error.code==='EACCES');
   console.log(JSON.stringify({ ok: true, checks: ['clerk_jwks_via_vault', 'valid_session_verified', 'sdk_authenticate_request',
     'sdk_current_user', 'sdk_handshake', 'tampered_session_rejected', 'proxy_denied_clerk_write', 'relay_denied_oauth_tokens', 'private_metadata_filtered', 'actual_r2_adapter_vault_roundtrip',
-    'head_checksum', 'binary_stream', 'browser_urls_minted', 'delete_missing_404', 'sandbox_direct_network_denied'],
+    'head_checksum', 'binary_stream', 'browser_urls_minted', 'delete_missing_404', 'sandbox_direct_network_denied', 'sandbox_private_files_denied'],
     credential_mode: 'public-placeholder' }));
 } catch { console.log(JSON.stringify({ ok: false, stage, reason: 'Synthetic service probe failed; details withheld' })); process.exitCode = 1; }
