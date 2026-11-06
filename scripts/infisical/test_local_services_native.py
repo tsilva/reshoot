@@ -71,7 +71,14 @@ def main():
                 data = {
                     "id": "user_fixture",
                     "object": "user",
-                    "email_addresses": [],
+                    "email_addresses": [
+                        {
+                            "id": "email_fixture",
+                            "email_address": "fixture@example.invalid",
+                            "linked_to": [{"secret": "fake-sensitive-link"}],
+                        }
+                    ],
+                    "primary_email_address_id": "email_fixture",
                     "first_name": "Fixture",
                     "private_metadata": {
                         "credential": "fake-private-metadata-must-not-reach-app"

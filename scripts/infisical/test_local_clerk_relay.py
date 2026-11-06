@@ -121,6 +121,7 @@ class ClerkRelayTests(unittest.TestCase):
         status, body = self.request("/v1/users/user_fixture")
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body)["id"], "user_fixture")
+        self.assertEqual(json.loads(body)["email_addresses"][0]["linked_to"], [])
         self.assertNotIn("fixture-do-not-return", body)
         self.assertNotIn(self.key, body)
         status, body = self.request("/v1/clients/handshake_payload?nonce=fixture")

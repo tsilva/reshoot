@@ -135,6 +135,7 @@ class Store:
                     for k, v in address.items()
                     if k in {"id", "object", "email_address"}
                 }
+                | {"linked_to": []}
                 for address in data.get("email_addresses", [])
             ]
             return safe

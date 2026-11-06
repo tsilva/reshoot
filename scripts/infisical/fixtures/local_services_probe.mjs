@@ -32,6 +32,8 @@ try {
   stage = 'current-user';
   const user = await client.users.getUser('user_fixture');
   assert.equal(user.id, 'user_fixture');
+  assert.equal(user.emailAddresses[0].emailAddress, 'fixture@example.invalid');
+  assert.deepEqual(user.emailAddresses[0].linkedTo, []);
   assert.deepEqual(user.privateMetadata, {});
   stage = 'handshake';
   const handshake = await client.clients.getHandshakePayload({ nonce: 'fixture-nonce' });
