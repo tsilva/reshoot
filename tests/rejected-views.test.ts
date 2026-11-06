@@ -3,7 +3,7 @@ import type { SQL } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 const state = vi.hoisted(() => ({ user: vi.fn(), owned: vi.fn(), sign: vi.fn(), select: vi.fn(),
   condition: undefined as SQL | undefined, limit: 0,
-  rows: [] as Array<{ id: string; label: string; privateError: string; previewKey: string }> }));
+  rows: [] as Array<{ id: string; label: string; privateError: string; previewKey: string; failureCode?: string }> }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/current-user", () => ({ resolveCurrentUser: state.user }));
 vi.mock("@/lib/projects/service", () => ({ requireOwnedProject: state.owned }));
@@ -51,7 +51,21 @@ describe("private rejected-view evidence", () => {
     expect(state.owned).toHaveBeenCalledWith("owner", projectId);
     expect(state.sign).toHaveBeenCalledWith("private-preview", 300); expect(state.limit).toBe(32);
     const sql = new PgDialect().sqlToQuery(state.condition!);
-    expect(sql.params).toEqual([projectId, "owner", "owner", "owner", "failed", "failed", "invalid_rotation_output"]);
+    expect(sql.params).toEqual([projectId, "owner", "owner", "owner", "failed", "failed", "invalid_rotation_output", "provider_failure"]);
+  });
+
+  it("returns only fixed provider categories without raw errors or preview signing", async () => {
+    state.rows = [{ id: "provider", label: "Back-left", failureCode: "provider_failure",
+      privateError: "Budget limit exceeded. private-key synthetic-sensitive-content", previewKey: "not-an-image" },
+      { id: "unknown", label: "Front-left", failureCode: "provider_failure",
+        privateError: "Unexpected rejection: synthetic-sensitive-content", previewKey: "not-an-image" }];
+    const body = await (await GET(request(), context())).json();
+    expect(body.views).toEqual([
+      { attemptId: "provider", label: "Back-left", providerFailure: { reason: "budget_limit" } },
+      { attemptId: "unknown", label: "Front-left", providerFailure: { reason: "unknown" } },
+    ]);
+    expect(state.sign).not.toHaveBeenCalled();
+    expect(JSON.stringify(body)).not.toContain("synthetic-sensitive-content");
   });
 
   it("does not expose historical errors or claim an unavailable preview exists", async () => {
