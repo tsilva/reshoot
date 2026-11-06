@@ -223,3 +223,17 @@ Run `python3 -m unittest discover -s scripts/infisical -p 'test_local_clerk_rela
 for offline Clerk relay checks. Synthetic loopback services verify instance-key
 binding, public/profile response filtering, and rejection of unreviewed paths,
 queries, cookies and browser origins without contacting Clerk or Infisical.
+
+For local sign-in/storage, run `pnpm services:check-local:vault` for read-only
+authentication/readiness. Run `python3 -I scripts/infisical/test_local_storage.py`
+and `python3 -I scripts/infisical/test_local_services_native.py` before provisioning
+or modifying routes. They exercise the actual SDK/storage adapter with fake keys,
+rejected JWT signatures, blocked OAuth-token reads, private-metadata filtering,
+checksummed transfers, expiring URLs and denied direct connections.
+
+With an owned `pnpm dev:vault` session already running, the explicit synthetic
+write check is `python3 -I scripts/infisical/test_installed_storage.py`. It writes
+only a randomly named fixture namespace to the isolated local store, verifies
+server and browser-style transfers, rejects upload replay and removes its objects.
+It neither contacts R2 nor prints temporary capability URLs. A real browser sign-in
+and upload review is separate from backend readiness and fake SDK verification.
