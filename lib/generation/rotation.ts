@@ -40,5 +40,8 @@ export function rotationInstructions(shot: GenerationShot) {
     ROTATION_COORDINATE_FRAME,
     `TARGET ${target.azimuth} degrees: front surface ${target.front ? "VISIBLE" : "HIDDEN"}; rear surface ${target.rear ? "VISIBLE" : "HIDDEN"}; visible physical side ${target.side.toUpperCase()}.`,
     "At a true profile, the front and rear broad surfaces are edge-on. Distinguish sides using actual asymmetric parts, controls, seams and attachments from the originals; never copy an asymmetry onto the opposite side.",
-  ].join("\n");
+    target.azimuth === 90 || target.azimuth === 270
+      ? "EXACT EDGE-ON PROFILE: turn the whole assembly exactly one quarter-turn from its canonical front. Look parallel to its broad front/rear presentation planes, not diagonally at either plane. Show the actual depth/thickness silhouette; thin or flat components become narrow edges. Do not preserve a wide readable front or rear simply to make the object recognizable. Keep the same vertical up axis and scale; do not widen, bend or thicken components to fill the canvas. Distinguish a broad face from its narrow rim, bevel or attached protrusions."
+      : null,
+  ].filter(Boolean).join("\n");
 }

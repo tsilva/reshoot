@@ -45,7 +45,9 @@ describe("catalog photo requests", () => {
   it("turns the whole product toward a fixed camera while normalizing pose and preserving original packaging", () => {
     const side = buildGenerationPrompt({ label: "Side", azimuth: 90, elevation: 0 }, 1);
     expect(side).toContain("RIGHT PROFILE view");
-    expect(side).toContain("turn the whole product until its right side faces the fixed camera");
+    expect(side).toContain("exactly 90 degrees from its canonical front");
+    expect(side).toContain("physical right side faces the fixed camera");
+    expect(side).toContain("Occluded and edge-on markings must disappear naturally");
     expect(side).toContain("Preserve existing logos, lettering and packaging");
     expect(side).toContain("consistent multi-angle ecommerce photo set");
     expect(side).not.toContain("Do not add text, props, hands, people, packaging");

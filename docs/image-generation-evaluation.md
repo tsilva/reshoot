@@ -68,6 +68,14 @@ Direction frames and context are prepared before the guarded transition that sta
 
 Tests cover category-independent request construction, all eight direction rasters and opposite-side colors, exact custom angles/elevations, original/guide/context roles, bound quote order, predecessor waiting, failed-view exclusion, missing-output failure, legacy scheduling, symmetry/uncertainty, and durable worker acceptance/rejection before storage and credit capture. Synthetic tests establish enforcement, not real model accuracy or coherent photographic geometry.
 
+### Edge-on profiles and rejected-view inspection
+
+True profiles show physical depth/thickness with both broad front/rear presentation faces edge-on. Thin components can become very narrow. Source lettering must disappear when its surface is hidden; preserving identity does not mean preserving the source photo's projected width or readable markings at every angle. Review distinguishes a narrow rim, bevel or seam from an exposed broad presentation face. The acceptance predicates still reject broad-face exposure at a profile and require the correct physical side.
+
+On orientation rejection, the worker preserves a review-sized preview at the attempt's private preview key and a bounded, validated observation in its private error record. It never writes the accepted output key or creates an accepted gallery/export record for that image. Crash recovery therefore cannot accept the preview. Failed diagnostic storage still releases the held credits. Project retention cleanup removes these rejected previews too; no new database migration is required.
+
+The owner-only, non-cacheable `GET /api/projects/<project-id>/rejected-views` endpoint returns at most 32 structured rejection records and five-minute preview URLs. It excludes arbitrary historical errors, checks ownership and project deletion, and makes no inference calls. The evidence can distinguish incorrect generated geometry from a false review rejection; it does not automatically accept, retry or regenerate an image. Keep private evidence and model text out of public logs and reports.
+
 ## Capture sample-specific textureless orientation hints
 
 This local utility produces guide images only. It does not generate final product photographs, use application credits, or add Three.js to the website's runtime dependencies. Prepare a fresh tool directory, then open the printed loopback URL in the configured test browser:

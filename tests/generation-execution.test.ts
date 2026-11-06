@@ -174,9 +174,14 @@ describe("durable generation dispatch", () => {
       expect(state.capture).toHaveBeenCalledWith(expect.objectContaining({ usageCostMicros: 70000 }));
       expect(state.release).not.toHaveBeenCalled();
     } else {
-      expect(state.putObject).not.toHaveBeenCalled();
+      expect(state.putObject).toHaveBeenCalledOnce();
+      expect(state.putObject).toHaveBeenCalledWith(expect.objectContaining({ key: "preview", mimeType: "image/webp" }));
       expect(state.capture).not.toHaveBeenCalled();
       expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ failureCode: "invalid_rotation_output", usageCostMicros: 70000 }));
+      const detail = JSON.parse(state.release.mock.calls[0][0].privateError);
+      expect(detail).toMatchObject({ kind: "rotation-review-v1", previewAvailable: true,
+        target: { azimuth: 270, front: false, rear: false, side: "left" } });
+      expect(detail.observed).toEqual(side === "right" ? expect.objectContaining({ physical_side: "right" }) : null);
     }
   });
 
@@ -270,6 +275,31 @@ describe("durable generation dispatch", () => {
     expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "ambiguous" });
     expect(state.fetch).not.toHaveBeenCalled();
     expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ attemptState: "ambiguous" }));
+  });
+
+  it("cannot recover a quarantined preview as an accepted output", async () => {
+    state.attemptState = "started";
+    state.headObject.mockImplementation(async key => {
+      if (key === "preview") return {};
+      throw { $metadata: { httpStatusCode: 404 } };
+    });
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "ambiguous" });
+    expect(state.capture).not.toHaveBeenCalled(); expect(state.fetch).not.toHaveBeenCalled();
+    expect(state.getObjectBuffer).not.toHaveBeenCalled();
+    expect(state.release).toHaveBeenCalledOnce();
+  });
+
+  it("releases a rejected view even if its diagnostic preview cannot be stored", async () => {
+    state.quoteShots = [{ rotationPolicy: "verified-rotation-v1" }];
+    const png = await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
+    state.fetch.mockResolvedValueOnce(Response.json({ data: [{ b64_json: png.toString("base64") }] }))
+      .mockResolvedValueOnce(Response.json({ choices: [{ message: { content: JSON.stringify({ confident: true, same_product: true,
+        rigid_pose: true, front_visible: true, rear_visible: false, physical_side: "right", evidence: "Broad front face exposed." }) } }] }));
+    state.putObject.mockRejectedValueOnce(new Error("Synthetic storage failure"));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "failed" });
+    expect(state.capture).not.toHaveBeenCalled(); expect(state.release).toHaveBeenCalledOnce();
+    expect(JSON.parse(state.release.mock.calls[0][0].privateError)).toMatchObject({ previewAvailable: false,
+      observed: { front_visible: true, physical_side: "right" } });
   });
 
   it("fails missing originals before marking a provider request started", async () => {

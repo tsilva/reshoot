@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
   outputs: [] as Array<{ output: string; preview: string }>,
+  rejected: [] as Array<{ preview: string }>,
   deleteObject: vi.fn(), deleteRows: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
@@ -11,10 +12,12 @@ vi.mock("@/lib/db", () => ({ db: {
   select: () => ({ from: (table: Table) => {
     const query = {
       leftJoin: () => query,
+      innerJoin: () => query,
       where: () => {
         switch (getTableName(table)) {
           case "projects": return { limit: async () => [{ id: "project", ownerId: "owner" }] };
           case "assets": return Promise.resolve([]);
+          case "generation_attempts": return Promise.resolve(state.rejected);
           default: return Promise.resolve(state.outputs);
         }
       },
@@ -33,6 +36,7 @@ describe("retention cleanup of project ZIPs", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     state.outputs = [];
+    state.rejected = [];
   });
 
   it("removes leftover ZIPs even when no generated image records remain", async () => {
@@ -57,5 +61,11 @@ describe("retention cleanup of project ZIPs", () => {
     });
     await expect(cleanupExpiredProjectObjects()).rejects.toThrow("Storage unavailable");
     expect(state.deleteRows).not.toHaveBeenCalled();
+  });
+
+  it("purges quarantined rejected previews without requiring accepted output records", async () => {
+    state.rejected = [{ preview: "rejected-preview" }, { preview: "rejected-preview" }];
+    expect(await cleanupExpiredProjectObjects()).toEqual({ projects: 1, deletedObjects: 5 });
+    expect(state.deleteObject.mock.calls).toEqual(["rejected-preview", ...keys].map(key => [key]));
   });
 });

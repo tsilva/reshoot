@@ -17,8 +17,9 @@ import { callProviderJson } from "@/lib/generation/provider-calls";
 import { actualImageMime, recoverGenerationOutput } from "@/lib/generation/recovery";
 import { buildImageRequest } from "@/lib/generation/request";
 import { createOrientationGuide } from "@/lib/generation/orientation-guide";
-import { ROTATION_POLICY } from "@/lib/generation/rotation";
+import { ROTATION_POLICY, rotationTarget } from "@/lib/generation/rotation";
 import { reviewRotationOutput } from "@/lib/generation/rotation-review";
+import type { RotationObservation } from "@/lib/generation/rotation-diagnostics";
 import { previousSequenceShots, requiredSequenceAnchors, reviewContextShots, sequenceContextShots, type PreviousGenerationView } from "@/lib/generation/sequence";
 import { shotOrientation } from "@/lib/generation/orientation";
 import {
@@ -329,20 +330,31 @@ export async function executeGenerationJob(
     if (rotationPolicy && orientationGuide) {
       const candidate = await image.clone().resize({ width: 768, height: 768, fit: "inside", withoutEnlargement: true })
         .flatten({ background: "white" }).webp({ quality: 90 }).toBuffer();
+      let observed: RotationObservation | null = null;
       const failure = await reviewRotationOutput({
         ownerId: job.ownerId, projectId: shot.projectId, generationAttemptId: attemptId,
         shot, guide: orientationGuide, references: request.input_references.slice(0, referenceBuffers.length).map((reference) => reference.image_url.url),
         candidate: `data:image/webp;base64,${candidate.toString("base64")}`,
         previousViews: reviewViews, policy: rotationPolicy,
+        onObservation: (observation) => { observed = observation; },
       });
       if (failure) {
-        // The reviewer returns fixed application reasons, never provider text
-        // or image evidence. Keep rejection diagnosis available in runtime logs.
         console.warn("Rotation output rejected", { jobId, attemptId, reason: failure });
+        let previewAvailable = false;
+        try {
+          // Quarantine only the review-sized preview. The accepted output key
+          // stays absent, so crash recovery cannot capture a rejected image.
+          await putObject({ key: attempt.previewR2Key, body: candidate, mimeType: "image/webp" });
+          previewAvailable = true;
+        } catch {
+          // Diagnostic storage must never prevent the credit release.
+          console.warn("Rejected rotation preview could not be saved", { jobId, attemptId });
+        }
         await releaseGeneration({
           jobId, attemptId, attemptState: "failed", failureCode: "invalid_rotation_output",
           publicError: "This view could not be verified at the requested angle. Credits were released.",
-          privateError: failure, providerRequestId, usageCostMicros,
+          privateError: JSON.stringify({ kind: "rotation-review-v1", failure, previewAvailable,
+            target: rotationTarget(shot), observed }), providerRequestId, usageCostMicros,
         });
         return { status: "failed" as const };
       }

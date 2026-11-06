@@ -75,6 +75,19 @@ describe("physical rotation acceptance", () => {
     expect(state.call).toHaveBeenCalledOnce();
   });
 
+  it("preserves the validated observation on rejection without logging raw provider content", async () => {
+    const onObservation = vi.fn();
+    state.call.mockResolvedValue({ ok: true, result: { choices: [{ message: { content: review({ front_visible: true }) } }] } });
+    expect(await reviewRotationOutput({ ownerId: "owner", projectId: "project", generationAttemptId: "attempt",
+      shot: { label: "Left", azimuth: 270 }, guide: { kind: "direction-frame-v1", azimuth: 270, elevation: 0, image: "guide" },
+      references: ["original"], candidate: "candidate", onObservation })).toContain("wrong physical side");
+    expect(onObservation).toHaveBeenCalledWith(expect.objectContaining({ front_visible: true, physical_side: "left" }));
+    const instructions = state.call.mock.calls[0][0].body.messages[0].content;
+    expect(instructions).toContain("not merely that a thin rim");
+    expect(buildGenerationPrompt({ label: "Right", azimuth: 90 }, 1)).toContain("EXACT EDGE-ON PROFILE");
+    expect(buildGenerationPrompt({ label: "Front", azimuth: 0 }, 1)).not.toContain("EXACT EDGE-ON PROFILE");
+  });
+
   it("reviews continuity against earlier accepted views and rejects component inversion", async () => {
     state.call.mockResolvedValue({ ok: true, result: { choices: [{ message: { content: review({ rigid_pose: false,
       evidence: "A flexible component has reversed curvature relative to the earlier views." }) } }] } });

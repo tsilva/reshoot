@@ -6,8 +6,11 @@ import {
   assets,
   assetVariants,
   generationInputs,
+  generationAttempts,
+  generationJobs,
   generationOutputs,
   projects,
+  shots,
 } from "@/lib/db/schema";
 import { deleteObject } from "@/lib/storage/r2";
 import { deleteProjectArchives } from "@/lib/projects/archive-storage";
@@ -68,6 +71,17 @@ export async function cleanupExpiredProjectObjects(limit = 100) {
     for (const output of outputRows) {
       await Promise.all([deleteObject(output.output), deleteObject(output.preview)]);
       deletedObjects += 2;
+    }
+    const rejected = await db.select({ preview: generationAttempts.previewR2Key })
+      .from(generationAttempts)
+      .innerJoin(generationJobs, eq(generationJobs.id, generationAttempts.jobId))
+      .innerJoin(shots, eq(shots.id, generationJobs.shotId))
+      .where(and(eq(shots.projectId, project.id), eq(shots.ownerId, project.ownerId),
+        eq(generationAttempts.ownerId, project.ownerId), eq(generationJobs.ownerId, project.ownerId),
+        eq(generationAttempts.state, "failed"), eq(generationJobs.failureCode, "invalid_rotation_output")));
+    for (const preview of new Set(rejected.map((row) => row.preview))) {
+      await deleteObject(preview);
+      deletedObjects += 1;
     }
     // Remove leftover ZIPs even if the image records were already purged.
     deletedObjects += await deleteProjectArchives(project.id);

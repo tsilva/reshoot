@@ -110,6 +110,8 @@ or fixture tests does not establish external configuration or delivery.
 
 ## Studio and gallery checks
 
+Rejected-view regression coverage is in `tests/rejected-views.test.ts`, `tests/generation-execution.test.ts` and `tests/project-cleanup.test.ts`. Verify anonymous, foreign-owner and deleted-project denial, query limits and owner scoping, non-cacheable responses, bounded structured observations, short-lived private preview URLs, credit release after diagnostic storage failure, retention cleanup and prevention of preview-only crash recovery. These checks must never publish a rejected candidate as an accepted output or retry paid inference.
+
 New shoots generate cardinal views before diagonals. Verify each intermediate angle against its two neighboring cardinal anchors, especially both rear quarters and the 270°/0° wrap. A partial set must retain its missing-angle warning on reopening, disable autoplay while preserving manual navigation, and release failed-view credits. The account panel must use the available phone width rather than shrinking to its text.
 
 Use synthetic/local fixtures for generation, credits and storage behavior. Browser
