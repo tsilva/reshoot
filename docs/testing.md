@@ -123,6 +123,17 @@ height below the header, with no lower Add photos or Generate controls. Verify
 that those controls appear after the first saved reference, disappear after the
 last is removed, and show the quoted credits in smaller text below Generate inside the button, without a view count or explanatory label. Select each thumbnail with mouse and keyboard to verify that the large preview changes without changing the quoted cost. Check the top-left remove control and preview fallback after removing the selected reference. Check that adding and removing saved photos refreshes the quoted cost, including removing the primary, removing the last reference and crossing the five-reference cap. The drag target must contain no price. Removal must check ownership, serialize with generation confirmation and reject generated shoots. A removed photo must not be restored by replaying upload finalization.
 Verify that busy or completed shoots reject drops without navigating to the file.
+Click **Choose photos**, cancel the picker, and confirm the upload area has no
+lingering focus outline. Tab to the empty upload area and **Add photos** control
+to confirm their keyboard focus outlines remain visible.
+On supported touch devices, check the rear-facing **Take a photo** chooser.
+Test preset controls,
+original-image dialogs, completed gallery, ZIP download and error/empty states.
+Check the studio header from 320px through desktop widths with long shoot titles,
+multi-digit balances and both Download and Preparing ZIP… states. Account controls
+must reserve their full width; playback buttons, download text and balance must
+remain separate without horizontal overflow. On phones, account controls share
+the title row while playback and download occupy the second row.
 Extract the ZIP and verify its `reshoot_<hyphenated-project-name>_<short-project-id>.zip`
 name, matching top-level folder, perspective-only filenames and original image
 formats. Include older cached shoots, registered phone views and repeated labels.
@@ -193,3 +204,17 @@ node scripts/verify-mug-alignment.mjs
 They require previously captured paused frames and matching geometry; they do not
 capture a browser or generate images. Keep only repeatable procedures, necessary
 asset provenance and supported limitations in public documentation.
+
+## Local database Vault transport
+
+Run `pnpm db:check-local:vault` for bounded database/role/upstream-auth checks and
+`pnpm dev:vault` for the opt-in local application. Its loopback-only
+`/api/internal/local-database` endpoint checks identity through the actual app DB
+binding without reading app rows. It is disabled under normal and hosted defaults.
+
+Run `pnpm exec vitest run tests/local-database-vault.test.ts` for default-preservation
+and fail-closed session tests. The relay package documents fake-key native
+integration tests for transactions, savepoints, row locks, actual cost-recording
+clients, rejected accounting, session expiry and ambiguous commits. Test against
+a disposable database before provisioning a new route. Never use inference,
+production data or billing operations to test this connection.

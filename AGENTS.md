@@ -74,3 +74,102 @@ notes in `.internal/reference/`, and browser captures/measurements in
 and contains no tracked files before writing. Public testing/development docs
 retain reproducible checks and known limitations; do not link them to private
 reports or add machine paths and operator/session details.
+
+<!-- agent-vault-agentbridge:read:start -->
+## Read-only AgentBridge check
+
+For local agent-operated model-catalog checks, use `pnpm agentbridge:check`.
+The reviewed mapping is Agent Vault bundle `local-reshoot-agentbridge-read`,
+service `reshoot-agentbridge-models`, for GET `/api/v1/models` on
+`127.0.0.1:8082`. The owner-only local metadata profile is
+`~/.config/infisical/agentbridge-clients/reshoot-read.json`.
+
+The profile validates this repository's native Development source identity and
+pins the existing routing helper's digest. No application key or Sentry token
+is fetched. The local gateway accepts public placeholders; AgentBridge's own
+upstream credential route remains responsible for provider authentication.
+The sandboxed Node client imports the reviewed app routing helper, requires
+`agentbridge_public_placeholder`, and enables proxy support explicitly.
+Its fixed request returns only catalog size and whether the configured default
+is advertised. A missing catalog entry is informational; a catalog does not
+prove that an inference request will succeed or that upstream login is valid.
+
+Outbound access is limited to the local proxy. Home reads are limited to the
+reviewed runtime, public CA and required client/config files. Only the pinned
+Node runtime can be executed inside the sandbox; Keychain service lookup is
+blocked. The trusted launcher and other full-access host processes remain
+outside that isolation boundary. The instance and CA are pinned without
+changing system trust, and sessions last at most ten minutes.
+
+This profile permits only read-only catalog access. It does not migrate or
+launch the full application, authorize inference, or enable chat, image,
+embedding, file or MCP transports. Missing/changed bindings and failed checks
+stop without raw-key or direct-network fallback. Existing app defaults,
+production delivery, Sentry settings/uploads and other service profiles remain
+unchanged. Run `pnpm test:agentbridge` after modifying this client or profile.
+<!-- agent-vault-agentbridge:read:end -->
+
+
+## Agent Vault image-comparison tool
+
+For local image-model comparisons, use the opt-in commands:
+
+```sh
+pnpm agentbridge:tools:check
+mkdir -p .internal/agent-vault/comparisons/my-run
+pnpm agentbridge:compare:vault --phase baseline --model openai/gpt-image-2.6-sunburst --output-dir "$PWD/.internal/agent-vault/comparisons/my-run"
+```
+
+The check makes only catalog and upstream-authentication requests. The comparison
+command runs the existing comparison client and **makes real image requests**;
+run it only after reviewing and approving the complete prompts, reference images
+and number of requests. Only 2.6 Sunburst is supported. Baseline sends two requests; candidate
+sends three. Omitting `--model` selects 2.6 Sunburst. Changed comparison source
+requires trusted review of the protected profile pins before use. This
+migration was verified with synthetic responses, without real image generation.
+
+Service mapping: native Development project `cdb4be1b-c53c-4b18-87eb-6f90aae2b661`,
+reserved service folder `/agents/agentbridge`, Agent Vault bundle
+`local-reshoot-agentbridge-tools`. The gateway service allows catalog, chat and
+image paths on `127.0.0.1:8082`; its separate authentication service permits only
+GET `/api/v1/openrouter/key` using the `localhost:8082` alias. No application key
+is copied into this folder: the gateway owns upstream authentication. The
+owner-only `agentbridge-clients/reshoot-tools.json` profile under the Infisical
+configuration directory pins the native identity, runtime, helpers, comparison
+source, routing helper and dependency lock. Source changes require trusted review.
+
+The sandbox restricts network access to the proxy, with public placeholders and
+process-local CA trust. Only the selected canonical output directory under
+`.internal/agent-vault/comparisons` is writable. Credential files and Keychain
+access are blocked; provider failure details are withheld and a failed transport
+stops subsequent dispatch. Recorded requests are never automatically replayed.
+This protects the sandboxed client, not other full-access same-user host processes.
+
+For the opt-in local webpage's database route, use the isolated local app setup
+below. It preserves interactive transactions through a trusted local relay;
+the normal Neon transport remains unchanged. The comparison tool still does not
+provide Clerk, storage or signing credentials. Never reuse the read-only
+migration-auditor role for application writes or bypass provider cost recording.
+
+The original catalog check, default app launchers, model choices, production
+delivery and Sentry configuration remain unchanged. Run `pnpm test:agentbridge`
+and the provider/naming tests after changes to these helpers.
+
+
+## Isolated local app through Agent Vault
+
+For agent-operated local app work needing database and AgentBridge access, use
+`pnpm dev:vault`; use `pnpm db:check-local:vault` for the read-only check.
+The reviewed mapping is native project `cdb4be1b-c53c-4b18-87eb-6f90aae2b661`,
+Development, reserved folder `/agents/database`, bundle `local-reshoot-development`.
+Agent Vault manages this credential directly; never export the folder or inject
+a database URL. The app receives `reshoot_database_public_placeholder` and uses
+only the separate `reshoot_agent_vault_dev` database as `reshoot_agent_vault_app`.
+The owner-only `database-relay/reshoot/app.json` profile in the Infisical config
+directory pins source, runtime, compiler, native binding, CA and relay policy.
+Changed bindings must fail; source approval is explicit trusted administration.
+Follow [local development through Agent Vault](docs/local-agent-vault.md) for
+installation, fake-first tests, service paths, lifecycle and limitations.
+Keep normal launch defaults, production delivery and Sentry unchanged. Sign-in,
+storage, signing and Realtime still need separate compatible routes; do not add
+an auth bypass, dummy storage keys, raw-key fallback or paid inference to test it.
