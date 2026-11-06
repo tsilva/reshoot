@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import sharp from "sharp";
 import type { OrientationGuideKind } from "../lib/generation/request";
 const state = vi.hoisted(() => ({
-  attemptState: "claimed", transitionWon: true, inputs: ["primary", "supporting"],
+  attemptState: "claimed", providerModel: "openai/gpt-image-2.6-flare", transitionWon: true, inputs: ["primary", "supporting"],
   quoteShots: [] as Array<{ orientationGuideKind: OrientationGuideKind }>,
   getObjectBuffer: vi.fn(), headObject: vi.fn(), putObject: vi.fn(),
   capture: vi.fn(), release: vi.fn(), fetch: vi.fn(), updates: [] as unknown[],
@@ -10,13 +10,13 @@ const state = vi.hoisted(() => ({
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("workflow", () => ({ RetryableError: Error }));
-vi.mock("@/lib/generation/provider", () => ({ imageProviderConfig: { model: "openai/gpt-image-2.5-flare", endpoint: "https://new.example/images", referer: "https://reshoot.tsilva.eu", title: "Reshoot" }, requireImageProviderKey: () => "dummy" }));
+vi.mock("@/lib/generation/provider", () => ({ imageProviderConfig: { model: "openai/gpt-image-2.6-flare", endpoint: "https://new.example/images", referer: "https://reshoot.tsilva.eu", title: "Reshoot" }, requireImageProviderKey: () => "dummy" }));
 vi.mock("@/lib/generation/accounting", () => ({ captureGeneration: state.capture, releaseGeneration: state.release }));
 vi.mock("@/lib/storage/r2", () => ({ getObjectBuffer: state.getObjectBuffer, headObject: state.headObject, putObject: state.putObject, sha256Hex: () => "checksum" }));
 vi.mock("@/lib/db", () => ({ db: {
   query: {
     generationJobs: { findFirst: async () => ({ id: "job", status: "running", ownerId: "owner", version: 1 }) },
-    generationAttempts: { findFirst: async () => ({ id: "attempt", state: state.attemptState, providerModel: "openai/gpt-image-2.5-sunburst", providerEndpoint: "https://pinned.example/images", outputR2Key: "output", previewR2Key: "preview" }) },
+    generationAttempts: { findFirst: async () => ({ id: "attempt", state: state.attemptState, providerModel: state.providerModel, providerEndpoint: "https://pinned.example/images", outputR2Key: "output", previewR2Key: "preview" }) },
   },
   select: (selection?: unknown) => ({ from: () => ({
     innerJoin: () => ({ innerJoin: () => ({ innerJoin: () => ({
@@ -37,7 +37,7 @@ import { executeGenerationJob } from "../workflows/generation/steps";
 
 describe("durable generation dispatch", () => {
   beforeEach(() => {
-    state.attemptState = "claimed"; state.transitionWon = true; state.inputs = ["primary", "supporting"]; state.updates = []; state.quoteShots = [];
+    state.attemptState = "claimed"; state.providerModel = "openai/gpt-image-2.6-flare"; state.transitionWon = true; state.inputs = ["primary", "supporting"]; state.updates = []; state.quoteShots = [];
     state.calls = []; state.ledgerAvailable = true;
     vi.clearAllMocks();
     state.headObject.mockRejectedValue({ $metadata: { httpStatusCode: 404 } });
@@ -76,7 +76,8 @@ describe("durable generation dispatch", () => {
     expect(state.putObject).toHaveBeenCalledTimes(2);
   });
 
-  it("retains the recorded model while sending old queued attempts through the current gateway, persists an image, then captures credits", async () => {
+  it.each(["openai/gpt-image-2.6-flare", "openai/gpt-image-2.5-sunburst"])("dispatches the recorded model %s through the current gateway, persists an image, then captures credits", async (model) => {
+    state.providerModel = model;
     const png = await sharp({
       create: { width: 16, height: 16, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
     }).composite([{
@@ -90,7 +91,7 @@ describe("durable generation dispatch", () => {
     expect(endpoint).toBe("https://new.example/images");
     const body = JSON.parse(options.body);
     expect(body.background).toBe("transparent");
-    expect(body.model).toBe("openrouter/openai/gpt-image-2.5-sunburst");
+    expect(body.model).toBe(`openrouter/${model}`);
     expect(body.prompt).toContain("RIGHT PROFILE view");
     expect(body.input_references.slice(0, 2).map((item: { image_url: { url: string } }) => item.image_url.url)).toEqual(["primary", "supporting"].map((key) => `data:image/webp;base64,${Buffer.from(key).toString("base64")}`));
     expect(body.input_references).toHaveLength(3);

@@ -11,10 +11,10 @@ const { values } = parseArgs({ options: {
   model: { type: "string" },
 } });
 if (!["baseline", "candidate"].includes(values.phase) || !isAbsolute(values["output-dir"] ?? "")) {
-  throw new Error("Use --phase baseline|candidate --output-dir /absolute/path. Each phase makes at most six paid image requests.");
+  throw new Error("Use --phase baseline|candidate --output-dir /absolute/path. Each phase makes at most three paid image requests.");
 }
-const models = ["openai/gpt-image-2.5-sunburst", "openai/gpt-image-2.5-flare"];
-if (values.model && !models.includes(values.model)) throw new Error("Choose one of the two comparison models.");
+const models = ["openai/gpt-image-2.6-flare"];
+if (values.model && !models.includes(values.model)) throw new Error("Only GPT Image 2.6 Flare is supported.");
 const key = (process.env.AGENTBRIDGE_API_KEY ?? "not-needed");
 if (!key) throw new Error("Managed image-provider credentials are required.");
 const directory = resolve(values["output-dir"]);

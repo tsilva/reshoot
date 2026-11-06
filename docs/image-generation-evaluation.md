@@ -1,10 +1,14 @@
-# Product photo model evaluation — 2026-10-07
+# Product photo model selection and evaluation
 
 Reshoot turns a simple original product image into separate catalog views with transparent backgrounds shown on the studio’s white surface. Product identity, pose, construction, markings, and correct camera angles take priority over creative styling.
 
 ## Decision
 
-Use `openai/gpt-image-2.5-flare` by default, with `openai/gpt-image-2.5-sunburst` available through the server-only `RESHOOT_IMAGE_MODEL` environment variable. An unsupported override fails configuration rather than silently selecting another provider. A claimed attempt retains its recorded model and uses the configured local or hosted provider route. There is no automatic paid model fallback.
+New generation attempts use only `openai/gpt-image-2.6-flare`. There is no 2.5 or Sunburst fallback. The server-only `RESHOOT_IMAGE_MODEL` setting may be absent or name 2.6 Flare; any other value fails configuration. Remove or update an older override before building or starting the app. A previously claimed attempt retains its recorded model and uses the configured local or hosted provider route, preserving dispatch recovery and cost provenance.
+
+The [2.6 Flare endpoint catalog](https://openrouter.ai/api/v1/images/models/openai/gpt-image-2.6-flare/endpoints), checked on 2026-11-06, supports the existing square aspect ratio, high quality, transparent background and up to 16 reference images. The request format and credit accounting are unchanged. This selection has automated request/dispatch coverage; no live 2.6 quality, latency or cost comparison has been run.
+
+## Historical 2.5 pilot — 2026-10-07
 
 Flare gave the more convincing right profile of the knitted doll with the revised prompt. Sunburst's right-profile result showed more of the far arm and both feet, drifting toward a three-quarter view. Both models preserved the visible bow, braids, knitted material and seated posture, although synthesized views changed some limb spacing and proportions. Both reproduced `RESHOOT`, `CREME SOAP`, and `100 g` correctly on the packaging fixture. Neither model demonstrated perfect geometric reconstruction from one image.
 
@@ -52,7 +56,7 @@ Before accepting a level phone view, the worker estimates lateral lean from the 
 
 For a complete set of eight level phone views, Reshoot displays and exports a registered turntable. While the batch is active, the gallery shows the original and generation progress. On success, the first generated views shown in the gallery are the completed turntable. If the batch ends incomplete, the gallery reports that the turntable could not be completed and shows any available individual views. It maps the four straight photographs onto one rounded phone shape and renders each of the eight angles with the same upright pivot, camera, height and materials. The projection preserves transparency at the rounded corners and fits a straight rail seam through the body. Buttons on the broad source face cannot shift the side rail. The 135° view reuses the 180° back and 90° right rail, placing the rail on the viewer’s left. The 225° view reuses the same back and places the 270° left rail on the viewer’s right. Straight source guides stay neutral. The gallery can scale the square previews into their transparent side padding on narrow screens, leaving the complete handset visible. Downloads retain the square canvas. The generated source files and credit history remain in place. Inferred surfaces still depend on the available originals.
 
-The guide is created before the guarded transition that starts a provider request. It adds no reconstruction service or paid preprocessing call. Quote reference counts, frozen original inputs, credit holds, dispatch/recovery and the one-request replay protection keep their existing behavior. The auxiliary image is service overhead within that image request, whose actual usage is captured normally. Five originals plus the guide require six image inputs; the configured models' [Flare](https://openrouter.ai/api/v1/images/models/openai/gpt-image-2.5-flare/endpoints) and [Sunburst](https://openrouter.ai/api/v1/images/models/openai/gpt-image-2.5-sunburst/endpoints) endpoint catalogs reported a maximum of 16 on 2026-10-31.
+The guide is created before the guarded transition that starts a provider request. It adds no reconstruction service or paid preprocessing call. Quote reference counts, frozen original inputs, credit holds, dispatch/recovery and the one-request replay protection keep their existing behavior. The auxiliary image is service overhead within that image request, whose actual usage is captured normally. Five originals plus the guide require six image inputs; the [2.6 Flare endpoint catalog](https://openrouter.ai/api/v1/images/models/openai/gpt-image-2.6-flare/endpoints) reported a maximum of 16 on 2026-11-06.
 
 Tests exercise the actual generated raster's neutrality, opacity and changing pose, exact custom angles/elevations, input order and role labeling with five originals, mismatched-guide rejection, and the durable worker's outbound request/output/credit capture. These tests cover request construction, dispatch and rejection of a tilted phone silhouette. The rendered guide and output checks do not certify the generated product’s geometry.
 
@@ -84,7 +88,7 @@ Baseline: doll right profile and carton front per model. Revised prompt: the sam
 | Sunburst | Revised | 3/3 | 33.5 s | $0.190216 |
 | Flare | Revised | 3/3 | 40.0 s | $0.190216 |
 
-All ten requests succeeded, costing $0.626490 in provider-reported usage. The models had identical costs per matching case. Flare was not consistently faster in this pilot; the default choice is based on visual camera adherence. This comparison does not mint or consume workspace credits because it is a separate development evaluation.
+All ten requests succeeded, costing $0.626490 in provider-reported usage. The models had identical costs per matching case. Flare was not consistently faster in this pilot; the original 2.5 default choice was based on visual camera adherence. This comparison does not mint or consume workspace credits because it is a separate development evaluation.
 
 ## Prompt changes
 
@@ -106,15 +110,12 @@ A validation build ran while this batch was active and erased the Workflow adapt
 
 Provider usage metadata is now stored before raster persistence, so future output recovery can retain billing evidence. Reported cost for the interrupted four-shot app batch was not recovered; the $0.626490 total above covers only the ten comparison requests. The app test involved four additional image requests.
 
-## Reproduce explicitly
+## Explicit evaluation
 
-The comparison makes paid provider calls. It is never part of startup, build, or the automated test suite. Credentials are fetched through the pinned development Infisical project into memory.
+`scripts/compare-image-models.mjs` now accepts only `openai/gpt-image-2.6-flare`. It compares the previous and revised prompts, rather than reproducing the historical 2.5 model comparison above. It makes real provider calls and is never part of startup, build, or the automated test suite.
 
-```bash
-python3 scripts/infisical/compare_images.py --phase baseline --output-dir /absolute/path/to/evaluation
-python3 scripts/infisical/compare_images.py --phase candidate --output-dir /absolute/path/to/evaluation
-```
+Agent-operated execution requires a separately reviewed sandboxed provider route and approval of the complete prompts, reference images and request count. Do not use the legacy secret-injection launcher. A protected launcher's source pins need trusted review after comparison-source changes.
 
-Use `--model openai/gpt-image-2.5-flare` or `--model openai/gpt-image-2.5-sunburst` to limit a phase to one model. Baseline makes at most four requests; candidate at most six. A JSON record is written before dispatch; rerunning the same directory skips recorded calls, including ambiguous or interrupted calls, to avoid duplicate charges. Use a new directory only when intentionally requesting a new evaluation. Records retain the exact prompt, parameters, reference filename, duration, status, usage cost and output dimensions, without credentials or signed private storage URLs.
+The script requires `--phase baseline` or `--phase candidate` and an absolute `--output-dir`; the optional `--model` accepts only 2.6 Flare. Baseline makes at most two requests; candidate at most three. A JSON record is written before dispatch; rerunning the same directory skips recorded calls, including ambiguous or interrupted calls, to avoid duplicate charges. Use a new directory only when intentionally requesting a new evaluation. Records retain the exact prompt, parameters, reference filename, duration, status, usage cost and output dimensions, without credentials or signed private storage URLs.
 
-Model capabilities and request format were checked against [OpenRouter image generation documentation](https://openrouter.ai/docs/guides/overview/multimodal/image-generation), [Sunburst](https://openrouter.ai/openai/gpt-image-2.5-sunburst), [Flare](https://openrouter.ai/openai/gpt-image-2.5-flare), and the provider's live image model catalog. No unsupported output-size or output-format option was added.
+For the historical 2.5 pilot, model capabilities and request format were checked against [OpenRouter image generation documentation](https://openrouter.ai/docs/guides/overview/multimodal/image-generation), [Sunburst](https://openrouter.ai/openai/gpt-image-2.5-sunburst), [Flare](https://openrouter.ai/openai/gpt-image-2.5-flare), and the provider's live image model catalog. No unsupported output-size or output-format option was added.

@@ -120,9 +120,23 @@ describe("catalog photo requests", () => {
     }
   });
 
-  it("allows only the two requested models for new attempts", () => {
-    expect(selectImageModel("")).toBe(supportedImageModels[0]);
-    for (const model of supportedImageModels) expect(selectImageModel(model)).toBe(model);
-    expect(() => selectImageModel("openai/gpt-image-2")).toThrow("not supported");
+  it("uses 2.6 Flare for new attempts and rejects legacy or alternative models", () => {
+    expect(supportedImageModels).toEqual(["openai/gpt-image-2.6-flare"]);
+    expect(selectImageModel("")).toBe("openai/gpt-image-2.6-flare");
+    expect(selectImageModel("openai/gpt-image-2.6-flare")).toBe("openai/gpt-image-2.6-flare");
+    for (const model of ["openai/gpt-image-2", "openai/gpt-image-2.5-flare", "openai/gpt-image-2.5-sunburst", "openai/gpt-image-2.6-sunburst"]) {
+      expect(() => selectImageModel(model)).toThrow("not supported");
+    }
+  });
+
+  it("fails closed on a legacy environment override instead of falling back", () => {
+    try {
+      vi.stubEnv("RESHOOT_IMAGE_MODEL", "");
+      expect(selectImageModel()).toBe("openai/gpt-image-2.6-flare");
+      vi.stubEnv("RESHOOT_IMAGE_MODEL", "openai/gpt-image-2.5-flare");
+      expect(() => selectImageModel()).toThrow("not supported");
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });
