@@ -32,8 +32,8 @@
     "services:check-local:vault": "python3 -I scripts/infisical/local_vault.py services-check"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1147.0",
-    "@aws-sdk/s3-request-presigner": "3.1147.0",
+    "@aws-sdk/client-s3": "3.1160.0",
+    "@aws-sdk/s3-request-presigner": "3.1160.0",
     "@clerk/nextjs": "7.9.22",
     "@neon/realtime": "0.1.1",
     "@neondatabase/serverless": "^1.1.0",
