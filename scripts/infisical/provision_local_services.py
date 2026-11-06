@@ -202,13 +202,13 @@ def main():
                 routes.append(
                     (
                         "reshoot-local-clerk",
-                        "api.clerk.com",
+                        f"localhost:{storage_port}",
                         ["GET"],
                         ["/v1/jwks", "/v1/users/", "/v1/clients/handshake_payload"],
                         {
                             "type": "bearer",
-                            "headerName": "Authorization",
-                            "headerPrefix": "Bearer ",
+                            "headerName": "Reshoot-Clerk-Key",
+                            "headerPrefix": "",
                             "value": values["CLERK_SECRET_KEY"],
                         },
                     )

@@ -73,6 +73,9 @@ def main():
                     "object": "user",
                     "email_addresses": [],
                     "first_name": "Fixture",
+                    "private_metadata": {
+                        "credential": "fake-private-metadata-must-not-reach-app"
+                    },
                 }
             elif self.path == "/v1/clients/handshake_payload?nonce=fixture-nonce":
                 data = {"directives": []}
@@ -100,7 +103,12 @@ def main():
                 "root": tmp,
                 "token_sha256": hashlib.sha256(fake_storage.encode()).hexdigest(),
             }
-            server = storage.Server(p)
+            fingerprint = hashlib.sha256(
+                (fixture["jwk"]["n"] + ":" + fixture["jwk"]["e"]).encode()
+            ).hexdigest()
+            server = storage.Server(
+                p, fingerprint, f"http://127.0.0.1:{fake.server_port}"
+            )
             server_thread = threading.Thread(target=server.serve_forever, daemon=True)
             server_thread.start()
             try:
@@ -114,17 +122,17 @@ def main():
                 for name, port, methods, paths, credential in [
                     (
                         "fixture-clerk",
-                        fake.server_port,
+                        server.server_port,
                         ["GET"],
                         [
                             "/v1/jwks",
-                            "/v1/users/user_fixture",
+                            "/v1/users/",
                             "/v1/clients/handshake_payload",
                         ],
                         {
                             "type": "bearer",
-                            "headerName": "Authorization",
-                            "headerPrefix": "Bearer ",
+                            "headerName": "Reshoot-Clerk-Key",
+                            "headerPrefix": "",
                             "value": fake_key,
                         },
                     ),
@@ -148,7 +156,9 @@ def main():
                         {
                             "type": "http",
                             "name": name,
-                            "hostPattern": f"127.0.0.1:{port}",
+                            "hostPattern": f"localhost:{port}"
+                            if name == "fixture-clerk"
+                            else f"127.0.0.1:{port}",
                             "allowedMethods": methods,
                             "allowedPathPrefixes": paths,
                             "credential": credential,
@@ -180,7 +190,8 @@ def main():
                     + __import__("base64")
                     .b64encode(b"fixture.clerk.accounts.dev$")
                     .decode(),
-                    f"FIXTURE_CLERK_BASE=http://127.0.0.1:{fake.server_port}",
+                    f"FIXTURE_CLERK_BASE=http://localhost:{server.server_port}",
+                    f"CLERK_API_URL=http://localhost:{server.server_port}",
                     "FIXTURE_SESSION=" + fixture["token"],
                     "RESHOOT_STORAGE_TRANSPORT=agent-vault",
                     "RESHOOT_STORAGE_TOKEN=reshoot_storage_public_placeholder",

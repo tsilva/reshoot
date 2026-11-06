@@ -108,6 +108,13 @@ class StorageTest(unittest.TestCase):
             url = json.load(r)["url"]
         with urllib.request.urlopen(url) as r:
             self.assertEqual(r.read(), self.body)
+        # Browser cookies ignore ports. Capability auth must ignore these cookies.
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                url, headers={"Cookie": "__session=fake-browser-only"}
+            )
+        ) as r:
+            self.assertEqual(r.read(), self.body)
         wrong = urllib.request.Request(
             url, method="PUT", data=self.body, headers=signed["headers"]
         )
@@ -128,6 +135,7 @@ class StorageTest(unittest.TestCase):
         for h in (
             {"Reshoot-Storage-Token": "reshoot_storage_public_placeholder"},
             {"Origin": "https://unrelated.invalid"},
+            {"Cookie": "__session=fake-browser-only"},
             {"Host": "unrelated.invalid"},
         ):
             with self.assertRaises(urllib.error.HTTPError) as error:

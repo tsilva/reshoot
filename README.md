@@ -351,7 +351,8 @@ and the provider/naming tests after changes to these helpers.
 ## Isolated local development
 
 With the reviewed relay installed, use `pnpm dev:vault` to run the local app
-against a separate PostgreSQL database without giving the app its password.
-Run `pnpm db:check-local:vault` for a read-only readiness check. Existing launch
-defaults stay unchanged; sign-in and storage still need their separate setup.
+against a separate PostgreSQL database and local object store, with Development
+Clerk sign-in and service credentials kept behind Vault. Run
+`pnpm db:check-local:vault` and `pnpm services:check-local:vault` for read-only
+readiness checks. Existing launch defaults stay unchanged.
 See [local development through Agent Vault](docs/local-agent-vault.md).

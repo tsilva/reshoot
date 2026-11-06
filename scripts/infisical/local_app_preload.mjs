@@ -50,7 +50,18 @@ globalThis.fetch = async (input, init) => {
   if (ai&&target.pathname.endsWith('/openrouter/key')) target.hostname='localhost';
   try {
     const response=await original(target,{...init,method,headers,redirect:'error'});
-    if(!response.ok){await response.body?.cancel();return Response.json({ok:false,reason:'Service request failed; details withheld'},{status:response.status});}
+    if(!response.ok){
+      if(clerk){
+        const value = await response.json().catch(()=>null);
+        const error = value?.errors?.[0];
+        if(['relay_upstream','relay_denied','relay_internal'].includes(error?.code)) {
+          const status = error.meta?.status;
+          return Response.json({errors:[{code:error.code,message:'Clerk service failed; details withheld',
+            meta:Number.isInteger(status)&&status>=400&&status<=599?{status}:{}}]}, {status:response.status});
+        }
+      } else await response.body?.cancel();
+      return Response.json({ok:false,reason:'Service request failed; details withheld'},{status:response.status});
+    }
     return response;
   }catch{throw new Error('Service connection failed; details withheld');}
 };

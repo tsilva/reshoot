@@ -6,6 +6,7 @@ import { createVaultStorage, validateStorageSession } from "../lib/storage/vault
 const common = { NODE_ENV: "development", NODE_USE_ENV_PROXY: "1", HTTP_PROXY: "http://fake:fixture@127.0.0.1:8283",
   HTTPS_PROXY: "http://fake:fixture@127.0.0.1:8283" };
 const clerk = { ...common, RESHOOT_CLERK_TRANSPORT: "agent-vault", CLERK_SECRET_KEY: CLERK_PLACEHOLDER,
+  CLERK_API_URL: "http://localhost:16783", RESHOOT_STORAGE_BASE_URL: "http://127.0.0.1:16783/",
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_" + Buffer.from("fixture.clerk.accounts.dev$").toString("base64") };
 const storage = { ...common, RESHOOT_STORAGE_TRANSPORT: "agent-vault", RESHOOT_STORAGE_TOKEN: "reshoot_storage_public_placeholder",
   RESHOOT_STORAGE_BASE_URL: "http://127.0.0.1:16783/" };

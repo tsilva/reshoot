@@ -218,3 +218,8 @@ integration tests for transactions, savepoints, row locks, actual cost-recording
 clients, rejected accounting, session expiry and ambiguous commits. Test against
 a disposable database before provisioning a new route. Never use inference,
 production data or billing operations to test this connection.
+
+Run `python3 -m unittest discover -s scripts/infisical -p 'test_local_clerk_relay.py'`
+for offline Clerk relay checks. Synthetic loopback services verify instance-key
+binding, public/profile response filtering, and rejection of unreviewed paths,
+queries, cookies and browser origins without contacting Clerk or Infisical.

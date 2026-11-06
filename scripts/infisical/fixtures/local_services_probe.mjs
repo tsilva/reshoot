@@ -32,6 +32,7 @@ try {
   stage = 'current-user';
   const user = await client.users.getUser('user_fixture');
   assert.equal(user.id, 'user_fixture');
+  assert.deepEqual(user.privateMetadata, {});
   stage = 'handshake';
   const handshake = await client.clients.getHandshakePayload({ nonce: 'fixture-nonce' });
   assert.deepEqual(handshake.directives, []);
@@ -43,6 +44,9 @@ try {
   const denied = await fetch(`${options.apiUrl}/v1/users`, { method: 'POST', body: '{}',
     headers: { Authorization: `Bearer ${CLERK_PLACEHOLDER}` } });
   assert.equal(denied.status, 403); await denied.body?.cancel();
+  const oauth = await fetch(`${options.apiUrl}/v1/users/user_fixture/oauth_access_tokens/google`, {
+    headers: { Authorization: `Bearer ${CLERK_PLACEHOLDER}` } });
+  assert.equal(oauth.status, 403); await oauth.body?.cancel();
   stage = 'storage';
   const storage = await import('../../../lib/storage/r2.ts');
   const body = Buffer.from('Synthetic local storage fixture.');
@@ -66,7 +70,7 @@ try {
   });
   assert.equal(direct, true);
   console.log(JSON.stringify({ ok: true, checks: ['clerk_jwks_via_vault', 'valid_session_verified', 'sdk_authenticate_request',
-    'sdk_current_user', 'sdk_handshake', 'tampered_session_rejected', 'proxy_denied_clerk_write', 'actual_r2_adapter_vault_roundtrip',
+    'sdk_current_user', 'sdk_handshake', 'tampered_session_rejected', 'proxy_denied_clerk_write', 'relay_denied_oauth_tokens', 'private_metadata_filtered', 'actual_r2_adapter_vault_roundtrip',
     'head_checksum', 'binary_stream', 'browser_urls_minted', 'delete_missing_404', 'sandbox_direct_network_denied'],
     credential_mode: 'public-placeholder' }));
 } catch { console.log(JSON.stringify({ ok: false, stage, reason: 'Synthetic service probe failed; details withheld' })); process.exitCode = 1; }

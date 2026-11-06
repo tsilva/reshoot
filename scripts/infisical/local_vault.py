@@ -244,6 +244,7 @@ def session_command(p, relay, mode, services=None):
                 "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="
                 + services[0]["clerk_publishable_key"],
                 "RESHOOT_CLERK_JWKS_SHA256=" + services[0]["clerk_jwks_sha256"],
+                "CLERK_API_URL=http://localhost:" + str(services[1]["listen_port"]),
             ]
     return [
         p["infisical"],
@@ -393,6 +394,11 @@ def main(args):
                     services[0]["storage_program"],
                     "--profile",
                     str(BASE / "storage.json"),
+                    *(
+                        ["--clerk-jwks-sha256", services[0]["clerk_jwks_sha256"]]
+                        if services[0]["clerk_publishable_key"]
+                        else []
+                    ),
                 ],
                 env=env,
                 stdout=subprocess.PIPE,

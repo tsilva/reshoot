@@ -158,8 +158,9 @@ and the provider/naming tests after changes to these helpers.
 
 ## Isolated local app through Agent Vault
 
-For agent-operated local app work needing database and AgentBridge access, use
-`pnpm dev:vault`; use `pnpm db:check-local:vault` for the read-only check.
+For agent-operated local app work needing database, AgentBridge, sign-in and local
+storage, use `pnpm dev:vault`. Use `pnpm db:check-local:vault` for database/AI
+readiness and `pnpm services:check-local:vault` for read-only Clerk/storage checks.
 The reviewed mapping is native project `cdb4be1b-c53c-4b18-87eb-6f90aae2b661`,
 Development, reserved folder `/agents/database`, bundle `local-reshoot-development`.
 Agent Vault manages this credential directly; never export the folder or inject
@@ -170,6 +171,24 @@ directory pins source, runtime, compiler, native binding, CA and relay policy.
 Changed bindings must fail; source approval is explicit trusted administration.
 Follow [local development through Agent Vault](docs/local-agent-vault.md) for
 installation, fake-first tests, service paths, lifecycle and limitations.
-Keep normal launch defaults, production delivery and Sentry unchanged. Sign-in,
-storage, signing and Realtime still need separate compatible routes; do not add
-an auth bypass, dummy storage keys, raw-key fallback or paid inference to test it.
+Local service mapping in the same bundle: `reshoot-local-clerk` permits GET via
+the protected relay's `localhost` alias for JWKS, one user profile and the SDK
+handshake. The relay calls only Clerk's HTTPS backend, pins the Development
+instance's public signing key, filters profile fields and rejects OAuth-token
+paths, user lists and writes. The app receives
+`sk_test_reshoot_vault_public_placeholder`; the dedicated Development key stays
+in Vault and trusted request memory. Production/Preview Clerk keys stay native.
+
+`reshoot-local-storage` permits only the seven documented POST storage RPCs on
+the relay's `127.0.0.1` address. The app receives
+`reshoot_storage_public_placeholder`; objects live in a separate protected local
+folder. Browser URLs grant one object/operation for at most ten minutes; browser
+transfers use those URLs directly and never receive the Vault storage token.
+These are direct Vault service bindings; do not export Secret Manager folders,
+inject R2 keys or route production storage into this local profile. Owner-only
+`services.json` metadata beside `app.json` pins public Clerk identity and the
+installed storage relay. Ordinary runs never provision, retrieve or rotate keys.
+
+Keep normal launch defaults, production delivery and Sentry unchanged. Realtime
+and payments still need compatible routes; do not add an auth bypass, dummy R2
+keys, raw-key fallback or paid inference to test this profile.

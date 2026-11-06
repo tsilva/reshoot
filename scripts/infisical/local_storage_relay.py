@@ -19,6 +19,7 @@ import tempfile
 import threading
 import time
 from urllib.parse import urlsplit
+import urllib.request
 
 MAX_OBJECT = 512 * 1024 * 1024
 MAX_UPLOAD = 20 * 1024 * 1024
@@ -56,11 +57,88 @@ def policy(path):
 
 
 class Store:
-    def __init__(self, p):
+    def __init__(self, p, clerk_jwks=None, clerk_upstream="https://api.clerk.com"):
         self.p = p
         self.root = Path(p["root"])
         self.lock = threading.RLock()
         self.tickets = {}
+        self.clerk_jwks = clerk_jwks
+        self.clerk_upstream = clerk_upstream
+        self.verified_keys = {}
+
+    def clerk(self, path, key):
+        """Exact paths only: never expose OAuth tokens or arbitrary user metadata."""
+
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *_args):
+                raise ValueError("Redirect rejected")
+
+        def get(target):
+            request = urllib.request.Request(
+                self.clerk_upstream + target,
+                headers={
+                    "Authorization": "Bearer " + key,
+                    "Clerk-API-Version": "2026-08-20",
+                    "User-Agent": "reshoot-local-vault/1.0",
+                },
+            )
+            with urllib.request.build_opener(
+                urllib.request.ProxyHandler({}), NoRedirect()
+            ).open(request, timeout=15) as response:
+                body = response.read(1024 * 1024 + 1)
+                if len(body) > 1024 * 1024:
+                    raise ValueError("Oversized Clerk response")
+                return json.loads(body)
+
+        digest = hashlib.sha256(key.encode()).hexdigest()
+        data = None
+        if path == "/v1/jwks" or self.verified_keys.get(digest, 0) <= time.monotonic():
+            data = get("/v1/jwks")
+            if not any(
+                k.get("kty") == "RSA"
+                and hashlib.sha256((k["n"] + ":" + k["e"]).encode()).hexdigest()
+                == self.clerk_jwks
+                for k in data["keys"]
+            ):
+                raise PermissionError()
+            self.verified_keys = {
+                k: v for k, v in self.verified_keys.items() if v > time.monotonic()
+            }
+            if len(self.verified_keys) >= 128:
+                raise ValueError("Too many credential verifications")
+            self.verified_keys[digest] = time.monotonic() + 60
+        if path == "/v1/jwks":
+            return {
+                "keys": [
+                    {
+                        k: v
+                        for k, v in item.items()
+                        if k in {"kid", "kty", "alg", "use", "n", "e"}
+                    }
+                    for item in data["keys"]
+                ]
+            }
+        data = get(path)
+        if path.startswith("/v1/users/"):
+            fields = {
+                "id",
+                "object",
+                "first_name",
+                "last_name",
+                "username",
+                "primary_email_address_id",
+            }
+            safe = {k: v for k, v in data.items() if k in fields}
+            safe["email_addresses"] = [
+                {
+                    k: v
+                    for k, v in address.items()
+                    if k in {"id", "object", "email_address"}
+                }
+                for address in data.get("email_addresses", [])
+            ]
+            return safe
+        return {"directives": data["directives"]}
 
     def path(self, key):
         if (
@@ -151,11 +229,16 @@ def handler(store):
             return value
 
         def validate_request(self):
+            allowed_hosts = {f"127.0.0.1:{store.p['listen_port']}"}
+            if store.clerk_jwks and self.path.startswith("/v1/"):
+                allowed_hosts.add(f"localhost:{store.p['listen_port']}")
             if (
-                self.headers.get("Host") != f"127.0.0.1:{store.p['listen_port']}"
+                self.headers.get("Host") not in allowed_hosts
                 or self.headers.get("Transfer-Encoding")
-                or self.headers.get("Cookie")
-                or urlsplit(self.path).query
+                or (
+                    urlsplit(self.path).query
+                    and not self.path.startswith("/v1/clients/handshake_payload?")
+                )
                 or urlsplit(self.path).fragment
             ):
                 raise PermissionError()
@@ -214,7 +297,69 @@ def handler(store):
                 self.send_error(403, "Request denied")
 
         def do_GET(self):
+            if self.path.startswith("/v1/"):
+                return self.clerk()
             self.capability("read")
+
+        def clerk(self):
+            try:
+                self.validate_request()
+                url = urlsplit(self.path)
+                valid = (
+                    self.path == "/v1/jwks"
+                    or re.fullmatch(r"/v1/users/user_[A-Za-z0-9]+", self.path)
+                    or (
+                        url.path == "/v1/clients/handshake_payload"
+                        and re.fullmatch(r"nonce=[A-Za-z0-9_.-]{1,2048}", url.query)
+                    )
+                )
+                keys = self.headers.get_all("Reshoot-Clerk-Key", [])
+                if (
+                    not store.clerk_jwks
+                    or not valid
+                    or self.headers.get("Cookie")
+                    or self.headers.get("Origin")
+                    or len(keys) != 1
+                    or not re.fullmatch(r"sk_test_[A-Za-z0-9_-]{20,256}", keys[0])
+                ):
+                    raise PermissionError()
+                with store.lock:
+                    data = store.clerk(self.path, keys[0])
+                self.reply(200, data)
+            except urllib.error.HTTPError as error:
+                self.reply(
+                    502,
+                    {
+                        "errors": [
+                            {
+                                "code": "relay_upstream",
+                                "message": "Clerk upstream request failed",
+                                "meta": {"status": error.code},
+                            }
+                        ]
+                    },
+                )
+            except PermissionError:
+                self.reply(
+                    403,
+                    {
+                        "errors": [
+                            {"code": "relay_denied", "message": "Clerk request denied"}
+                        ]
+                    },
+                )
+            except Exception:
+                self.reply(
+                    502,
+                    {
+                        "errors": [
+                            {
+                                "code": "relay_internal",
+                                "message": "Clerk relay failed; details withheld",
+                            }
+                        ]
+                    },
+                )
 
         def do_PUT(self):
             self.capability("upload")
@@ -260,6 +405,7 @@ def handler(store):
                 supplied = self.headers.get_all("Reshoot-Storage-Token", [])
                 if (
                     self.headers.get("Origin")
+                    or self.headers.get("Cookie")
                     or len(supplied) != 1
                     or not hmac.compare_digest(
                         hashlib.sha256(supplied[0].encode()).hexdigest(),
@@ -342,9 +488,12 @@ class Server(ThreadingHTTPServer):
     daemon_threads = True
     request_queue_size = 16
 
-    def __init__(self, p):
+    def __init__(self, p, clerk_jwks=None, clerk_upstream="https://api.clerk.com"):
         self.slots = threading.BoundedSemaphore(16)
-        super().__init__(("127.0.0.1", p["listen_port"]), handler(Store(p)))
+        super().__init__(
+            ("127.0.0.1", p["listen_port"]),
+            handler(Store(p, clerk_jwks, clerk_upstream)),
+        )
 
     def process_request(self, request, address):
         if not self.slots.acquire(blocking=False):
@@ -370,10 +519,15 @@ class Server(ThreadingHTTPServer):
 def main():
     parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument("--profile", type=Path, required=True)
+    parser.add_argument("--clerk-jwks-sha256")
     args = parser.parse_args()
     os.umask(0o077)
     p = policy(args.profile)
-    server = Server(p)
+    if args.clerk_jwks_sha256 and not re.fullmatch(
+        "[a-f0-9]{64}", args.clerk_jwks_sha256
+    ):
+        raise ValueError("Invalid public signing-key fingerprint")
+    server = Server(p, args.clerk_jwks_sha256)
     print(
         json.dumps({"ready": True, "host": "127.0.0.1", "port": p["listen_port"]}),
         flush=True,

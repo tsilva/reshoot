@@ -42,7 +42,7 @@ def main():
         != "verified-trout-3003.clerk.accounts.dev$"
     ):
         raise ValueError("Expected reviewed Reshoot Development public key")
-    profile, _ = launcher.load_services()
+    profile, storage = launcher.load_services()
     if profile["clerk_publishable_key"] is not None:
         raise ValueError("Clerk is already configured; rotation needs explicit review")
     with (launcher.BASE / "session.lock").open("a") as lock:
@@ -85,7 +85,7 @@ def main():
             {
                 "type": "http",
                 "name": "reshoot-local-clerk",
-                "hostPattern": "api.clerk.com",
+                "hostPattern": "localhost:" + str(storage["listen_port"]),
                 "allowedMethods": ["GET"],
                 "allowedPathPrefixes": [
                     "/v1/jwks",
@@ -94,8 +94,8 @@ def main():
                 ],
                 "credential": {
                     "type": "bearer",
-                    "headerName": "Authorization",
-                    "headerPrefix": "Bearer ",
+                    "headerName": "Reshoot-Clerk-Key",
+                    "headerPrefix": "",
                     "value": key,
                 },
             },
