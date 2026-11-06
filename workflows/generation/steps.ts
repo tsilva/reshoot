@@ -291,7 +291,8 @@ export async function executeGenerationJob(
         attemptId,
         attemptState: response.status >= 500 ? "ambiguous" : "failed",
         failureCode: response.status === 400 ? "request_rejected" : "provider_failure",
-        publicError: response.status === 429 ? "The image provider is busy. Credits were released."
+        publicError: response.status === 402 ? "Image generation is temporarily unavailable. Credits were released."
+          : response.status === 429 ? "The image provider is busy. Credits were released."
           : response.status >= 500 ? "The image provider was unavailable. Credits were released."
           : "The image provider rejected this view's request. Credits were released.",
         privateError: result?.error?.message ?? `Image request failed (${response.status}).`,

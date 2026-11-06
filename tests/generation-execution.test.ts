@@ -51,6 +51,14 @@ describe("durable generation dispatch", () => {
     vi.stubGlobal("fetch", state.fetch);
   });
 
+  it("reports upstream credit/budget rejection as unavailable, releases the hold, and never retries", async () => {
+    state.fetch.mockResolvedValueOnce(Response.json({error:{message:"private upstream billing details"}},{status:402}));
+    const warn=vi.spyOn(console,"warn").mockImplementation(()=>{});
+    try{await executeGenerationJob("job","attempt","lease");}finally{warn.mockRestore();}
+    expect(state.release).toHaveBeenCalledWith(expect.objectContaining({publicError:"Image generation is temporarily unavailable. Credits were released."}));
+    expect(state.capture).not.toHaveBeenCalled();expect(state.fetch).toHaveBeenCalledOnce();
+  });
+
   it.each([false, true])("bounds diagonal context to its two cardinals and stops before paid work if an anchor failed (%s)", async (failed) => {
     state.azimuth=225;
     state.quoteShots=[0,45,90,135,180,225,270,315].map(azimuth=>({clientId:String(azimuth),shotId:azimuth===225?"shot":String(azimuth),label:"View",azimuth,
