@@ -61,25 +61,30 @@ export function SampleCarousel() {
     >
       <div className="sample-viewer">
         <div className="sample-photo">
-          {sampleProducts.flatMap((sampleProduct) => sampleProduct.angles.map((sampleAngle, index) => (
-            <Image
-              key={`${sampleProduct.id}:${sampleAngle.id}`}
-              src={sampleAngle.image}
-              style={sampleAngle.offset ? {
-                translate: `${100 * sampleAngle.offset.x / sampleAngle.image.width}% ${100 * sampleAngle.offset.y / sampleAngle.image.height}%`,
-                scale: sampleAngle.offset.scale,
-                transformOrigin: "top left",
-              } : undefined}
-              sizes="(max-width: 850px) 100vw, 60vw"
-              alt={`Generated ${sampleProduct.description}, ${sampleAngle.label.toLowerCase()} studio view`}
-              preload
-              onLoad={() => {
-                const key = `${sampleProduct.id}:${sampleAngle.id}`;
-                setLoadedViews((loaded) => loaded.has(key) ? loaded : new Set(loaded).add(key));
-              }}
-              hidden={sampleProduct.id !== product.id || index !== angleIndex}
-            />
-          )))}
+          {sampleProducts.flatMap((sampleProduct, sampleIndex) => sampleProduct.angles.map((sampleAngle, index) => {
+            const firstView = sampleIndex === 0 && index === 0;
+            return (
+              <Image
+                key={`${sampleProduct.id}:${sampleAngle.id}`}
+                src={sampleAngle.image}
+                style={sampleAngle.offset ? {
+                  translate: `${100 * sampleAngle.offset.x / sampleAngle.image.width}% ${100 * sampleAngle.offset.y / sampleAngle.image.height}%`,
+                  scale: sampleAngle.offset.scale,
+                  transformOrigin: "top left",
+                } : undefined}
+                sizes="(max-width: 850px) 100vw, 60vw"
+                alt={`Generated ${sampleProduct.description}, ${sampleAngle.label.toLowerCase()} studio view`}
+                preload={firstView}
+                loading={firstView ? undefined : "eager"}
+                fetchPriority={firstView ? undefined : "low"}
+                onLoad={() => {
+                  const key = `${sampleProduct.id}:${sampleAngle.id}`;
+                  setLoadedViews((loaded) => loaded.has(key) ? loaded : new Set(loaded).add(key));
+                }}
+                hidden={sampleProduct.id !== product.id || index !== angleIndex}
+              />
+            );
+          }))}
         </div>
       </div>
       <div className="sample-toolbar">

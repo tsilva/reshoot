@@ -149,7 +149,9 @@ export function StudioHome({ initialCredits, initialProjects, currentUser, proje
           <SampleCarousel />
         </div>
 
-        <ProjectsClient key={initialProjects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={initialProjects} />
+        {currentUser && (
+          <ProjectsClient key={initialProjects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={initialProjects} />
+        )}
       </main>
       <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span><LegalLinks /></footer>
     </div>
