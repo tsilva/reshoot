@@ -10,6 +10,9 @@ import { usePhotoPlayback } from "@/lib/client/use-photo-playback";
 
 type SampleView = { productIndex: number; angleIndex: number };
 
+const OPENING_VIEW_KEY = `${sampleProducts[0].id}:${sampleProducts[0].angles[0].id}`;
+const SAMPLE_IMAGE_SIZES = "(max-width: 540px) calc(100vw - 34px), (max-width: 850px) min(calc(100vw - 44px), 720px), min(60vw, 720px)";
+
 function nextView(current: SampleView, direction: -1 | 1): SampleView {
   const angleIndex = current.angleIndex + direction;
   if (angleIndex >= 0 && angleIndex < sampleProducts[current.productIndex].angles.length) {
@@ -25,9 +28,13 @@ export function SampleCarousel() {
   const sampleAngles = product.angles;
   const [originalOpen, setOriginalOpen] = useState(false);
   const [loadedViews, setLoadedViews] = useState<Set<string>>(() => new Set());
+  const [openingFailed, setOpeningFailed] = useState(false);
   const sampleRef = useRef<HTMLElement>(null);
   const productLoaded = sampleAngles.every((angle) => loadedViews.has(`${product.id}:${angle.id}`));
   const angle = sampleAngles[angleIndex];
+  const openingSettled = openingFailed || loadedViews.has(OPENING_VIEW_KEY);
+  const previousProduct = (productIndex + sampleProducts.length - 1) % sampleProducts.length;
+  const nextProduct = (productIndex + 1) % sampleProducts.length;
   const advance = useCallback(() => setView((current) => nextView(current, 1)), []);
   const playback = usePhotoPlayback({ containerRef: sampleRef, frameKey: `${product.id}:${angle.id}`, ready: productLoaded, blocked: originalOpen, onAdvance: advance });
   const rotationEnabled = playback.enabled;
@@ -62,26 +69,33 @@ export function SampleCarousel() {
       <div className="sample-viewer">
         <div className="sample-photo">
           {sampleProducts.flatMap((sampleProduct, sampleIndex) => sampleProduct.angles.map((sampleAngle, index) => {
-            const firstView = sampleIndex === 0 && index === 0;
+            const key = `${sampleProduct.id}:${sampleAngle.id}`;
+            const firstView = key === OPENING_VIEW_KEY;
+            const active = sampleIndex === productIndex && index === angleIndex;
+            // Warm the active rotation and the entry frame in each direction after the opening image.
+            const adjacentEntry = (sampleIndex === nextProduct && index === 0)
+              || (sampleIndex === previousProduct && index === sampleProduct.angles.length - 1);
+            const warm = openingSettled && (sampleIndex === productIndex || adjacentEntry);
+            if (!firstView && !active && !warm && !loadedViews.has(key)) return null;
             return (
               <Image
-                key={`${sampleProduct.id}:${sampleAngle.id}`}
+                key={key}
                 src={sampleAngle.image}
                 style={sampleAngle.offset ? {
                   translate: `${100 * sampleAngle.offset.x / sampleAngle.image.width}% ${100 * sampleAngle.offset.y / sampleAngle.image.height}%`,
                   scale: sampleAngle.offset.scale,
                   transformOrigin: "top left",
                 } : undefined}
-                sizes="(max-width: 850px) 100vw, 60vw"
+                sizes={SAMPLE_IMAGE_SIZES}
                 alt={`Generated ${sampleProduct.description}, ${sampleAngle.label.toLowerCase()} studio view`}
                 preload={firstView}
                 loading={firstView ? undefined : "eager"}
-                fetchPriority={firstView ? undefined : "low"}
+                fetchPriority={firstView ? undefined : active ? "high" : "low"}
                 onLoad={() => {
-                  const key = `${sampleProduct.id}:${sampleAngle.id}`;
                   setLoadedViews((loaded) => loaded.has(key) ? loaded : new Set(loaded).add(key));
                 }}
-                hidden={sampleProduct.id !== product.id || index !== angleIndex}
+                onError={firstView ? () => setOpeningFailed(true) : undefined}
+                hidden={!active}
               />
             );
           }))}
