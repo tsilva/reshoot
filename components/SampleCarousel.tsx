@@ -30,13 +30,17 @@ export function SampleCarousel() {
   const [loadedViews, setLoadedViews] = useState<Set<string>>(() => new Set());
   const [openingFailed, setOpeningFailed] = useState(false);
   const sampleRef = useRef<HTMLElement>(null);
-  const productLoaded = sampleAngles.every((angle) => loadedViews.has(`${product.id}:${angle.id}`));
   const angle = sampleAngles[angleIndex];
+  const frameKey = `${product.id}:${angle.id}`;
+  const upcoming = nextView({ productIndex, angleIndex }, 1);
+  const upcomingProduct = sampleProducts[upcoming.productIndex];
+  const upcomingKey = `${upcomingProduct.id}:${upcomingProduct.angles[upcoming.angleIndex].id}`;
+  const ready = loadedViews.has(frameKey) && loadedViews.has(upcomingKey);
   const openingSettled = openingFailed || loadedViews.has(OPENING_VIEW_KEY);
   const previousProduct = (productIndex + sampleProducts.length - 1) % sampleProducts.length;
   const nextProduct = (productIndex + 1) % sampleProducts.length;
   const advance = useCallback(() => setView((current) => nextView(current, 1)), []);
-  const playback = usePhotoPlayback({ containerRef: sampleRef, frameKey: `${product.id}:${angle.id}`, ready: productLoaded, blocked: originalOpen, onAdvance: advance });
+  const playback = usePhotoPlayback({ containerRef: sampleRef, frameKey, ready, blocked: originalOpen, onAdvance: advance });
   const rotationEnabled = playback.enabled;
 
   function cycleSample(direction: -1 | 1) {
@@ -81,11 +85,6 @@ export function SampleCarousel() {
               <Image
                 key={key}
                 src={sampleAngle.image}
-                style={sampleAngle.offset ? {
-                  translate: `${100 * sampleAngle.offset.x / sampleAngle.image.width}% ${100 * sampleAngle.offset.y / sampleAngle.image.height}%`,
-                  scale: sampleAngle.offset.scale,
-                  transformOrigin: "top left",
-                } : undefined}
                 sizes={SAMPLE_IMAGE_SIZES}
                 alt={`Generated ${sampleProduct.description}, ${sampleAngle.label.toLowerCase()} studio view`}
                 preload={firstView}

@@ -176,6 +176,12 @@ these acceptance rules without establishing photographic quality or coherent
 
 ## Sample rotation review
 
+The homepage uses equal-sized display frames derived from the original sample
+photographs and their approved framing offsets. Regenerate them with
+`node scripts/prepare-sample-frames.mjs` after updating either input. The framing
+check compares the display frames with the approved product bounds and center.
+Autoplay waits for the current and next image to decode before advancing.
+
 Check the home page at desktop, tablet and phone sizes, including a short laptop
 viewport and a 320 × 568 phone. With no saved shoots or wallet panel, the header,
 introduction, Add photos action, complete product preview, playback controls,

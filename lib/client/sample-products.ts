@@ -1,32 +1,31 @@
 import type { StaticImageData } from "next/image";
-import sampleFraming from "@/lib/client/sample-framing.json";
 import dollUpload from "@/public/assets/samples/example-uploads/linen-doll.jpg";
 import mugUpload from "@/public/assets/samples/example-uploads/ceramic-mug.jpg";
 import handbagUpload from "@/public/assets/samples/example-uploads/leather-handbag.jpg";
-import dollFront from "@/public/assets/samples/linen-doll/front.webp";
-import dollFrontRight from "@/public/assets/samples/linen-doll/front-three-quarter.webp";
-import dollRight from "@/public/assets/samples/linen-doll/right-profile.webp";
-import dollBackRight from "@/public/assets/samples/linen-doll/back-right-three-quarter.webp";
-import dollBack from "@/public/assets/samples/linen-doll/back.webp";
-import dollBackLeft from "@/public/assets/samples/linen-doll/back-left-three-quarter.webp";
-import dollLeft from "@/public/assets/samples/linen-doll/left-profile.webp";
-import dollFrontLeft from "@/public/assets/samples/linen-doll/front-left-three-quarter.webp";
-import mugFront from "@/public/assets/samples/ceramic-mug/front.png";
-import mugFrontRight from "@/public/assets/samples/ceramic-mug/front-three-quarter.png";
-import mugRight from "@/public/assets/samples/ceramic-mug/right-profile.png";
-import mugBackRight from "@/public/assets/samples/ceramic-mug/back-right-three-quarter.png";
-import mugBack from "@/public/assets/samples/ceramic-mug/back.png";
-import mugBackLeft from "@/public/assets/samples/ceramic-mug/back-left-three-quarter.png";
-import mugLeft from "@/public/assets/samples/ceramic-mug/left-profile.png";
-import mugFrontLeft from "@/public/assets/samples/ceramic-mug/front-left-three-quarter.png";
-import handbagFront from "@/public/assets/samples/leather-handbag/front.webp";
-import handbagFrontRight from "@/public/assets/samples/leather-handbag/front-three-quarter.webp";
-import handbagRight from "@/public/assets/samples/leather-handbag/right-profile.webp";
-import handbagBackRight from "@/public/assets/samples/leather-handbag/back-right-three-quarter.webp";
-import handbagBack from "@/public/assets/samples/leather-handbag/back.webp";
-import handbagBackLeft from "@/public/assets/samples/leather-handbag/back-left-three-quarter.webp";
-import handbagLeft from "@/public/assets/samples/leather-handbag/left-profile.webp";
-import handbagFrontLeft from "@/public/assets/samples/leather-handbag/front-left-three-quarter.webp";
+import dollFront from "@/public/assets/samples/display/linen-doll/front.webp";
+import dollFrontRight from "@/public/assets/samples/display/linen-doll/front-three-quarter.webp";
+import dollRight from "@/public/assets/samples/display/linen-doll/right-profile.webp";
+import dollBackRight from "@/public/assets/samples/display/linen-doll/back-right-three-quarter.webp";
+import dollBack from "@/public/assets/samples/display/linen-doll/back.webp";
+import dollBackLeft from "@/public/assets/samples/display/linen-doll/back-left-three-quarter.webp";
+import dollLeft from "@/public/assets/samples/display/linen-doll/left-profile.webp";
+import dollFrontLeft from "@/public/assets/samples/display/linen-doll/front-left-three-quarter.webp";
+import mugFront from "@/public/assets/samples/display/ceramic-mug/front.webp";
+import mugFrontRight from "@/public/assets/samples/display/ceramic-mug/front-three-quarter.webp";
+import mugRight from "@/public/assets/samples/display/ceramic-mug/right-profile.webp";
+import mugBackRight from "@/public/assets/samples/display/ceramic-mug/back-right-three-quarter.webp";
+import mugBack from "@/public/assets/samples/display/ceramic-mug/back.webp";
+import mugBackLeft from "@/public/assets/samples/display/ceramic-mug/back-left-three-quarter.webp";
+import mugLeft from "@/public/assets/samples/display/ceramic-mug/left-profile.webp";
+import mugFrontLeft from "@/public/assets/samples/display/ceramic-mug/front-left-three-quarter.webp";
+import handbagFront from "@/public/assets/samples/display/leather-handbag/front.webp";
+import handbagFrontRight from "@/public/assets/samples/display/leather-handbag/front-three-quarter.webp";
+import handbagRight from "@/public/assets/samples/display/leather-handbag/right-profile.webp";
+import handbagBackRight from "@/public/assets/samples/display/leather-handbag/back-right-three-quarter.webp";
+import handbagBack from "@/public/assets/samples/display/leather-handbag/back.webp";
+import handbagBackLeft from "@/public/assets/samples/display/leather-handbag/back-left-three-quarter.webp";
+import handbagLeft from "@/public/assets/samples/display/leather-handbag/left-profile.webp";
+import handbagFrontLeft from "@/public/assets/samples/display/leather-handbag/front-left-three-quarter.webp";
 
 type SampleProductSource = {
   id: string;
@@ -34,7 +33,6 @@ type SampleProductSource = {
   description: string;
   upload: StaticImageData;
   images: StaticImageData[];
-  offsets?: { x: number; y: number; scale?: number }[];
 };
 
 const views = [
@@ -55,7 +53,6 @@ const productSources: SampleProductSource[] = [
     description: "linen doll",
     upload: dollUpload,
     images: [dollFront, dollFrontRight, dollRight, dollBackRight, dollBack, dollBackLeft, dollLeft, dollFrontLeft],
-    offsets: sampleFraming["linen-doll"],
   },
   {
     id: "ceramic-mug",
@@ -63,7 +60,6 @@ const productSources: SampleProductSource[] = [
     description: "cobalt-blue ceramic mug",
     upload: mugUpload,
     images: [mugFront, mugFrontRight, mugRight, mugBackRight, mugBack, mugBackLeft, mugLeft, mugFrontLeft],
-    offsets: sampleFraming["ceramic-mug"],
   },
   {
     id: "leather-handbag",
@@ -71,12 +67,11 @@ const productSources: SampleProductSource[] = [
     description: "cognac leather handbag",
     upload: handbagUpload,
     images: [handbagFront, handbagFrontRight, handbagRight, handbagBackRight, handbagBack, handbagBackLeft, handbagLeft, handbagFrontLeft],
-    offsets: sampleFraming["leather-handbag"],
   },
 ];
 
-export const sampleProducts = productSources.map(({ images, offsets, upload, ...product }) => ({
+export const sampleProducts = productSources.map(({ images, upload, ...product }) => ({
   ...product,
   upload,
-  angles: views.map((view, index) => ({ ...view, image: images[index], offset: offsets?.[index] })),
+  angles: views.map((view, index) => ({ ...view, image: images[index] })),
 }));

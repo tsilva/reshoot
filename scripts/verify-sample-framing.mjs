@@ -2,12 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import sharp from "sharp";
-import { measureSample } from "./sample-geometry.mjs";
+import { measureSample, sampleDisplayPath, sampleDisplaySize, sampleViewOrder } from "./sample-geometry.mjs";
 
 const readJson = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), "utf8"));
 const manifest = await readJson("../design/qa/original-rotation/generation.json");
 const offsets = await readJson("../lib/client/sample-framing.json");
-const viewOrder = ["front", "front-three-quarter", "right-profile", "back-right-three-quarter", "back", "back-left-three-quarter", "left-profile", "front-left-three-quarter"];
 const seen = new Set();
 const baselines = new Map();
 const checkedGuides = new Set();
@@ -57,7 +56,7 @@ for (const asset of manifest.assets) {
   assert(alpha?.min === 0 && alpha.max === 255, `Sample lacks transparent or opaque pixels: ${key}`);
   const info = await measureSample(bytes, asset.product);
   assert.equal(info.width, info.height, `Sample must be square: ${key}`);
-  const framing = offsets[asset.product]?.[viewOrder.indexOf(asset.id)];
+  const framing = offsets[asset.product]?.[sampleViewOrder.indexOf(asset.id)];
   assert(framing && framing.scale > 0, `Missing display framing: ${key}`);
   const left = (info.bounds.left * framing.scale + framing.x) / info.width;
   const right = (info.bounds.right * framing.scale + framing.x) / info.width;
@@ -70,11 +69,24 @@ for (const asset of manifest.assets) {
   assert(Math.abs(bottom - baseline) <= 0.002, `Product floor contact drifts: ${key}`);
   assert(left >= 0.1 && top >= 0.1 && right <= 0.9 && bottom <= 0.9,
     `Product leaves the central 80% display box: ${key} (${[left, top, right, bottom].join(", ")})`);
+
+  const display = await readFile(new URL(`../${sampleDisplayPath(asset.product, asset.id)}`, import.meta.url));
+  const displayInfo = await measureSample(display, asset.product);
+  assert.equal(displayInfo.width, sampleDisplaySize, `Display frame width changed: ${key}`);
+  assert.equal(displayInfo.height, sampleDisplaySize, `Display frame height changed: ${key}`);
+  for (const [edge, position] of Object.entries({ left, right, top, bottom })) {
+    // Resampling can shift where a faint silhouette edge crosses the material threshold.
+    const tolerance = edge === "bottom" ? 2 : 4;
+    assert(Math.abs(displayInfo.bounds[edge] - position * sampleDisplaySize) <= tolerance,
+      `Display frame ${edge} differs from the approved framing: ${key}`);
+  }
+  assert(Math.abs(displayInfo.bodyAxisX - axis * sampleDisplaySize) <= 2,
+    `Display frame center differs from the approved framing: ${key}`);
 }
 
 for (const product of ["linen-doll", "ceramic-mug", "leather-handbag"]) {
   assert.equal(offsets[product].length, 8, `Expected eight framing records: ${product}`);
-  for (const view of viewOrder) assert(seen.has(`${product}:${view}`), `Missing ${product}:${view}`);
+  for (const view of sampleViewOrder) assert(seen.has(`${product}:${view}`), `Missing ${product}:${view}`);
 }
 
 console.log("Sample framing: 24 transparent photographs retain 10% margins, centered measured body axes, fixed per-product floor contact and source/output provenance. All original-plus-orientation-guide roles and hint rigs verified. These checks do not certify photographic geometry or visual quality.");
