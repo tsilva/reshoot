@@ -87,9 +87,8 @@ export function SampleCarousel() {
                 src={sampleAngle.image}
                 sizes={SAMPLE_IMAGE_SIZES}
                 alt={`Generated ${sampleProduct.description}, ${sampleAngle.label.toLowerCase()} studio view`}
-                preload={firstView}
-                loading={firstView ? undefined : "eager"}
-                fetchPriority={firstView ? undefined : active ? "high" : "low"}
+                loading="eager"
+                fetchPriority={active ? "high" : "low"}
                 onLoad={() => {
                   setLoadedViews((loaded) => loaded.has(key) ? loaded : new Set(loaded).add(key));
                 }}
