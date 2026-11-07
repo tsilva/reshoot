@@ -177,9 +177,10 @@ these acceptance rules without establishing photographic quality or coherent
 ## Sample rotation review
 
 The canonical homepage serves a prerender for signed-out HTML navigations
-after Clerk resolves the session. Signed-in visits, client navigation, and
-requests with query parameters use the account-aware route. The response at
-`/` is private and non-cacheable because it depends on the session.
+after Clerk resolves the session. Reshoot uses the Next.js 16 middleware
+entry point to run this routing in the Edge runtime. Signed-in visits, client
+navigation, and requests with query parameters use the account-aware route.
+The response at `/` is private and non-cacheable because it depends on the session.
 The static `/public-home.html` artifact contains only public content and
 declares `/` as its canonical URL. Verify that signed-out visitors still see
 the rotating samples and a signed-in visitor still sees their own shoots.

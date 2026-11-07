@@ -31,7 +31,7 @@ const withClerk = clerkMiddleware(async (auth, request) => {
   }
 });
 
-export default function proxy(request: NextRequest, event: Parameters<typeof withClerk>[1]) {
+export default function middleware(request: NextRequest, event: Parameters<typeof withClerk>[1]) {
   // Never provision a keyless Clerk application or fall back to the shared demo.
   if (!clerkConfigured()) {
     return isPublicHomeCandidate(request) ? rewritePublicHome(request) : NextResponse.next();
@@ -40,5 +40,6 @@ export default function proxy(request: NextRequest, event: Parameters<typeof wit
 }
 
 export const config = {
+  // This entry point defaults to Edge. Next.js 16's proxy uses Node.js.
   matcher: ["/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)", "/(api|trpc)(.*)"],
 };

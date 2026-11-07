@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ClerkMiddlewareAuth } from "@clerk/nextjs/server";
-import proxy from "../proxy";
+import middleware from "../middleware";
 
 const state = vi.hoisted(() => ({ auth: vi.fn(), configured: vi.fn(), handshake: vi.fn() }));
 vi.mock("@/lib/auth/config", () => ({ clerkConfigured: state.configured }));
@@ -16,8 +16,8 @@ function route(path: string, options?: ConstructorParameters<typeof NextRequest>
   const headers = new Headers({ accept: "text/html" });
   new Headers(options?.headers).forEach((value, name) => headers.set(name, value));
   const request = new NextRequest(new URL(path, origin), { ...options, headers });
-  const event = { waitUntil: vi.fn() } as unknown as Parameters<typeof proxy>[1];
-  return proxy(request, event);
+  const event = { waitUntil: vi.fn() } as unknown as Parameters<typeof middleware>[1];
+  return middleware(request, event);
 }
 
 describe("public homepage routing", () => {
