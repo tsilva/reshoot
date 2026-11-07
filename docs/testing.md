@@ -176,6 +176,14 @@ these acceptance rules without establishing photographic quality or coherent
 
 ## Sample rotation review
 
+The canonical homepage serves a prerender for signed-out HTML navigations
+after Clerk resolves the session. Signed-in visits, client navigation, and
+requests with query parameters use the account-aware route. The response at
+`/` is private and non-cacheable because it depends on the session.
+The static `/public-home.html` artifact contains only public content and
+declares `/` as its canonical URL. Verify that signed-out visitors still see
+the rotating samples and a signed-in visitor still sees their own shoots.
+
 The homepage uses equal-sized display frames derived from the original sample
 photographs and their approved framing offsets. Regenerate them with
 `node scripts/prepare-sample-frames.mjs` after updating either input. The framing

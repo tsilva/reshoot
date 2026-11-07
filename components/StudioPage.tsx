@@ -1,4 +1,5 @@
 import type { ProjectDetail } from "@/lib/api/types";
+import { PublicHome } from "@/components/PublicHome";
 import { StudioHome } from "@/components/StudioHome";
 import { findCurrentUser } from "@/lib/auth/current-user";
 import { redirect } from "next/navigation";
@@ -13,7 +14,7 @@ export async function StudioPage({ project, showLibrary, walletOpen }: {
   const user = await findCurrentUser();
   if (!user) {
     if (showLibrary || walletOpen) redirect(`/login?returnTo=${encodeURIComponent(showLibrary ? "/projects" : "/?wallet=open")}`);
-    return <StudioHome key="signed-out" initialCredits={null} initialProjects={[]} currentUser={null} />;
+    return <PublicHome />;
   }
   const [{ getCreditSummary }, { listProjects }] = await Promise.all([
     import("@/lib/credits/service"), import("@/lib/projects/service"),

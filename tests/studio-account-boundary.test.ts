@@ -8,6 +8,7 @@ vi.mock("@/lib/credits/service", () => ({ getCreditSummary: state.credits }));
 vi.mock("@/lib/projects/service", () => ({ listProjects: state.projects }));
 vi.mock("@/components/StudioHome", () => ({ StudioHome: () => null }));
 import { StudioPage } from "../components/StudioPage";
+import { PublicHome } from "../components/PublicHome";
 
 describe("studio account boundary", () => {
   beforeEach(() => {
@@ -18,8 +19,10 @@ describe("studio account boundary", () => {
 
   it("does not load a wallet or projects for public visitors", async () => {
     const page = await StudioPage({});
-    expect(page.key).toBe("signed-out");
-    expect(page.props).toMatchObject({ currentUser: null, initialCredits: null, initialProjects: [] });
+    expect(page.type).toBe(PublicHome);
+    const publicHome = PublicHome();
+    expect(publicHome.key).toBe("signed-out");
+    expect(publicHome.props).toMatchObject({ currentUser: null, initialCredits: null, initialProjects: [] });
     expect(state.credits).not.toHaveBeenCalled();
     expect(state.projects).not.toHaveBeenCalled();
   });
