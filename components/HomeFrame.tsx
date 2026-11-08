@@ -1,0 +1,46 @@
+import Link from "next/link";
+import { Aperture } from "@phosphor-icons/react/ssr";
+import type { ReactNode } from "react";
+import { LegalLinks } from "@/components/legal/LegalLinks";
+import { SampleCarousel } from "@/components/SampleCarousel";
+
+export function HomeFrame({ brandHref, accountControls, startAction, startNote, pageError, children }: {
+  brandHref: string;
+  accountControls: ReactNode;
+  startAction: ReactNode;
+  startNote: string;
+  pageError?: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="one-page-studio home-page">
+      <header className="home-header">
+        <div className="home-header-inner">
+          <Link href={brandHref} className="home-brand" aria-label="Reshoot home">
+            <Aperture size={24} weight="light" aria-hidden="true" />reshoot.
+          </Link>
+          {accountControls}
+        </div>
+      </header>
+
+      <main className="home-content">
+        {pageError}
+        <div className="home-hero">
+          <section className="home-intro" aria-labelledby="home-title">
+            <h1 id="home-title">Your photos.<br />{" "}<em>Professional 360° views.</em></h1>
+            <div className="home-intro-copy">
+              <p>Add your product photos. Get clean studio views, automatically.</p>
+              <div className="home-start-row">
+                {startAction}
+                <p className="home-start-note">{startNote}</p>
+              </div>
+            </div>
+          </section>
+          <SampleCarousel />
+        </div>
+        {children}
+      </main>
+      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span><LegalLinks /></footer>
+    </div>
+  );
+}
