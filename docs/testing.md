@@ -187,7 +187,8 @@ the rotating samples and a signed-in visitor still sees their own shoots.
 
 The homepage uses equal-sized display frames derived from the original sample
 photographs and their approved framing offsets. Regenerate them with
-`node scripts/prepare-sample-frames.mjs` after updating either input. The framing
+`node scripts/prepare-sample-frames.mjs` after updating either input. This also
+regenerates the responsive AVIF versions of the opening frame. The framing
 check compares the display frames with the approved product bounds and center.
 Autoplay waits for the current and next image to decode before advancing.
 

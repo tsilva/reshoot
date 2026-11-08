@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { X } from "@phosphor-icons/react";
 import { useCallback, useRef, useState } from "react";
-import { sampleProducts } from "@/lib/client/sample-products";
+import { preload } from "react-dom";
+import { openingSampleSources, sampleProducts } from "@/lib/client/sample-products";
 import { Dialog } from "@/components/Dialog";
 import { SlideshowControls } from "@/components/SlideshowControls";
 import { usePhotoPlayback } from "@/lib/client/use-photo-playback";
@@ -12,6 +13,7 @@ type SampleView = { productIndex: number; angleIndex: number };
 
 const OPENING_VIEW_KEY = `${sampleProducts[0].id}:${sampleProducts[0].angles[0].id}`;
 const SAMPLE_IMAGE_SIZES = "(max-width: 540px) calc(100vw - 34px), (max-width: 850px) min(calc(100vw - 44px), 720px), min(60vw, 720px)";
+const OPENING_SAMPLE_SRC_SET = openingSampleSources.map(({ src, width }) => `${src} ${width}w`).join(", ");
 
 function nextView(current: SampleView, direction: -1 | 1): SampleView {
   const angleIndex = current.angleIndex + direction;
@@ -23,6 +25,14 @@ function nextView(current: SampleView, direction: -1 | 1): SampleView {
 }
 
 export function SampleCarousel() {
+  preload(openingSampleSources[0].src, {
+    as: "image",
+    type: "image/avif",
+    imageSrcSet: OPENING_SAMPLE_SRC_SET,
+    imageSizes: SAMPLE_IMAGE_SIZES,
+    fetchPriority: "high",
+  });
+
   const [{ productIndex, angleIndex }, setView] = useState<SampleView>({ productIndex: 0, angleIndex: 0 });
   const product = sampleProducts[productIndex];
   const sampleAngles = product.angles;
@@ -81,7 +91,7 @@ export function SampleCarousel() {
               || (sampleIndex === previousProduct && index === sampleProduct.angles.length - 1);
             const warm = openingSettled && (sampleIndex === productIndex || adjacentEntry);
             if (!firstView && !active && !warm && !loadedViews.has(key)) return null;
-            return (
+            const photo = (
               <Image
                 key={key}
                 src={sampleAngle.image}
@@ -96,6 +106,12 @@ export function SampleCarousel() {
                 hidden={!active}
               />
             );
+            return firstView ? (
+              <picture key={key}>
+                <source type="image/avif" srcSet={OPENING_SAMPLE_SRC_SET} sizes={SAMPLE_IMAGE_SIZES} />
+                {photo}
+              </picture>
+            ) : photo;
           }))}
         </div>
       </div>

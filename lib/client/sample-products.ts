@@ -3,6 +3,12 @@ import dollUpload from "@/public/assets/samples/example-uploads/linen-doll.jpg";
 import mugUpload from "@/public/assets/samples/example-uploads/ceramic-mug.jpg";
 import handbagUpload from "@/public/assets/samples/example-uploads/leather-handbag.jpg";
 import dollFront from "@/public/assets/samples/display/linen-doll/front.webp";
+import opening384 from "@/public/assets/samples/display/linen-doll/front-384.avif";
+import opening640 from "@/public/assets/samples/display/linen-doll/front-640.avif";
+import opening750 from "@/public/assets/samples/display/linen-doll/front-750.avif";
+import opening828 from "@/public/assets/samples/display/linen-doll/front-828.avif";
+import opening1080 from "@/public/assets/samples/display/linen-doll/front-1080.avif";
+import opening1254 from "@/public/assets/samples/display/linen-doll/front-1254.avif";
 import dollFrontRight from "@/public/assets/samples/display/linen-doll/front-three-quarter.webp";
 import dollRight from "@/public/assets/samples/display/linen-doll/right-profile.webp";
 import dollBackRight from "@/public/assets/samples/display/linen-doll/back-right-three-quarter.webp";
@@ -75,3 +81,13 @@ export const sampleProducts = productSources.map(({ images, upload, ...product }
   upload,
   angles: views.map((view, index) => ({ ...view, image: images[index] })),
 }));
+
+// Turbopack emits AVIF files as-is and does not read their dimensions.
+export const openingSampleSources = [
+  { src: opening384.src, width: 384 },
+  { src: opening640.src, width: 640 },
+  { src: opening750.src, width: 750 },
+  { src: opening828.src, width: 828 },
+  { src: opening1080.src, width: 1080 },
+  { src: opening1254.src, width: 1254 },
+];

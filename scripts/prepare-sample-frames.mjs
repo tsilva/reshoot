@@ -36,3 +36,11 @@ for (const { product, id, output } of assets) {
     .webp({ lossless: true })
     .toFile(fileURLToPath(destination));
 }
+
+const openingFrame = new URL(sampleDisplayPath("linen-doll", "front"), root);
+for (const width of [384, 640, 750, 828, 1080, sampleDisplaySize]) {
+  await sharp(fileURLToPath(openingFrame))
+    .resize(width)
+    .avif({ quality: 52, effort: 6 })
+    .toFile(fileURLToPath(new URL(`front-${width}.avif`, openingFrame)));
+}
