@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { X } from "@phosphor-icons/react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { preload } from "react-dom";
 import { openingSampleSources, sampleProducts } from "@/lib/client/sample-products";
 import { Dialog } from "@/components/Dialog";
@@ -39,10 +39,12 @@ export function SampleCarousel() {
   const [originalOpen, setOriginalOpen] = useState(false);
   const [loadedViews, setLoadedViews] = useState<Set<string>>(() => new Set());
   const [openingFailed, setOpeningFailed] = useState(false);
+  const [warmRemainingViews, setWarmRemainingViews] = useState(false);
   const sampleRef = useRef<HTMLElement>(null);
   const angle = sampleAngles[angleIndex];
   const frameKey = `${product.id}:${angle.id}`;
   const upcoming = nextView({ productIndex, angleIndex }, 1);
+  const previous = nextView({ productIndex, angleIndex }, -1);
   const upcomingProduct = sampleProducts[upcoming.productIndex];
   const upcomingKey = `${upcomingProduct.id}:${upcomingProduct.angles[upcoming.angleIndex].id}`;
   const ready = loadedViews.has(frameKey) && loadedViews.has(upcomingKey);
@@ -53,8 +55,30 @@ export function SampleCarousel() {
   const playback = usePhotoPlayback({ containerRef: sampleRef, frameKey, ready, blocked: originalOpen, onAdvance: advance });
   const rotationEnabled = playback.enabled;
 
+  useEffect(() => {
+    if (!openingSettled || warmRemainingViews) return;
+
+    // Give the opening frame and its immediate neighbors a head start.
+    let cancelWarmup: (() => void) | undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const warmup = () => setWarmRemainingViews(true);
+      if (typeof window.requestIdleCallback === "function") {
+        const idle = window.requestIdleCallback(warmup, { timeout: 300 });
+        cancelWarmup = () => window.cancelIdleCallback(idle);
+      } else {
+        const timer = window.setTimeout(warmup, 0);
+        cancelWarmup = () => window.clearTimeout(timer);
+      }
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      cancelWarmup?.();
+    };
+  }, [openingSettled, warmRemainingViews]);
+
   function cycleSample(direction: -1 | 1) {
     playback.pause();
+    setWarmRemainingViews(true);
     setOriginalOpen(false);
     setView((current) => nextView(current, direction));
   }
@@ -86,10 +110,12 @@ export function SampleCarousel() {
             const key = `${sampleProduct.id}:${sampleAngle.id}`;
             const firstView = key === OPENING_VIEW_KEY;
             const active = sampleIndex === productIndex && index === angleIndex;
-            // Warm the active rotation and the entry frame in each direction after the opening image.
+            const nearby = (sampleIndex === upcoming.productIndex && index === upcoming.angleIndex)
+              || (sampleIndex === previous.productIndex && index === previous.angleIndex);
             const adjacentEntry = (sampleIndex === nextProduct && index === 0)
               || (sampleIndex === previousProduct && index === sampleProduct.angles.length - 1);
-            const warm = openingSettled && (sampleIndex === productIndex || adjacentEntry);
+            const warm = openingSettled
+              && (nearby || (warmRemainingViews && (sampleIndex === productIndex || adjacentEntry)));
             if (!firstView && !active && !warm && !loadedViews.has(key)) return null;
             const photo = (
               <Image
