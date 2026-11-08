@@ -1,3 +1,4 @@
+import "@/app/studio.css";
 import type { ProjectDetail } from "@/lib/api/types";
 import { PublicHome } from "@/components/PublicHome";
 import { StudioHome } from "@/components/StudioHome";
