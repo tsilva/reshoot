@@ -11,6 +11,8 @@ vi.mock("@/components/SampleCarousel", () => ({ SampleCarousel: () => null }));
 import { StudioPage } from "../components/StudioPage";
 import { PublicHome } from "../components/PublicHome";
 import { HomeFrame } from "../components/HomeFrame";
+import { AuthProvider } from "../components/auth/AuthProvider";
+import { StudioHome } from "../components/StudioHome";
 
 describe("studio account boundary", () => {
   beforeEach(() => {
@@ -36,6 +38,8 @@ describe("studio account boundary", () => {
       .mockResolvedValueOnce({ id: "two", displayName: "Two", email: "two@example.invalid", isDemo: true });
     const first = await StudioPage({});
     const second = await StudioPage({});
+    expect(first.type).toBe(AuthProvider);
+    expect(first.props.children.type).toBe(StudioHome);
     expect(first.key).toBe("one");
     expect(second.key).toBe("two");
     expect(state.credits.mock.calls).toEqual([["one", true], ["two", true]]);

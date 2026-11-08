@@ -1,6 +1,7 @@
 import type { ProjectDetail } from "@/lib/api/types";
 import { PublicHome } from "@/components/PublicHome";
 import { StudioHome } from "@/components/StudioHome";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { findCurrentUser } from "@/lib/auth/current-user";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
@@ -24,5 +25,7 @@ export async function StudioPage({ project, showLibrary, walletOpen }: {
     project ? [] : listProjects(user.id),
   ]);
 
-  return <StudioHome key={user.id} initialCredits={credits} initialProjects={projects} currentUser={{ displayName: user.displayName, email: user.email, isDemo: user.isDemo }} project={project} showLibrary={showLibrary} initialWalletOpen={walletOpen} />;
+  return <AuthProvider key={user.id}>
+    <StudioHome initialCredits={credits} initialProjects={projects} currentUser={{ displayName: user.displayName, email: user.email, isDemo: user.isDemo }} project={project} showLibrary={showLibrary} initialWalletOpen={walletOpen} />
+  </AuthProvider>;
 }
