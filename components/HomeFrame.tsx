@@ -4,19 +4,20 @@ import type { ReactNode } from "react";
 import { LegalLinks } from "@/components/legal/LegalLinks";
 import { SampleCarousel } from "@/components/SampleCarousel";
 
-export function HomeFrame({ brandHref, accountControls, startAction, startNote, pageError, children }: {
+export function HomeFrame({ brandHref, accountControls, startAction, startNote, pageError, children, prefetchLinks }: {
   brandHref: string;
   accountControls: ReactNode;
   startAction: ReactNode;
   startNote: string;
   pageError?: ReactNode;
   children?: ReactNode;
+  prefetchLinks?: boolean;
 }) {
   return (
     <div className="one-page-studio home-page">
       <header className="home-header">
         <div className="home-header-inner">
-          <Link href={brandHref} className="home-brand" aria-label="Reshoot home">
+          <Link href={brandHref} prefetch={prefetchLinks} className="home-brand" aria-label="Reshoot home">
             <Aperture size={24} weight="light" aria-hidden="true" />reshoot.
           </Link>
           {accountControls}
@@ -40,7 +41,7 @@ export function HomeFrame({ brandHref, accountControls, startAction, startNote, 
         </div>
         {children}
       </main>
-      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span><LegalLinks /></footer>
+      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span><LegalLinks prefetch={prefetchLinks} /></footer>
     </div>
   );
 }

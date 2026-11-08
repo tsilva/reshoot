@@ -6,7 +6,8 @@ export function PublicHome() {
   return (
     <HomeFrame
       brandHref="#"
-      accountControls={<Link className="home-wallet-button" href="/login">Sign in <User size={18} /></Link>}
+      prefetchLinks={false}
+      accountControls={<Link className="home-wallet-button" href="/login" prefetch={false}>Sign in <User size={18} /></Link>}
       startAction={<Link className="home-primary-button" href="/login" prefetch={false}><span>Add photos</span><ArrowRight size={20} /></Link>}
       startNote="Sign in to save your shoots. Explore the samples for free."
     />
