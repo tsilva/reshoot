@@ -15,12 +15,10 @@
 .article section p { margin: 14px 0; }
 .article ul { padding-left: 24px; }
 .article a, .header > a:last-child { text-decoration: underline; text-underline-offset: 4px; }
-.article a:hover, .header > a:last-child:hover, .links a:hover { color: var(--coral-strong); }
-.page a:focus-visible, .links a:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; border-radius: 2px; }
+.article a:hover, .header > a:last-child:hover { color: var(--coral-strong); }
+.page a:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; border-radius: 2px; }
 .contact { border-top: 1px solid var(--border); margin-top: 40px; padding-top: 24px; }
 .footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-top: 1px solid var(--border); padding: 22px 0; font-size: 12px; color: var(--text-soft); }
-.links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; font-size: inherit; }
-.links a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 600px) {
   .page { padding: 0 20px; }
   .header { min-height: 72px; gap: 12px; }
@@ -29,5 +27,4 @@
   .description { font-size: 18px; }
   .contents { gap: 12px 18px; margin-bottom: 36px; }
   .footer { align-items: flex-start; flex-wrap: wrap; }
-  .links { gap: 8px 14px; }
 }

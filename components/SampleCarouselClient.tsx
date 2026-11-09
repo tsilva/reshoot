@@ -147,7 +147,7 @@ export function SampleCarouselClient({ sampleProducts, openingSrc, openingSrcSet
       <div className="sample-toolbar">
         <SlideshowControls playing={rotationEnabled} onPrevious={() => cycleSample(-1)} onNext={() => cycleSample(1)} onTogglePlayback={togglePlayback} />
         <button className="sample-original-preview" type="button" aria-haspopup="dialog" aria-controls="sample-original-modal" title="View illustrative original photo" onClick={() => setOriginalOpen(true)}>
-          <Image src={product.upload} alt="" width={44} height={44} sizes="(hover: hover) 120px, 44px" loading="eager" />
+          <Image src={product.upload} alt="" width={44} height={44} sizes="(hover: hover) 120px, 44px" loading="eager" fetchPriority="low" />
           <span>Show original</span>
         </button>
       </div>

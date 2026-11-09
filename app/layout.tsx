@@ -3,6 +3,7 @@ import { Hanken_Grotesk, Instrument_Serif } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import "@/app/base.css";
+import "@/app/home.css";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,

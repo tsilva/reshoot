@@ -1,5 +1,4 @@
 @import "./globals.css";
-@import "./home.css";
 
 /* Quiet photo canvas: the generated image is the working surface. */
 .has-studio { --studio-bar-height: 64px; }
