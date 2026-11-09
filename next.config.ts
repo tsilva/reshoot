@@ -11,6 +11,10 @@ const storageHostname = process.env.R2_ENDPOINT
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  ...(process.env.RESHOOT_DATABASE_TRANSPORT === "agent-vault"
+    ? { logging: false as const, skipProxyUrlNormalize: true } : {}),
+  ...(process.env.RESHOOT_DATABASE_TRANSPORT === "agent-vault" && process.env.RESHOOT_VAULT_TSCONFIG
+    ? { typescript: { tsconfigPath: process.env.RESHOOT_VAULT_TSCONFIG } } : {}),
   distDir: process.env.NEXT_DEV_OUTPUT_DIR || ".next",
   reactStrictMode: true,
   images: storageHostname

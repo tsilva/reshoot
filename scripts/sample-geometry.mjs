@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import sharp from "sharp";
 
+export const sampleViewOrder = ["front", "front-three-quarter", "right-profile", "back-right-three-quarter", "back", "back-left-three-quarter", "left-profile", "front-left-three-quarter"];
+export const sampleDisplaySize = 1254;
+
+export function sampleDisplayPath(product, view) {
+  return `public/assets/samples/display/${product}/${view}.webp`;
+}
+
 // Known sample materials only. These bands avoid the doll's moving feet,
 // the mug's handle and the handbag's handles; never anchor to a panel seam.
 const bodyBands = {

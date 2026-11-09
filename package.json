@@ -7,6 +7,8 @@
   },
   "packageManager": "pnpm@10.17.1",
   "scripts": {
+    "agentbridge:check": "python3 -I scripts/infisical/agentbridge_vault.py check",
+    "test:agentbridge": "node --test scripts/agentbridge-vault.check.mjs",
     "dev": "python3 scripts/infisical/run.py dev",
     "build": "next build",
     "start": "node scripts/dev-server.mjs next start",
@@ -22,7 +24,12 @@
     "start:secrets": "python3 scripts/infisical/run.py start",
     "secrets:check": "python3 scripts/infisical/run.py check",
     "test:secrets": "python3 -m unittest discover -s scripts/infisical -p test_secrets.py",
-    "test:provider": "node scripts/verify-provider-routing.mjs"
+    "test:provider": "node scripts/verify-provider-routing.mjs",
+    "agentbridge:tools:check": "python3 -I scripts/infisical/agentbridge_tools_vault.py check",
+    "agentbridge:compare:vault": "python3 -I scripts/infisical/agentbridge_tools_vault.py compare",
+    "dev:vault": "python3 -I scripts/infisical/local_vault.py dev --port auto",
+    "db:check-local:vault": "python3 -I scripts/infisical/local_vault.py check",
+    "services:check-local:vault": "python3 -I scripts/infisical/local_vault.py services-check"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1147.0",

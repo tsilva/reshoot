@@ -1,0 +1,29 @@
+(version 1)
+(allow default)
+(deny process-exec)
+(allow process-exec (literal (param "NODE_BIN")) (literal (param "COMPILER_BIN")))
+(deny mach-lookup (global-name "com.apple.securityd") (global-name "com.apple.securityd.xpc"))
+(deny network*)
+(allow network-outbound (remote tcp "localhost:8283"))
+(allow network-bind (local ip "localhost:*"))
+(allow network-inbound (local tcp "localhost:*"))
+(deny file-read-data file-write* (subpath (param "USER_HOME")))
+(allow file-read-data
+  (literal (param "CA_FILE"))
+  (subpath (param "NODE_ROOT"))
+  (subpath (param "REPO_ROOT")))
+(deny file-write* (subpath (param "REPO_ROOT")))
+(deny file-read-data
+  (subpath (string-append (param "REPO_ROOT") "/.git"))
+  (subpath (string-append (param "REPO_ROOT") "/.internal"))
+  (regex #"(^|/)[.]env($|[./])")
+  (regex #"(^|/)([.]netrc|[.]access[.]local[.]toml)$"))
+(allow file-write*
+  (regex (string-append (param "REPO_ROOT") "/\\.tsconfig\\.vault-local-[0-9]+\\.json$"))
+  (regex (string-append (param "REPO_ROOT") "/\\.next-dev-[0-9]+(/|$)")))
+
+(deny file-read-data (subpath (string-append (param "REPO_ROOT") "/.clerk")) (subpath (string-append (param "REPO_ROOT") "/.vercel")) (subpath (string-append (param "REPO_ROOT") "/.local")))
+(allow file-read-data file-write* (regex (string-append (param "REPO_ROOT") "/[.]workflow-local/vault-[0-9]+(/|$)")))
+
+; The installed Workflow SDK generates only gitignored endpoint bundles here.
+(allow file-write* (subpath (string-append (param "REPO_ROOT") "/app/.well-known/workflow")))

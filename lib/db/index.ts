@@ -1,22 +1,23 @@
-import { Pool } from "@neondatabase/serverless";
+import type { Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import * as schema from "@/lib/db/schema";
-
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is not configured.");
-}
+import { createDatabasePool } from "./connection";
+import { validateDatabaseSession } from "./vault-pool.mjs";
 
 const globalForDatabase = globalThis as unknown as {
   reshootPool?: Pool;
+  reshootVaultPool?: Pool;
 };
 
-export const pool =
-  globalForDatabase.reshootPool ?? new Pool({ connectionString: databaseUrl });
+const isVault = process.env.RESHOOT_DATABASE_TRANSPORT !== undefined;
+if (isVault) validateDatabaseSession();
+else if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not configured.");
+export const pool = (isVault ? globalForDatabase.reshootVaultPool : globalForDatabase.reshootPool)
+  ?? createDatabasePool();
 
 if (process.env.NODE_ENV !== "production") {
-  globalForDatabase.reshootPool = pool;
+  if (isVault) globalForDatabase.reshootVaultPool = pool;
+  else globalForDatabase.reshootPool = pool;
 }
 
 export const db = drizzle({ client: pool, schema });

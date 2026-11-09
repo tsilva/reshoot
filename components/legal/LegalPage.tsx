@@ -1,3 +1,4 @@
+import "@/app/studio.css";
 import Link from "next/link";
 import { LEGAL_CONTACT, LEGAL_UPDATED, type LegalDocument } from "@/lib/legal";
 import { LegalLinks } from "./LegalLinks";

@@ -1,88 +1,34 @@
 import "server-only";
 import sharp from "sharp";
-import { shotOrientation, type GenerationShot, type OrientationGuide, type OrientationGuideKind } from "./request";
+import { ORIENTATION_GUIDE_KIND, shotOrientation, type GenerationShot, type OrientationGuide } from "./request";
 
 type Point = [number, number, number];
-type Triangle = [Point, Point, Point, gray?: number];
 type Surface = { vertices: Point[]; gray?: number; color?: string };
 
-// Generic direction cue, never geometry inferred from a user's product.
-// Keep this version deterministic; a future product-specific guide replaces
-// this factory without changing the ordered original-photo inputs.
-function cupTriangles(mug = false): Triangle[] {
-  const triangles: Triangle[] = [];
-  function surface(rows: number, columns: number, point: (row: number, column: number) => Point) {
-    for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
-      const a = point(row, column), b = point(row + 1, column);
-      const c = point(row + 1, column + 1), d = point(row, column + 1);
-      triangles.push([a, b, c], [a, c, d]);
-    }
-  }
-  const profile = [[0, 0], [.31, 0], [.38, .03], [.42, .15], [.46, .4],
-    [.46, .9], [.455, .99], [.44, 1], [.415, .99], [.4, .95], [.405, .2], [.34, .08], [0, .08]];
-  surface(48, profile.length - 1, (slice, layer) => {
-    const angle = slice * 2 * Math.PI / 48, [radius, height] = profile[layer];
-    const radiusScale = mug ? .87 : 1;
-    return [radius * radiusScale * Math.sin(angle), height, radius * radiusScale * Math.cos(angle)];
-  });
-  surface(64, 8, (segment, ring) => {
-    const angle = segment * 2 * Math.PI / 64, tube = ring * 2 * Math.PI / 8;
-    const thickness = mug ? .055 : .065;
-    return [(mug ? .53 : .63) + ((mug ? .24 : .33) + thickness * Math.cos(tube)) * Math.cos(angle),
-      .52 + ((mug ? .34 : .36) + thickness * Math.cos(tube)) * Math.sin(angle), thickness * Math.sin(tube)];
-  });
-  return triangles;
+// A coordinate frame communicates physical directions without assuming an
+// object category, shape, component layout, material or source camera angle.
+function directionFrame(): Surface[] {
+  const a: Point = [-.32, 0, .20], b: Point = [.32, 0, .20];
+  const c: Point = [.32, 1, .20], d: Point = [-.32, 1, .20];
+  const e: Point = [-.32, 0, -.20], f: Point = [.32, 0, -.20];
+  const g: Point = [.32, 1, -.20], h: Point = [-.32, 1, -.20];
+  return [
+    { vertices: [a, b, c, d], color: "#363636" },
+    { vertices: [f, e, h, g], color: "#c9c9c9" },
+    { vertices: [b, f, g, c], color: "#ee6500" },
+    { vertices: [e, a, d, h], color: "#167acf" },
+    { vertices: [d, c, g, h], color: "#949494" },
+    { vertices: [e, f, b, a], color: "#949494" },
+  ];
 }
 
-function phoneSurfaces(colorCoded: boolean): Surface[] {
-  const radius = .055, halfWidth = .25, halfDepth = .025;
-  const rim = [[halfWidth - radius, 1 - radius], [-halfWidth + radius, 1 - radius],
-    [-halfWidth + radius, radius], [halfWidth - radius, radius]]
-    .flatMap(([x, y], corner) => Array.from({ length: 9 }, (_, step) => {
-      const angle = (corner + step / 8) * Math.PI / 2;
-      return [x + radius * Math.cos(angle), y + radius * Math.sin(angle)];
-    }));
-  const front = rim.map(([x, y]): Point => [x, y, halfDepth]);
-  const back = rim.map(([x, y]): Point => [x, y, -halfDepth]);
-  if (colorCoded) {
-    const rails = front.map((point, i) => {
-      const next = (i + 1) % front.length;
-      const longSide = Math.abs(front[next][1] - point[1]) > .5;
-      return {
-        vertices: [point, back[i], back[next], front[next]],
-        color: longSide ? (point[0] > 0 ? "#ee6500" : "#167acf") : "#949494",
-      };
-    });
-    return [
-      { vertices: front, color: "#363636" },
-      { vertices: [...back].reverse(), color: "#c9c9c9" },
-      ...rails,
-    ];
-  }
-  return front.flatMap((point, i): Surface[] => {
-    const next = (i + 1) % front.length;
-    return [
-      { vertices: [[0, .5, halfDepth], point, front[next]], gray: 75 },
-      { vertices: [[0, .5, -halfDepth], back[next], back[i]], gray: 183 },
-      { vertices: [point, back[i], back[next]], gray: 127 },
-      { vertices: [point, back[next], front[next]], gray: 127 },
-    ];
-  });
-}
-
-const surfacesByKind: Record<OrientationGuideKind, Surface[]> = {
-  "generic-cup-v1": cupTriangles().map(([a, b, c]) => ({ vertices: [a, b, c] })),
-  "upright-mug-v1": cupTriangles(true).map(([a, b, c]) => ({ vertices: [a, b, c] })),
-  "upright-phone-v1": phoneSurfaces(false),
-  "upright-phone-v2": phoneSurfaces(true),
-};
+const frameSurfaces = directionFrame();
 const SIZE = 512;
 
 // Orthographic software capture: one centered vertical pivot, no textures,
 // no cast shadows, no browser/WebGL or external reconstruction dependency.
-function renderGuide(kind: OrientationGuideKind, azimuth: number, elevation: number) {
-  const isPhone = kind.startsWith("upright-phone-");
-  const scale = isPhone ? SIZE * .8 : kind === "upright-mug-v1" ? SIZE * .48 : SIZE / 2.7;
+function renderGuide(azimuth: number, elevation: number) {
+  const scale = SIZE * .8;
   const yaw = azimuth * Math.PI / 180, tilt = elevation * Math.PI / 180;
   function transform([x, y, z]: Point): Point {
     const rotatedX = x * Math.cos(yaw) - z * Math.sin(yaw);
@@ -90,7 +36,7 @@ function renderGuide(kind: OrientationGuideKind, azimuth: number, elevation: num
     return [rotatedX, (y - .5) * Math.cos(tilt) - rotatedZ * Math.sin(tilt),
       (y - .5) * Math.sin(tilt) + rotatedZ * Math.cos(tilt)];
   }
-  const faces = surfacesByKind[kind].flatMap((surface) => {
+  const faces = frameSurfaces.flatMap((surface) => {
     const vertices = surface.vertices.map(transform);
     const [a, b, c] = vertices;
     const u = b.map((v, i) => v - a[i]), v = c.map((n, i) => n - a[i]);
@@ -98,7 +44,7 @@ function renderGuide(kind: OrientationGuideKind, azimuth: number, elevation: num
     const length = Math.hypot(...normal);
     if (length < 1e-10 || normal[2] <= 0) return [];
     const light = Math.max(0, (-3 * normal[0] + 7 * normal[1] + 4 * normal[2]) / (Math.sqrt(74) * length));
-    const gray = (surface.gray ?? 140) + Math.round((isPhone ? 28 : 65) * light);
+    const gray = (surface.gray ?? 140) + Math.round(65 * light);
     const fill = surface.color ?? `rgb(${gray},${gray},${gray})`;
     const points = vertices.map(([x, y]) => `${(SIZE / 2 + x * scale).toFixed(2)},${(SIZE / 2 - y * scale).toFixed(2)}`).join(" ");
     const depth = vertices.reduce((sum, vertex) => sum + vertex[2], 0) / vertices.length;
@@ -108,10 +54,9 @@ function renderGuide(kind: OrientationGuideKind, azimuth: number, elevation: num
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}"><rect width="100%" height="100%" fill="white"/>${faces.map((f) => f.svg).join("")}</svg>`;
 }
 
-export async function createOrientationGuide(shot: GenerationShot, kind: OrientationGuideKind = "generic-cup-v1"): Promise<OrientationGuide | undefined> {
+export async function createOrientationGuide(shot: GenerationShot): Promise<OrientationGuide | undefined> {
   const orientation = shotOrientation(shot);
-  // Legacy label-only shots have no reliable yaw: do not invent a front cue.
   if (!orientation) return undefined;
-  const png = await sharp(Buffer.from(renderGuide(kind, orientation.azimuth, orientation.elevation))).png().toBuffer();
-  return { kind, ...orientation, image: `data:image/png;base64,${png.toString("base64")}` };
+  const png = await sharp(Buffer.from(renderGuide(orientation.azimuth, orientation.elevation))).png().toBuffer();
+  return { kind: ORIENTATION_GUIDE_KIND, ...orientation, image: `data:image/png;base64,${png.toString("base64")}` };
 }

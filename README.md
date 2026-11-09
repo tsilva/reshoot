@@ -14,7 +14,7 @@ Reshoot is a product-photography studio for small brands, studios, and product t
 
 **Add photos** opens a blank shoot workspace. Set up the shoot there by choosing reference photos or dragging and dropping them onto the page; no name or separate upload dialog is required. The empty upload area fills the available height below the header. The lower Add photos and Generate controls appear only after a reference photo is saved, and disappear again when the last reference is removed. Photos upload directly into the shoot, with progress and retries for failed files. Once references are ready, the workspace calculates the price for eight studio views. Reshoot suggests a short name for the product in the first saved photo, leaving out the surroundings and how it is held or placed. On touch devices whose browser supports native capture, **Take a photo** opens the rear-facing camera; choosing existing photos remains available. File selection, drops, and camera capture use the same JPG/PNG/WebP validation and limits: up to 25 photos, 20 MB each, and 500 MB per shoot. Camera availability and the native chooser depend on the device/browser. If automatic naming is unavailable, photos are still saved under **Product shoot**. Later uploads preserve the shoot’s existing name.
 
-New shoots use an upright display pose and rotate around a fixed vertical axis. Uploads supply the product’s appearance and details. Their camera tilt and pose do not carry over into the turntable. A complete eight-view phone shoot uses a shared phone shape for gallery playback and downloads, keeping the same faces, rails and scale through the turn and preserving the cutouts’ rounded corners and straight side rails.
+New shoots use an upright display pose and rotate around a fixed vertical axis. Uploads supply the product’s appearance and details. Their camera tilt and pose do not carry over into the turntable. Every object uses the same physical direction frame and rotation guidance. Its original photographs determine shape, construction and materials; no object category selects a special scaffold or prompt.
 
 On mobile, the shoot workspace stacks reference controls and Generate beneath the preview. Checkout dialogs fill the available screen, including short phone landscape layouts. Safe-area padding keeps dialog controls clear of screen cutouts and the home indicator; the page behind the dialog stays still. Desktop dialogs remain centered.
 
@@ -44,7 +44,7 @@ Uniform display scaling and translation register each sample product’s body ax
 
 The visual design retains the editorial typography, clay and olive accents, and fine rules inspired by [Mudora by RylicStudio](https://dribbble.com/shots/26596729-Mudora-Pottery-and-Ceramics-Landing-Page), on a white studio surface. Instrument Serif supplies the headlines and Hanken Grotesk the controls. The sample uses a single photo carousel; repeated marketing sections and the oversized empty-library illustration are removed. The Plan & usage tab, upload dialog, and saved shoots share the white design.
 
-The first uploaded original is the identity anchor. The studio automatically includes up to four more ready originals in upload order, preserving an existing shoot’s saved anchor. Projects can still store 25 originals; when more than five are saved, the studio explains the generation limit. The studio plans eight views for each new shoot, one every 45° around the product. The **Generate** button shows the quoted credit total in smaller text below its label once reference photos are ready. Select a thumbnail to preview that reference in the large canvas; this does not change the generation anchor or cost. Remove photos using the X at the top left of each thumbnail, or add photos until satisfied with the cost. Every change invalidates the old quote and calculates a new one. More reference photos add context and can increase cost, up to the five-reference limit. Removing the primary photo promotes the next saved reference; removing every photo returns to the blank workspace. References are locked once generation starts. The drag overlay only identifies the drop target; pricing appears after photos are saved. Clicking it confirms the credit hold and starts generation. If a quote fails or expires, Generate refreshes the price for review before confirmation. Uploading more photos invalidates that quote; an expired quote must be checked again. The canvas initially shows the reference photo, then the latest version of the first completed view. The landing page’s previous, play/pause and next controls replace the output thumbnails. Generated views rotate every 0.9 seconds after their photos load. Manual navigation pauses playback. Left/right arrow keys also browse views. Playback follows the same reduced-motion, keyboard-focus, visibility and offscreen behavior as the landing page. A single completed view has disabled playback controls; a reference-only shoot has none. The gallery shows the latest version of each view. Generation prepares a ZIP of those images regardless of approval status. Download starts transferring the saved ZIP as soon as you click it. Archives are named `reshoot_<hyphenated-project-name>_<first-8-project-id-characters>.zip` and contain a folder with the same name (without `.zip`). Images inside use only their perspective label, such as `angle_N.png`, and retain their actual image format; repeated labels receive a numeric suffix to preserve every image. Older shoots prepare their ZIP the first time you reopen them. Each shoot supports one generation batch; regeneration and additional sets are unavailable. Quotes for existing shoots and legacy regeneration requests are rejected, and confirmation rechecks this rule under the credit-account lock before reserving credits. Replaying the same confirmation or resuming its existing batch remains safe. The header shows the credit balance beside the account avatar. The balance shortcut opens Plan & usage directly in the account panel, without scrolling away from the shoot. Confirmed monthly payments refresh that balance and the generation quote. Existing account and wallet links also open Plan & usage. Gallery autoplay rotates right by default, matching the Rotate right control. The gallery photo expands to use the desktop viewport while keeping playback controls above the fold. Before generation, the photo reserves room for references and Generate; phone controls wrap below the canvas without horizontal page overflow. The internal orientation cue is appended after those originals; it is not a selectable original or an extra customer reference in the quote. The normal single generation request records its actual provider usage as before. Handled mugs use a dedicated pose template with explicit handle visibility for every angle. Obvious wrong-side or side-on handle loops in profile views are rejected and their held credits released, without an automatic retry. This check does not establish coherent 3D geometry; inspect the complete rotation for consistency.
+The first uploaded original is the identity anchor. The studio automatically includes up to four more ready originals in upload order, preserving an existing shoot’s saved anchor. Projects can still store 25 originals; when more than five are saved, the studio explains the generation limit. The studio plans eight views for each new shoot, one every 45° around the product. The **Generate** button shows the quoted credit total in smaller text below its label once reference photos are ready. Select a thumbnail to preview that reference in the large canvas; this does not change the generation anchor or cost. Remove photos using the X at the top left of each thumbnail, or add photos until satisfied with the cost. Every change invalidates the old quote and calculates a new one. More reference photos add context and can increase cost, up to the five-reference limit. Removing the primary photo promotes the next saved reference; removing every photo returns to the blank workspace. References are locked once generation starts. The drag overlay only identifies the drop target; pricing appears after photos are saved. Clicking it confirms the credit hold and starts generation. If a quote fails or expires, Generate refreshes the price for review before confirmation. Uploading more photos invalidates that quote; an expired quote must be checked again. The canvas initially shows the reference photo, then the latest version of the first completed view. The landing page’s previous, play/pause and next controls replace the output thumbnails. Generated views rotate every 0.9 seconds after their photos load. Manual navigation pauses playback. Left/right arrow keys also browse views. Playback follows the same reduced-motion, keyboard-focus, visibility and offscreen behavior as the landing page. A single completed view has disabled playback controls; a reference-only shoot has none. The gallery shows the latest version of each view. Generation prepares a ZIP of those images regardless of approval status. Download starts transferring the saved ZIP as soon as you click it. Archives are named `reshoot_<hyphenated-project-name>_<first-8-project-id-characters>.zip` and contain a folder with the same name (without `.zip`). Images inside use only their perspective label, such as `angle_N.png`, and retain their actual image format; repeated labels receive a numeric suffix to preserve every image. Older shoots prepare their ZIP the first time you reopen them. Each shoot supports one generation batch; regeneration and additional sets are unavailable. Quotes for existing shoots and legacy regeneration requests are rejected, and confirmation rechecks this rule under the credit-account lock before reserving credits. Replaying the same confirmation or resuming its existing batch remains safe. The header shows the credit balance beside the account avatar. The balance shortcut opens Plan & usage directly in the account panel, without scrolling away from the shoot. Confirmed monthly payments refresh that balance and the generation quote. Existing account and wallet links also open Plan & usage. Gallery autoplay rotates right by default, matching the Rotate right control. The gallery photo expands to use the desktop viewport while keeping playback controls above the fold. Before generation, the photo reserves room for references and Generate; phone controls wrap below the canvas without horizontal page overflow. The internal orientation cue is appended after those originals; it is not a selectable original or an extra customer reference in the quote. Each oriented output receives an independent visual check for the requested physical side, stable construction and consistent occlusion before acceptance. Wrong or uncertain views release held credits without automatic retries. Image generation and visual review record their provider costs separately. Genuine rotational symmetry may produce equivalent views; these checks do not establish coherent 3D geometry, so inspect the complete rotation for consistency.
 
 ## Install
 
@@ -170,6 +170,10 @@ routed/requested model, reported model/provider when available, both request and
 response IDs, HTTP outcome, timestamps, and provider-reported USD cost in micros.
 They never store credentials, prompts, response bodies or image payloads.
 
+New rotation verification also records its vision-review
+requests separately. Apply `0006_rotation_review` before deploying that path;
+see [rotation acceptance and its limits](docs/image-generation-evaluation.md#upright-rotation-in-user-generation).
+
 Usage is committed before decoding or validating images, writing storage, or
 settling customer credits. Rejected images and failed requests can still incur
 provider costs. Missing, null, invalid or negative costs remain unresolved;
@@ -199,6 +203,48 @@ spend cannot be reconstructed reliably. Recorded-call totals do not certify
 complete historical project spend. Elapsed durations include response transfer
 and parsing, not just model inference; interrupted records can lack a finish time.
 
+<!-- agent-vault-agentbridge:read:start -->
+## Agent Vault model-catalog probe
+
+On a configured trusted Mac:
+
+```sh
+pnpm agentbridge:check
+pnpm test:agentbridge
+```
+
+Use the first command for a bounded read-only model-catalog check.
+The reviewed mapping is Agent Vault bundle `local-reshoot-agentbridge-read`,
+service `reshoot-agentbridge-models`, for GET `/api/v1/models` on
+`127.0.0.1:8082`. The owner-only local metadata profile is
+`~/.config/infisical/agentbridge-clients/reshoot-read.json`.
+
+The profile validates this repository's native Development source identity and
+pins the existing routing helper's digest. No application key or Sentry token
+is fetched. The local gateway accepts public placeholders; AgentBridge's own
+upstream credential route remains responsible for provider authentication.
+The sandboxed Node client imports the reviewed app routing helper, requires
+`agentbridge_public_placeholder`, and enables proxy support explicitly.
+Its fixed request returns only catalog size and whether the configured default
+is advertised. A missing catalog entry is informational; a catalog does not
+prove that an inference request will succeed or that upstream login is valid.
+
+Outbound access is limited to the local proxy. Home reads are limited to the
+reviewed runtime, public CA and required client/config files. Only the pinned
+Node runtime can be executed inside the sandbox; Keychain service lookup is
+blocked. The trusted launcher and other full-access host processes remain
+outside that isolation boundary. The instance and CA are pinned without
+changing system trust, and sessions last at most ten minutes.
+
+This profile permits only read-only catalog access. It does not migrate or
+launch the full application, authorize inference, or enable chat, image,
+embedding, file or MCP transports. Missing/changed bindings and failed checks
+stop without raw-key or direct-network fallback. Existing app defaults,
+production delivery, Sentry settings/uploads and other service profiles remain
+unchanged. Run `pnpm test:agentbridge` after modifying this client or profile.
+<!-- agent-vault-agentbridge:read:end -->
+
+Trusted provisioning installs the official checksum-reviewed Node v24.22.1 Darwin ARM64 runtime alongside existing runtimes under `~/.config/infisical/runtimes/node-v24.22.1-darwin-arm64`, plus an owner-only metadata profile. The profile records version 1, repository/root, native project/environment/path identity, bundle, fixed loopback URL and proxy, absolute runtime/CLI/public-CA paths, CA fingerprint, routing-helper path/digest and the documented app default model. Review source or profile changes explicitly before replacing these pins; ordinary checks never approve new scope automatically.
 
 ## Notes
 
@@ -254,3 +300,59 @@ Realtime reduces repeated unchanged result transfers; actual savings depend on b
 ## License
 
 [MIT License](LICENSE).
+
+
+## Agent Vault image-comparison tool
+
+For local image-model comparisons, use the opt-in commands:
+
+```sh
+pnpm agentbridge:tools:check
+mkdir -p .internal/agent-vault/comparisons/my-run
+pnpm agentbridge:compare:vault --phase baseline --model openai/gpt-image-2.6-sunburst --output-dir "$PWD/.internal/agent-vault/comparisons/my-run"
+```
+
+The check makes only catalog and upstream-authentication requests. The comparison
+command runs the existing comparison client and **makes real image requests**;
+run it only after reviewing and approving the complete prompts, reference images
+and number of requests. Only 2.6 Sunburst is supported. Baseline sends two requests; candidate
+sends three. Omitting `--model` selects 2.6 Sunburst. Changed comparison source
+requires trusted review of the protected profile pins before use. This
+migration was verified with synthetic responses, without real image generation.
+
+Service mapping: native Development project `cdb4be1b-c53c-4b18-87eb-6f90aae2b661`,
+reserved service folder `/agents/agentbridge`, Agent Vault bundle
+`local-reshoot-agentbridge-tools`. The gateway service allows catalog, chat and
+image paths on `127.0.0.1:8082`; its separate authentication service permits only
+GET `/api/v1/openrouter/key` using the `localhost:8082` alias. No application key
+is copied into this folder: the gateway owns upstream authentication. The
+owner-only `agentbridge-clients/reshoot-tools.json` profile under the Infisical
+configuration directory pins the native identity, runtime, helpers, comparison
+source, routing helper and dependency lock. Source changes require trusted review.
+
+The sandbox restricts network access to the proxy, with public placeholders and
+process-local CA trust. Only the selected canonical output directory under
+`.internal/agent-vault/comparisons` is writable. Credential files and Keychain
+access are blocked; provider failure details are withheld and a failed transport
+stops subsequent dispatch. Recorded requests are never automatically replayed.
+This protects the sandboxed client, not other full-access same-user host processes.
+
+For the opt-in local webpage's database route, use the isolated local app setup
+below. It preserves interactive transactions through a trusted local relay;
+the normal Neon transport remains unchanged. The comparison tool still does not
+provide Clerk, storage or signing credentials. Never reuse the read-only
+migration-auditor role for application writes or bypass provider cost recording.
+
+The original catalog check, default app launchers, model choices, production
+delivery and Sentry configuration remain unchanged. Run `pnpm test:agentbridge`
+and the provider/naming tests after changes to these helpers.
+
+
+## Isolated local development
+
+With the reviewed relay installed, use `pnpm dev:vault` to run the local app
+against a separate PostgreSQL database and local object store, with Development
+Clerk sign-in and service credentials kept behind Vault. Run
+`pnpm db:check-local:vault` and `pnpm services:check-local:vault` for read-only
+readiness checks. Existing launch defaults stay unchanged.
+See [local development through Agent Vault](docs/local-agent-vault.md).

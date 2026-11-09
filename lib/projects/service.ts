@@ -273,6 +273,7 @@ export async function getProjectDetail(
     assets: publicAssets,
     shots: publicShots,
     activeBatchId: batchActive ? batch.id : null,
+    latestBatchId: batch?.id ?? null,
     ...(turntable ? { registeredPhoneTurntable: true } : {}),
     ...(expectsPhoneTurntable && !batchActive && !turntable ? { turntableUnavailable: true } : {}),
   };

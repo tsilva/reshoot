@@ -144,9 +144,10 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
   const generating = Boolean(batch && !batchIsTerminal(batch.status)) || Boolean(initialProject.activeBatchId && !batch);
 
   useEffect(() => {
-    if (!initialProject.activeBatchId) return;
+    const batchId = initialProject.activeBatchId ?? initialProject.latestBatchId;
+    if (!batchId) return;
     let active = true;
-    void apiRequest<{ batch: GenerationBatchStatus }>(`/api/generation-batches/${initialProject.activeBatchId}`, { cache: "no-store" })
+    void apiRequest<{ batch: GenerationBatchStatus }>(`/api/generation-batches/${batchId}`, { cache: "no-store" })
       .then((response) => {
         if (!active) return;
         setBatch(response.batch);
@@ -168,7 +169,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     return () => {
       active = false;
     };
-  }, [initialProject.activeBatchId]);
+  }, [initialProject.activeBatchId, initialProject.latestBatchId]);
 
   const refreshProject = useCallback(async () => {
     const response = await apiRequest<{ project: ProjectDetail }>(
@@ -418,6 +419,8 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     return shot.versions.at(-1)!;
   }
   const activeVersion = activeShot ? latestVersion(activeShot) : null;
+  const missingViews = project.shots.filter((shot) => shot.versions.length === 0);
+  const incompleteRotation = !generating && completedShots.length > 0 && missingViews.length > 0;
   const previewReference = readyOriginals.find((asset) => asset.id === selectedReferenceId) ?? primary;
   const canvasImage = activeVersion?.previewUrl ?? previewReference?.previewUrl;
   const advance = useCallback(() => {
@@ -430,7 +433,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
     containerRef: canvasRef,
     frameKey: activeVersion?.outputId ?? "reference",
     ready: completedShots.length > 1 && completedShots.every((shot) => loadedPhotos.has(latestVersion(shot).previewUrl)),
-    blocked: busy || generating,
+    blocked: busy || generating || incompleteRotation,
     onAdvance: advance,
   });
 
@@ -471,6 +474,10 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
           <WarningCircle size={18} /> The phone turntable could not be completed. Available views are shown individually.
         </div>
       ) : null}
+      {incompleteRotation ? <div className="studio-notice error-notice" role="alert">
+        <WarningCircle size={18} /><span>Incomplete rotation: {completedShots.length} of {project.shots.length} views ready.
+          {" "}Missing: {missingViews.map((shot) => shot.label).join(", ")}. Autoplay requires a complete set.</span>
+      </div> : null}
       {batch?.jobs.some((job) => job.status === "failed") ? (
         <div className="studio-failed-jobs">
           {batch.jobs.filter((job) => job.status === "failed").map((job) => {
@@ -582,7 +589,7 @@ export function ProjectStudioClient({ initialProject, checkoutAvailable, onOpenW
           <h1 className="studio-title" title={project.title}>{project.title}</h1>
           {completedShots.length ? <>
             <div className="studio-rotation-controls" onFocusCapture={playback.onFocusCapture} onBlurCapture={playback.onBlurCapture} onKeyDown={handleRotationKey}>
-              <SlideshowControls playing={playback.enabled && completedShots.length > 1} disabled={completedShots.length < 2}
+              <SlideshowControls playing={!incompleteRotation && playback.enabled && completedShots.length > 1} disabled={completedShots.length < 2} playbackDisabled={incompleteRotation}
                 previousLabel="Rotate left" nextLabel="Rotate right"
                 onPrevious={() => cycleView(1)} onNext={() => cycleView(-1)} onTogglePlayback={playback.toggle} />
             </div>

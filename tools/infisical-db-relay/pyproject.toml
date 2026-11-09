@@ -1,0 +1,20 @@
+[project]
+name = "infisical-db-relay"
+version = "0.1.0"
+description = "Local PostgreSQL transactions behind an Infisical Agent Vault HTTP route"
+requires-python = ">=3.11"
+dependencies = ["psycopg[binary]==3.3.3"]
+
+[project.scripts]
+infisical-db-relay = "infisical_db_relay.cli:main"
+
+[build-system]
+requires = ["hatchling==1.33.0"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+exclude-newer = "7 days"
+constraint-dependencies = ["mistralai!=2.4.6", "guardrails-ai!=0.10.1"]
+
+[dependency-groups]
+build = ["hatchling==1.33.0"]

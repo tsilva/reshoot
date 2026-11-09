@@ -1,0 +1,197 @@
+:root {
+  --surface: #ffffff;
+  --surface-lowest: #ffffff;
+  --surface-low: #fafafa;
+  --surface-mid: #f3f3f0;
+  --surface-high: #eaeae6;
+  --ink: #291c16;
+  --text: #291c16;
+  --text-soft: #615d58;
+  --coral: #4c503a;
+  --coral-strong: #602912;
+  --coral-pale: #f0d2b6;
+  --lavender: #e3e1cd;
+  --lavender-strong: #4c503a;
+  --sage: #4c503a;
+  --sage-pale: #e4e4d4;
+  --danger: #ba1a1a;
+  --danger-pale: #ffdad6;
+  --border: #deded9;
+  --border-strong: #99998e;
+  --shadow: 0 12px 32px rgba(10, 17, 40, 0.08);
+  --shadow-strong: 0 20px 48px rgba(10, 17, 40, 0.16);
+  --font-display-stack: var(--font-display), Georgia, serif;
+  --font-body-stack: var(--font-body), Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@media (forced-colors: none) {
+  @supports not selector(::-webkit-scrollbar) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-strong) var(--surface-low);
+    }
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--surface-low);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    min-height: 40px;
+    border: 3px solid var(--surface-low);
+    border-radius: 999px;
+    background: var(--border-strong);
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-soft);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: var(--surface-low);
+  }
+}
+
+html {
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body-stack);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--surface);
+  color: var(--text);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role="application"]:focus-visible {
+  outline: 3px solid rgba(87, 93, 120, 0.3);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display-stack);
+}
+
+[data-step-heading]:focus {
+  outline: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(10, 17, 40, 0.54);
+  backdrop-filter: blur(6px);
+}
+
+@media (min-width: 720px) {
+  .modal-backdrop {
+    align-items: center;
+    padding: 24px;
+  }
+}
+
+dialog.native-modal {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+dialog.native-modal:not([open]) {
+  display: none;
+}
+
+dialog.native-modal::backdrop {
+  background: rgba(10, 17, 40, 0.54);
+  backdrop-filter: blur(6px);
+}
+
+@media (max-width: 850px), (max-height: 540px) and (pointer: coarse) {
+  html:has(dialog.native-modal[open]),
+  body:has(dialog.native-modal[open]) {
+    overflow: hidden;
+  }
+
+  dialog.native-modal {
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
+  }
+}

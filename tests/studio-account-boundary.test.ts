@@ -7,7 +7,12 @@ vi.mock("@/lib/auth/current-user", () => ({ findCurrentUser: state.user }));
 vi.mock("@/lib/credits/service", () => ({ getCreditSummary: state.credits }));
 vi.mock("@/lib/projects/service", () => ({ listProjects: state.projects }));
 vi.mock("@/components/StudioHome", () => ({ StudioHome: () => null }));
+vi.mock("@/components/SampleCarousel", () => ({ SampleCarousel: () => null }));
 import { StudioPage } from "../components/StudioPage";
+import { PublicHome } from "../components/PublicHome";
+import { HomeFrame } from "../components/HomeFrame";
+import { AuthProvider } from "../components/auth/AuthProvider";
+import { StudioHome } from "../components/StudioHome";
 
 describe("studio account boundary", () => {
   beforeEach(() => {
@@ -18,8 +23,12 @@ describe("studio account boundary", () => {
 
   it("does not load a wallet or projects for public visitors", async () => {
     const page = await StudioPage({});
-    expect(page.key).toBe("signed-out");
-    expect(page.props).toMatchObject({ currentUser: null, initialCredits: null, initialProjects: [] });
+    expect(page.type).toBe(PublicHome);
+    const publicHome = PublicHome();
+    expect(publicHome.type).toBe(HomeFrame);
+    expect(publicHome.props.accountControls.props.href).toBe("/login");
+    expect(publicHome.props.startAction.props.href).toBe("/login");
+    expect(publicHome.props.children).toBeUndefined();
     expect(state.credits).not.toHaveBeenCalled();
     expect(state.projects).not.toHaveBeenCalled();
   });
@@ -29,6 +38,8 @@ describe("studio account boundary", () => {
       .mockResolvedValueOnce({ id: "two", displayName: "Two", email: "two@example.invalid", isDemo: true });
     const first = await StudioPage({});
     const second = await StudioPage({});
+    expect(first.type).toBe(AuthProvider);
+    expect(first.props.children.type).toBe(StudioHome);
     expect(first.key).toBe("one");
     expect(second.key).toBe("two");
     expect(state.credits.mock.calls).toEqual([["one", true], ["two", true]]);
