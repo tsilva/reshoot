@@ -54,6 +54,11 @@ dialog.native-modal:has(> .sample-original-modal) { align-items: center; justify
 .home-saved-empty h2 { font-size: 32px; font-weight: 400; letter-spacing: -.6px; }
 .home-saved-empty p, .library-empty-message { color: var(--text-soft); font-size: 14px; line-height: 1.6; margin-top: 10px; }
 .home-footer { display: flex; justify-content: space-between; gap: 15px; border-top: 1px solid var(--home-rule); padding: 23px 0; font-size: 11px; color: var(--text-soft); }
+.legal-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; font-size: inherit; }
+.legal-links a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.legal-links a:hover { color: var(--coral-strong); }
+.legal-links a:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; border-radius: 2px; }
+@media (max-width: 600px) { .legal-links { gap: 8px 14px; } }
 .home-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; margin: 20px 0; border: 1px solid #ba6a43; background: #f0d2b6; color: #602912; font-size: 13px; }
 .home-wallet, .home-active-studio { position: relative; border: 1px solid var(--home-rule); background: #fff; margin: 28px 0; scroll-margin-top: 105px; }
 .home-panel-close { border: 1px solid var(--home-rule); background: transparent; border-radius: 30px; display: flex; align-items: center; gap: 7px; padding: 9px 13px; margin: 18px 22px 0 auto; color: var(--text-soft); font-size: 12px; cursor: pointer; }
