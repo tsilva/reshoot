@@ -2,13 +2,13 @@ import Link from "next/link";
 import { Aperture } from "@phosphor-icons/react/ssr";
 import type { ReactNode } from "react";
 import { LegalLinks } from "@/components/legal/LegalLinks";
-import { SampleCarousel } from "@/components/SampleCarousel";
 
-export function HomeFrame({ brandHref, accountControls, startAction, startNote, pageError, children, prefetchLinks }: {
+export function HomeFrame({ brandHref, accountControls, startAction, startNote, sample, pageError, children, prefetchLinks }: {
   brandHref: string;
   accountControls: ReactNode;
   startAction: ReactNode;
   startNote: string;
+  sample: ReactNode;
   pageError?: ReactNode;
   children?: ReactNode;
   prefetchLinks?: boolean;
@@ -37,7 +37,7 @@ export function HomeFrame({ brandHref, accountControls, startAction, startNote, 
               </div>
             </div>
           </section>
-          <SampleCarousel />
+          {sample}
         </div>
         {children}
       </main>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight, Coins, Plus, SpinnerGap, User, X,
 } from "@phosphor-icons/react";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ProjectStudioClient } from "@/components/projects/ProjectStudioClient";
 import { ProjectsClient } from "@/components/projects/ProjectsClient";
 import { HomeFrame } from "@/components/HomeFrame";
@@ -14,10 +14,11 @@ import type { CreditSummary, ProjectDetail, ProjectSummary } from "@/lib/api/typ
 import { apiRequest } from "@/lib/client/api";
 import { PROJECT_RETURN_KEY, projectCardId, projectPath } from "@/lib/projects/routes";
 
-export function StudioHome({ initialCredits, initialProjects, currentUser, project: activeProject = null, showLibrary = false, initialWalletOpen = false }: {
+export function StudioHome({ initialCredits, initialProjects, currentUser, sample, project: activeProject = null, showLibrary = false, initialWalletOpen = false }: {
   initialCredits: CreditSummary | null;
   initialProjects: ProjectSummary[];
   currentUser: { displayName: string; email: string; isDemo: boolean } | null;
+  sample: ReactNode;
   project?: ProjectDetail | null;
   showLibrary?: boolean;
   initialWalletOpen?: boolean;
@@ -125,6 +126,7 @@ export function StudioHome({ initialCredits, initialProjects, currentUser, proje
         {busy === "shoot" ? <SpinnerGap className="spin" size={20} /> : <ArrowRight size={20} />}
       </button>}
       startNote={currentUser ? "Private to your account. Stripe checkout uses test mode." : "Sign in to save your shoots. Explore the samples for free."}
+      sample={sample}
       pageError={pageError}
     >
       {currentUser && (

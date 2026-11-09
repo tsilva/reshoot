@@ -1,3 +1,4 @@
+import "server-only";
 import type { StaticImageData } from "next/image";
 import dollUpload from "@/public/assets/samples/example-uploads/linen-doll.jpg";
 import mugUpload from "@/public/assets/samples/example-uploads/ceramic-mug.jpg";
@@ -76,11 +77,17 @@ const productSources: SampleProductSource[] = [
   },
 ];
 
+function imageDimensions({ src, width, height }: StaticImageData) {
+  return { src, width, height };
+}
+
 export const sampleProducts = productSources.map(({ images, upload, ...product }) => ({
   ...product,
-  upload,
-  angles: views.map((view, index) => ({ ...view, image: images[index] })),
+  upload: imageDimensions(upload),
+  angles: views.map((view, index) => ({ ...view, image: imageDimensions(images[index]) })),
 }));
+
+export type SampleProduct = (typeof sampleProducts)[number];
 
 // Turbopack emits AVIF files as-is and does not read their dimensions.
 export const openingSampleSources = [
