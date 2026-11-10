@@ -75,7 +75,7 @@ source policy: keep them managed by Clerk and do not mirror them into secret syn
 `/login`; sign-up is at `/sign-up`. Clerk user IDs, rather than email matching or
 browser cookies, identify account ownership. Missing Clerk configuration leaves
 public samples available and private access closed; it never restores the shared demo.
-Production builds require both Clerk keys and fail if either is missing.
+Production delivery requires the Clerk publishable key and verifies the native secret binding. Vercel supplies the secret to production requests.
 The SDK is not used to provision keyless applications.
 
 Google sign-in uses the same Clerk account flow as email sign-in. Enable the

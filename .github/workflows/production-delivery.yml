@@ -3,10 +3,6 @@ name: Production delivery
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - .github/workflows/production-delivery.yml
-      - lib/auth/config.ts
-      - tests/production-auth-config.test.ts
   workflow_dispatch:
     inputs:
       stage_prebuilt:
@@ -35,13 +31,13 @@ jobs:
       id-token: write
     uses: tsilva/.github/.github/workflows/production-delivery.yml@48a4449de4ac5f4d5e14343f70fe5fc57bc2cd74
     with:
-      sync_only: ${{ inputs.stage_prebuilt }}
+      sync_only: true
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
-  stage_prebuilt:
+  publish:
     needs: deliver
-    if: github.ref == 'refs/heads/main' && inputs.stage_prebuilt
+    if: github.ref == 'refs/heads/main'
     uses: tsilva/.github/.github/workflows/vercel-prebuilt.yml@ff72a05772d5d5546fa1cdfd89054125caa484b8
     with:
       project_id: prj_L1D4dlxsUv8zZORHmxEmDZnE3lCV
@@ -50,6 +46,7 @@ jobs:
       public_environment: '["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY","NEXT_PUBLIC_GOOGLE_ANALYTICS_ID","NEXT_PUBLIC_SENTRY_DSN","SENTRY_ORG","SENTRY_PROJECT","R2_ENDPOINT"]'
       source_maps: true
       verify_clerk_runtime: true
+      promote: ${{ !inputs.stage_prebuilt }}
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}

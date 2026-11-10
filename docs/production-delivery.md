@@ -132,11 +132,11 @@ After a rollout, verify the exact commit's READY state and domain assignment, au
 
 For rollback, retain the additive revision table and triggers while rolling application code back. Realtime setup does not alter generation records or existing holds. Older application versions resume their previous status polling; do not run both clients for the same page.
 
-Push to `main` triggers `.github/workflows/production-delivery.yml`. After secret scanning, it calls the trusted workflow in public `tsilva/.github`, pinned to a reviewed full commit SHA. The privileged job checks out only the shared implementation, waits for the same latest main commit's CI, syncs its fixed Production allowlist, deploys that exact commit, and verifies the resulting READY deployment. Vercel's automatic Git deployments remain disabled so they cannot race synchronization.
+Push to `main` triggers `.github/workflows/production-delivery.yml`. After secret scanning, it calls the trusted workflow in public `tsilva/.github`, pinned to a reviewed full commit SHA. The privileged job checks out only the shared implementation, waits for the same latest main commit's CI, and syncs its fixed Production allowlist. A separate GitHub Actions job builds the exact commit, stages its prebuilt artifact on Vercel, verifies that deployment, then promotes it to production. Vercel's automatic Git deployments remain disabled so they cannot race synchronization.
 
-Infisical remains the source of application secrets except the two native Clerk keys described above. Development uses the existing human CLI login. The shared GitHub reader has Viewer access to the assigned production vaults, and the completed rollout requires its server-side OIDC policy to match the exact approved reusable workflow revision, caller repository IDs, owner ID, main branch and Production context. The trusted `apps.json` selects the source vault and destination from the immutable caller repository ID; app files and inputs cannot change that mapping. The reader itself can access all assigned vaults inside the trusted job. Its token and fetched values never leave that job. The Vercel deployment credential remains in this repository's GitHub Production environment.
+Infisical remains the source of application secrets except the two native Clerk keys described above. Development uses the existing human CLI login. The shared GitHub reader has Viewer access to the assigned production vaults, and the completed rollout requires its server-side OIDC policy to match the exact approved reusable workflow revision, caller repository IDs, owner ID, main branch and Production context. The trusted `apps.json` selects the source vault and destination from the immutable caller repository ID; app files and inputs cannot change that mapping. The reader itself can access all assigned vaults inside the trusted job. The Infisical reader token stays in the trusted job, which sends the allowlisted values only to their configured Production destination. The Vercel deployment credential remains in this repository's GitHub Production environment.
 
-The pinned shared source and [trust contract](https://github.com/tsilva/.github/blob/96ac6c21c4db6087757d4d65907119fec0f8f26f/.github/actions/production-delivery/README.md) are authoritative. App repositories retain only the pinned caller workflow. Source/destination mappings, credential handling and boundary tests are maintained centrally; no app code executes in the privileged job.
+The pinned shared source and [trust contract](https://github.com/tsilva/.github/blob/48a4449de4ac5f4d5e14343f70fe5fc57bc2cd74/.github/actions/production-delivery/README.md) are authoritative. App repositories retain only the pinned caller workflow. Source/destination mappings, credential handling and boundary tests are maintained centrally; no app code executes in the privileged job.
 
 The workflow does not run on pull requests or forks, export `.env` files, upload secret artifacts, delete secret variables, or change preview/development variables. All required source keys and destination targets are checked before writes. Failed CI or sync prevents deployment. Existing production remains live on failure.
 
@@ -186,7 +186,7 @@ Production and Preview call OpenRouter directly with their own server-only `OPEN
 
 Secret synchronization updates an existing Production variable by its exact Vercel ID, preserving separately configured Preview rows. New variables are created only when Production has no matching row; duplicate or combined targets still stop delivery.
 
-Production values must differ from Preview and Development under the Vercel isolation policy. Delivery reports `production-secret-reused` without printing the provider response. Reshoot uses the separate `reshoot-production-build` Sentry organization token with `org:ci` scope for source-map uploads and releases; keep it only in the production vault. Rotate the source token rather than weakening isolation or editing Preview.
+Production values must differ from Preview and Development under the Vercel isolation policy. Delivery reports `production-secret-reused` without printing the provider response. Reshoot uses the separate `reshoot-production-build` Sentry organization token with `org:ci` scope for source-map uploads and releases; keep its source in the Production vault. Rotate the source token rather than weakening isolation or editing Preview.
 
 Production delivery classifies public settings through the pinned `configNames` list; all other allowlisted values remain write-only Secrets. Vercel’s Require Separate Values policy stays enabled: real Production secrets must differ from non-production values. Existing variables are updated by their exact Production IDs. A legacy Secret explicitly listed as public configuration is replaced only in Production because Vercel cannot convert it to Config in place; Preview and Development rows are preserved. Provider responses and credential values are never logged. A failed sync holds deployment; rerun delivery after fixing the named key at its source.
 
@@ -195,3 +195,13 @@ assignment. Required integration checks, including Clerk DNS verification,
 remain enforced. The workflow waits for assignment, fails on alias errors or
 timeout, and rechecks the current main commit before reporting `Production
 READY`. Never bypass a failed integration check to make delivery green.
+
+## Staging a prebuilt deployment
+
+Use **Actions → Production delivery → Run workflow → main** with **stage_prebuilt** selected to build and verify a Vercel deployment while production domains keep serving the live release. Leave the option clear for a production delivery.
+
+Infisical Production owns the Sentry upload token. The build job uses the encrypted `SENTRY_AUTH_TOKEN` copy in the GitHub Production environment and confirms the source-map upload before deployment. Refresh that copy after rotating the source token, then rerun delivery.
+
+The GitHub Production variable `VERCEL_PUBLIC_BUILD_OVERRIDES` holds the explicitly public build values whose Vercel rows are non-readable. Update the public copies when changing those frontend settings.
+
+The prebuilt job checks the native Clerk secret binding in Vercel by metadata before compiling with the public key. Vercel supplies the secret to runtime requests.
