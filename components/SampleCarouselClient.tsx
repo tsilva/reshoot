@@ -12,6 +12,7 @@ import { usePhotoPlayback } from "@/lib/client/use-photo-playback";
 type SampleView = { productIndex: number; angleIndex: number };
 
 const SAMPLE_IMAGE_SIZES = "(max-width: 540px) calc(100vw - 34px), (max-width: 850px) min(calc(100vw - 44px), 720px), min(60vw, 720px)";
+const REMAINING_VIEW_WARMUP_DELAY_MS = 500;
 
 function nextView(sampleProducts: SampleProduct[], current: SampleView, direction: -1 | 1): SampleView {
   const angleIndex = current.angleIndex + direction;
@@ -61,9 +62,9 @@ export function SampleCarouselClient({ sampleProducts, openingSrc, openingSrcSet
   useEffect(() => {
     if (!openingSettled || warmRemainingViews) return;
 
-    // Give the opening frame and its immediate neighbors a head start.
+    // Give the opening frame time to paint before requesting the rest of the rotation.
     let cancelWarmup: (() => void) | undefined;
-    const frame = window.requestAnimationFrame(() => {
+    const delay = window.setTimeout(() => {
       const warmup = () => setWarmRemainingViews(true);
       if (typeof window.requestIdleCallback === "function") {
         const idle = window.requestIdleCallback(warmup, { timeout: 300 });
@@ -72,9 +73,9 @@ export function SampleCarouselClient({ sampleProducts, openingSrc, openingSrcSet
         const timer = window.setTimeout(warmup, 0);
         cancelWarmup = () => window.clearTimeout(timer);
       }
-    });
+    }, REMAINING_VIEW_WARMUP_DELAY_MS);
     return () => {
-      window.cancelAnimationFrame(frame);
+      window.clearTimeout(delay);
       cancelWarmup?.();
     };
   }, [openingSettled, warmRemainingViews]);
