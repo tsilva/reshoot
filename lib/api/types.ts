@@ -48,6 +48,7 @@ export type ProjectDetail = ProjectSummary & {
   assets: Asset[];
   shots: ProjectShot[];
   activeBatchId: string | null;
+  latestBatchId?: string | null;
   registeredPhoneTurntable?: boolean;
   turntableUnavailable?: boolean;
 };

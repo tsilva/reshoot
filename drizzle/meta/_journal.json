@@ -43,6 +43,13 @@
       "when": 1793903164551,
       "tag": "0005_provider_cost_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793967816949,
+      "tag": "0006_rotation_review",
+      "breakpoints": true
     }
   ]
 }

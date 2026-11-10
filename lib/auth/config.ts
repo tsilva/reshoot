@@ -1,4 +1,7 @@
+import { validateClerkSession } from "./vault-session.mjs";
+
 export function clerkConfigured() {
+  if (process.env.RESHOOT_CLERK_TRANSPORT !== undefined) return validateClerkSession();
   return Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
 }
 

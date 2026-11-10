@@ -1,0 +1,26 @@
+(version 1)
+(allow default)
+(deny process-exec)
+(allow process-exec (literal (param "NODE_BIN")))
+(deny mach-lookup (global-name "com.apple.securityd") (global-name "com.apple.securityd.xpc"))
+(deny network*)
+(allow network-outbound (remote tcp "localhost:8283"))
+(deny file-read-data file-write* (subpath (param "USER_HOME")))
+(allow file-read-data
+  (literal (param "CA_FILE"))
+  (subpath (param "NODE_ROOT"))
+  (subpath (param "REPO_ROOT")))
+(deny file-write* (subpath (param "REPO_ROOT")))
+(deny file-read-data
+  (subpath (string-append (param "REPO_ROOT") "/.git"))
+  (subpath (string-append (param "REPO_ROOT") "/.internal"))
+  (subpath (string-append (param "REPO_ROOT") "/.clerk"))
+  (subpath (string-append (param "REPO_ROOT") "/.vercel"))
+  (subpath (string-append (param "REPO_ROOT") "/.local"))
+  (regex #"(^|/)[.]env($|[./])")
+  (regex #"(^|/)([.]netrc|[.]access[.]local[.]toml)$"))
+
+(allow file-read-data file-write* (subpath (param "OUTPUT_DIR")))
+(deny file-read-data
+  (regex #"(^|/)[.]env($|[./])")
+  (regex #"(^|/)([.]netrc|[.]access[.]local[.]toml)$"))

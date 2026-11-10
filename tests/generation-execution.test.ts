@@ -1,27 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import sharp from "sharp";
-import type { OrientationGuideKind } from "../lib/generation/request";
+import type { QuoteShotInput } from "../lib/db/schema";
 const state = vi.hoisted(() => ({
-  attemptState: "claimed", transitionWon: true, inputs: ["primary", "supporting"],
-  quoteShots: [] as Array<{ orientationGuideKind: OrientationGuideKind }>,
+  attemptState: "claimed", providerModel: "openai/gpt-image-2.6-sunburst", transitionWon: true, inputs: ["primary", "supporting"],
+  quoteShots: [] as Partial<QuoteShotInput>[],
+  previousRows: [] as Array<{ shotId: string; status: string; r2Key?: string; mimeType?: string }>,
+  azimuth: 90,
   getObjectBuffer: vi.fn(), headObject: vi.fn(), putObject: vi.fn(),
   capture: vi.fn(), release: vi.fn(), fetch: vi.fn(), updates: [] as unknown[],
   calls: [] as unknown[], ledgerAvailable: true,
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("workflow", () => ({ RetryableError: Error }));
-vi.mock("@/lib/generation/provider", () => ({ imageProviderConfig: { model: "openai/gpt-image-2.5-flare", endpoint: "https://new.example/images", referer: "https://reshoot.tsilva.eu", title: "Reshoot" }, requireImageProviderKey: () => "dummy" }));
+vi.mock("@/lib/generation/provider", () => ({ imageProviderConfig: { model: "openai/gpt-image-2.6-sunburst", endpoint: "https://new.example/images", referer: "https://reshoot.tsilva.eu", title: "Reshoot" }, requireImageProviderKey: () => "dummy" }));
 vi.mock("@/lib/generation/accounting", () => ({ captureGeneration: state.capture, releaseGeneration: state.release }));
 vi.mock("@/lib/storage/r2", () => ({ getObjectBuffer: state.getObjectBuffer, headObject: state.headObject, putObject: state.putObject, sha256Hex: () => "checksum" }));
 vi.mock("@/lib/db", () => ({ db: {
   query: {
-    generationJobs: { findFirst: async () => ({ id: "job", status: "running", ownerId: "owner", version: 1 }) },
-    generationAttempts: { findFirst: async () => ({ id: "attempt", state: state.attemptState, providerModel: "openai/gpt-image-2.5-sunburst", providerEndpoint: "https://pinned.example/images", outputR2Key: "output", previewR2Key: "preview" }) },
+    generationJobs: { findFirst: async () => ({ id: "job", batchId: "batch", status: "running", ownerId: "owner", version: 1 }) },
+    generationAttempts: { findFirst: async () => ({ id: "attempt", state: state.attemptState, providerModel: state.providerModel, providerEndpoint: "https://pinned.example/images", outputR2Key: "output", previewR2Key: "preview" }) },
   },
   select: (selection?: unknown) => ({ from: () => ({
+    leftJoin: () => ({ where: async () => state.previousRows }),
     innerJoin: () => ({ innerJoin: () => ({ innerJoin: () => ({
       where: () => ({ limit: async () => [{
-        shot: { id: "shot", projectId: "project", label: "Right profile", azimuth: 90, elevation: 0 },
+        shot: { id: "shot", projectId: "project", label: "Profile", azimuth: state.azimuth, elevation: 0 },
         quoteShots: state.quoteShots,
       }] }),
     }) }) }),
@@ -37,46 +40,153 @@ import { executeGenerationJob } from "../workflows/generation/steps";
 
 describe("durable generation dispatch", () => {
   beforeEach(() => {
-    state.attemptState = "claimed"; state.transitionWon = true; state.inputs = ["primary", "supporting"]; state.updates = []; state.quoteShots = [];
+    state.attemptState = "claimed"; state.providerModel = "openai/gpt-image-2.6-sunburst"; state.transitionWon = true; state.inputs = ["primary", "supporting"]; state.updates = []; state.quoteShots = [];
     state.calls = []; state.ledgerAvailable = true;
+    state.azimuth = 90;
+    state.previousRows = [];
     vi.clearAllMocks();
+    state.fetch.mockReset();
     state.headObject.mockRejectedValue({ $metadata: { httpStatusCode: 404 } });
     state.getObjectBuffer.mockImplementation(async (key) => Buffer.from(key));
     vi.stubGlobal("fetch", state.fetch);
   });
 
-  it("uses the frozen mug pose and releases a wrong-angle output without another paid call", async () => {
-    state.quoteShots = [{ orientationGuideKind: "upright-mug-v1" }];
-    const png = await sharp(Buffer.from(`<svg width="512" height="512">
-      <ellipse cx="386" cy="240" rx="70" ry="110" fill="none" stroke="blue" stroke-width="22"/>
-      <rect x="146" y="76" width="220" height="360" rx="30" fill="blue"/>
-    </svg>`)).png().toBuffer();
-    state.fetch.mockResolvedValue(new Response(JSON.stringify({ data: [{ b64_json: png.toString("base64") }] })));
-    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "failed" });
-    expect(state.fetch).toHaveBeenCalledOnce();
-    const body = JSON.parse(state.fetch.mock.calls[0][1].body);
-    expect(body.prompt).toContain("handle is directly IN FRONT");
-    expect(body.prompt).not.toContain("Ignore the guide's cup shape, handle");
-    expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ failureCode: "invalid_mug_orientation" }));
-    expect(state.capture).not.toHaveBeenCalled();
-    expect(state.putObject).not.toHaveBeenCalled();
+  it("reports upstream credit/budget rejection as unavailable, releases the hold, and never retries", async () => {
+    state.fetch.mockResolvedValueOnce(Response.json({error:{message:"private upstream billing details"}},{status:402}));
+    const warn=vi.spyOn(console,"warn").mockImplementation(()=>{});
+    try{await executeGenerationJob("job","attempt","lease");}finally{warn.mockRestore();}
+    expect(state.release).toHaveBeenCalledWith(expect.objectContaining({publicError:"Image generation is temporarily unavailable. Credits were released."}));
+    expect(state.capture).not.toHaveBeenCalled();expect(state.fetch).toHaveBeenCalledOnce();
   });
 
-  it("saves a mug profile with no side loop and captures its credits once", async () => {
-    state.quoteShots = [{ orientationGuideKind: "upright-mug-v1" }];
-    const png = await sharp(Buffer.from(`<svg width="512" height="512">
-      <rect x="146" y="76" width="220" height="360" rx="30" fill="blue"/>
-      <rect x="245" y="120" width="22" height="240" rx="10" fill="#666"/>
-    </svg>`)).png().toBuffer();
-    state.fetch.mockResolvedValue(new Response(JSON.stringify({ data: [{ b64_json: png.toString("base64") }] })));
-    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "succeeded" });
-    expect(state.fetch).toHaveBeenCalledOnce();
+  it.each([false, true])("bounds diagonal context to its two cardinals and stops before paid work if an anchor failed (%s)", async (failed) => {
+    state.azimuth=225;
+    state.quoteShots=[0,45,90,135,180,225,270,315].map(azimuth=>({clientId:String(azimuth),shotId:azimuth===225?"shot":String(azimuth),label:"View",azimuth,
+      referenceAssetIds:["primary","supporting"],sequencePolicy:"cardinal-anchors-v2",rotationPolicy:"verified-rotation-v2"}));
+    state.previousRows=[0,180,90,270,135].map(angle=>({shotId:String(angle),status:failed&&angle===270?"failed":"succeeded",r2Key:`anchor-${angle}`,mimeType:"image/png"}));
+    const png=await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
+    state.getObjectBuffer.mockImplementation(async key=>String(key).startsWith("anchor-")?png:Buffer.from(key));
+    state.fetch.mockResolvedValueOnce(Response.json({data:[{b64_json:png.toString("base64")}]}))
+      .mockResolvedValueOnce(Response.json({choices:[{message:{content:JSON.stringify({confident:true,same_product:true,rigid_pose:true,
+        front_visible:false,rear_visible:true,physical_side:"left",side_image_edge:"right",same_view_as:null,evidence:"Rear face with side on image right, consistent with cardinal anchors."})}}]}));
+    const log=vi.spyOn(console,"error").mockImplementation(()=>{});
+    try { await executeGenerationJob("job","attempt","lease"); } finally {log.mockRestore();}
+    if(failed){expect(state.fetch).not.toHaveBeenCalled();expect(state.release).toHaveBeenCalledWith(expect.objectContaining({failureCode:"missing_rotation_anchor"}));return;}
     expect(state.capture).toHaveBeenCalledOnce();
-    expect(state.release).not.toHaveBeenCalled();
-    expect(state.putObject).toHaveBeenCalledTimes(2);
+    const request=JSON.parse(state.fetch.mock.calls[0][1].body);
+    expect(request.input_references).toHaveLength(5);
+    expect(request.prompt).toContain("at 180 degrees"); expect(request.prompt).toContain("at 270 degrees");
+    expect(request.prompt).not.toContain("at 135 degrees");
+    const reviewer=JSON.parse(state.fetch.mock.calls[1][1].body);
+    expect(reviewer.messages[1].content.filter((c:{type:string})=>c.type==="image_url")).toHaveLength(8);
   });
 
-  it("retains the recorded model while sending old queued attempts through the current gateway, persists an image, then captures credits", async () => {
+  it.each([180, 90, 270, 135, 225, 45, 315])("isolates a rejected front anchor from independent views (%s degrees)", async (azimuth) => {
+    state.azimuth = azimuth;
+    state.quoteShots = [0, 45, 90, 135, 180, 225, 270, 315].map(angle => ({
+      clientId: String(angle), shotId: angle === azimuth ? "shot" : String(angle), label: "View", azimuth: angle,
+      referenceAssetIds: ["primary", "supporting"], sequencePolicy: "cardinal-anchors-v2", rotationPolicy: "verified-rotation-v2",
+    }));
+    state.previousRows = [0, 180, 90, 270, 45, 135, 225].map(angle => ({
+      shotId: String(angle), status: angle === 0 ? "failed" : "succeeded", r2Key: `anchor-${angle}`, mimeType: "image/png",
+    }));
+    const png = await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
+    state.getObjectBuffer.mockResolvedValue(png);
+    state.fetch.mockResolvedValueOnce(Response.json({ data: [{ b64_json: png.toString("base64") }] }))
+      .mockResolvedValueOnce(Response.json({ choices: [{ message: { content: JSON.stringify({
+        confident: true, same_product: true, rigid_pose: true, front_visible: azimuth === 45 || azimuth === 315,
+        rear_visible: azimuth > 90 && azimuth < 270,
+        physical_side: azimuth === 180 ? "neither" : azimuth < 180 ? "right" : "left",
+        side_image_edge: azimuth % 90 === 0 ? "neither" : azimuth === 225 ? "right" : "left",
+        same_view_as: null, evidence: "Observed side agrees with the originals and available accepted anchors.",
+      }) } }] }));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    let result;
+    try { result = await executeGenerationJob("job", "attempt", "lease"); } finally { log.mockRestore(); }
+    const blocked = azimuth === 45 || azimuth === 315;
+    expect(result).toEqual({ status: blocked ? "failed" : "succeeded" });
+    if (blocked) {
+      expect(state.fetch).not.toHaveBeenCalled();
+      expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ failureCode: "missing_rotation_anchor" }));
+      expect(state.capture).not.toHaveBeenCalled();
+    } else {
+      expect(state.fetch).toHaveBeenCalledTimes(2);
+      expect(state.capture).toHaveBeenCalledOnce();
+      expect(state.release).not.toHaveBeenCalled();
+      expect(state.getObjectBuffer).not.toHaveBeenCalledWith("anchor-0");
+    }
+  });
+
+  it.each([false, true])("loads accepted predecessors in frozen order, skips rejected views, and shares context with review (missing=%s)", async (missing) => {
+    const png = await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
+    state.quoteShots = [
+      { shotId: "first", azimuth: 0 }, { shotId: "rejected", azimuth: 45 }, { shotId: "second", azimuth: 90 }, { shotId: "shot", azimuth: 180 },
+    ].map((shot) => ({ ...shot, sequencePolicy: "previous-views-v1", rotationPolicy: "verified-rotation-v1" }));
+    state.azimuth = 180;
+    // Database result order is intentionally different from the frozen quote.
+    state.previousRows = [{ shotId: "second", status: "succeeded", r2Key: "second-output", mimeType: "image/png" },
+      { shotId: "rejected", status: "failed", r2Key: "rejected-output" },
+      { shotId: "first", status: "succeeded", r2Key: missing ? undefined : "first-output", mimeType: "image/png" }];
+    state.getObjectBuffer.mockResolvedValue(png);
+    state.fetch.mockResolvedValueOnce(Response.json({ data: [{ b64_json: png.toString("base64") }] }))
+      .mockResolvedValueOnce(Response.json({ choices: [{ message: { content: JSON.stringify({
+        confident: true, same_product: true, rigid_pose: true, front_visible: false, rear_visible: true,
+        physical_side: "neither", evidence: "Same frozen component construction at the rear.",
+      }) } }] }));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: missing ? "failed" : "succeeded" });
+    if (missing) {
+      expect(state.fetch).not.toHaveBeenCalled();
+      expect(state.updates).toEqual([]);
+      expect(state.release).toHaveBeenCalledOnce();
+      return;
+    }
+    expect(state.getObjectBuffer.mock.calls.map(([key]) => key)).toEqual(["primary", "supporting", "first-output", "second-output"]);
+    const imageRequest = JSON.parse(state.fetch.mock.calls[0][1].body);
+    expect(imageRequest.input_references).toHaveLength(5);
+    expect(imageRequest.prompt).toContain("REFERENCE 4 is an earlier generated view at 0 degrees");
+    expect(imageRequest.prompt).toContain("REFERENCE 5 is an earlier generated view at 90 degrees");
+    const reviewRequest = JSON.parse(state.fetch.mock.calls[1][1].body);
+    expect(reviewRequest.messages[1].content.filter((item: { type: string }) => item.type === "image_url")).toHaveLength(6);
+  });
+
+  it.each(["left", "right", "unavailable", "malformed"])("reviews a new left profile before storage (%s)", async (side) => {
+    state.azimuth = 270;
+    state.quoteShots = [{ orientationGuideKind: "direction-frame-v1", rotationPolicy: "verified-rotation-v1" }];
+    const png = await sharp(Buffer.from('<svg width="512" height="512"><rect x="90" y="60" width="80" height="390" fill="black"/></svg>')).png().toBuffer();
+    state.fetch.mockResolvedValueOnce(Response.json({ data: [{ b64_json: png.toString("base64") }], usage: { cost: .07 } }))
+      .mockResolvedValueOnce(side === "unavailable" ? new Response(null, { status: 503 }) : Response.json({
+        choices: [{ message: { content: side === "malformed" ? "not JSON" : JSON.stringify({
+          confident: true, same_product: true, rigid_pose: true, front_visible: false, rear_visible: false,
+          physical_side: side, evidence: "Asymmetric landmarks identify the observed physical side.",
+        }) } }], usage: { cost: .001 },
+      }));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: side === "left" ? "succeeded" : "failed" });
+    expect(state.fetch).toHaveBeenCalledTimes(2);
+    const requests = state.fetch.mock.calls.map(([, options]) => JSON.parse(options.body));
+    expect(requests[0].prompt).toContain("visible physical side LEFT");
+    expect(requests[1].model).toBe("openrouter/openai/gpt-4.1-mini");
+    expect(requests[1].messages[1].content.filter((item: { type: string }) => item.type === "image_url")).toHaveLength(4);
+    expect(state.calls).toEqual([
+      expect.objectContaining({ purpose: "image", generationAttemptId: "attempt" }),
+      expect.objectContaining({ purpose: "rotation_review", generationAttemptId: "attempt" }),
+    ]);
+    if (side === "left") {
+      expect(state.capture).toHaveBeenCalledWith(expect.objectContaining({ usageCostMicros: 70000 }));
+      expect(state.release).not.toHaveBeenCalled();
+    } else {
+      expect(state.putObject).toHaveBeenCalledOnce();
+      expect(state.putObject).toHaveBeenCalledWith(expect.objectContaining({ key: "preview", mimeType: "image/webp" }));
+      expect(state.capture).not.toHaveBeenCalled();
+      expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ failureCode: "invalid_rotation_output", usageCostMicros: 70000 }));
+      const detail = JSON.parse(state.release.mock.calls[0][0].privateError);
+      expect(detail).toMatchObject({ kind: "rotation-review-v1", previewAvailable: true,
+        target: { azimuth: 270, front: false, rear: false, side: "left" } });
+      expect(detail.observed).toEqual(side === "right" ? expect.objectContaining({ physical_side: "right" }) : null);
+    }
+  });
+
+  it.each(["openai/gpt-image-2.6-sunburst", "openai/gpt-image-2.6-flare", "openai/gpt-image-2.5-sunburst"])("dispatches the recorded model %s through the current gateway, persists an image, then captures credits", async (model) => {
+    state.providerModel = model;
     const png = await sharp({
       create: { width: 16, height: 16, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
     }).composite([{
@@ -90,7 +200,13 @@ describe("durable generation dispatch", () => {
     expect(endpoint).toBe("https://new.example/images");
     const body = JSON.parse(options.body);
     expect(body.background).toBe("transparent");
-    expect(body.model).toBe("openrouter/openai/gpt-image-2.5-sunburst");
+    expect(body.model).toBe(`openrouter/${model}`);
+    expect(body.quality).toBe("high");
+    if (model === "openai/gpt-image-2.6-sunburst") {
+      expect(body.provider).toEqual({ options: { openai: { complexity: "high" } } });
+    } else {
+      expect(body).not.toHaveProperty("provider");
+    }
     expect(body.prompt).toContain("RIGHT PROFILE view");
     expect(body.input_references.slice(0, 2).map((item: { image_url: { url: string } }) => item.image_url.url)).toEqual(["primary", "supporting"].map((key) => `data:image/webp;base64,${Buffer.from(key).toString("base64")}`));
     expect(body.input_references).toHaveLength(3);
@@ -99,7 +215,7 @@ describe("durable generation dispatch", () => {
     expect(guide).toMatch(/^data:image\/png;base64,/);
     expect(await sharp(Buffer.from(guide.split(",")[1], "base64")).metadata()).toMatchObject({ format: "png", width: 512, height: 512 });
     expect(body.prompt).toContain("REFERENCE 2 is a supporting original");
-    expect(body.prompt).toContain("REFERENCE 3 is a GENERIC TEXTURELESS CUP");
+    expect(body.prompt).toContain("REFERENCE 3 is an annotated coordinate frame");
     expect(body.prompt).not.toContain("REFERENCE 3 is a supporting original");
     expect(state.updates).toContainEqual(expect.objectContaining({ providerRequestId: "request", usageCostMicros: 70000 }));
     expect(state.putObject).toHaveBeenCalledTimes(2);
@@ -110,22 +226,15 @@ describe("durable generation dispatch", () => {
     expect(state.release).not.toHaveBeenCalled();
   });
 
-  it.each([0, 8])("uses the frozen phone guide and checks the silhouette's lean (%s degrees)", async (lean) => {
-    state.quoteShots = [{ orientationGuideKind: "upright-phone-v1" }];
-    const png = await sharp(Buffer.from(`<svg width="256" height="256">
-      <rect x="78" y="28" width="100" height="200" rx="10" fill="#111"
-        transform="rotate(${lean} 128 128)"/>
-    </svg>`)).png().toBuffer();
-    state.fetch.mockResolvedValue(new Response(JSON.stringify({ data: [{ b64_json: png.toString("base64") }] })));
-
-    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: lean ? "failed" : "succeeded" });
-    expect(JSON.parse(state.fetch.mock.calls[0][1].body).prompt).toContain("is an upright phone-shaped scaffold");
-    if (lean) {
-      expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ failureCode: "invalid_upright_output" }));
-      expect(state.putObject).not.toHaveBeenCalled();
-    } else {
-      expect(state.capture).toHaveBeenCalledOnce();
-    }
+  it.each(["generic-cup-v1", "upright-mug-v1", "upright-phone-v1", "upright-phone-v2"] as const)("uses the generic frame even for legacy quote kind %s", async (kind) => {
+    state.quoteShots = [{ orientationGuideKind: kind }];
+    const png = await sharp(Buffer.from('<svg width="256" height="256"><rect x="78" y="28" width="100" height="200" fill="blue"/></svg>')).png().toBuffer();
+    state.fetch.mockResolvedValue(Response.json({ data: [{ b64_json: png.toString("base64") }] }));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "succeeded" });
+    const prompt = JSON.parse(state.fetch.mock.calls[0][1].body).prompt;
+    expect(prompt).toContain("annotated coordinate frame");
+    expect(prompt).not.toMatch(/\b(?:watch|mug|cup|phone|doll)\b/i);
+    expect(state.fetch).toHaveBeenCalledOnce();
   });
 
   it("releases the held credit when the provider returns an opaque output", async () => {
@@ -166,6 +275,31 @@ describe("durable generation dispatch", () => {
     expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "ambiguous" });
     expect(state.fetch).not.toHaveBeenCalled();
     expect(state.release).toHaveBeenCalledWith(expect.objectContaining({ attemptState: "ambiguous" }));
+  });
+
+  it("cannot recover a quarantined preview as an accepted output", async () => {
+    state.attemptState = "started";
+    state.headObject.mockImplementation(async key => {
+      if (key === "preview") return {};
+      throw { $metadata: { httpStatusCode: 404 } };
+    });
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "ambiguous" });
+    expect(state.capture).not.toHaveBeenCalled(); expect(state.fetch).not.toHaveBeenCalled();
+    expect(state.getObjectBuffer).not.toHaveBeenCalled();
+    expect(state.release).toHaveBeenCalledOnce();
+  });
+
+  it("releases a rejected view even if its diagnostic preview cannot be stored", async () => {
+    state.quoteShots = [{ rotationPolicy: "verified-rotation-v1" }];
+    const png = await sharp(Buffer.from('<svg width="128" height="128"><rect x="20" y="20" width="80" height="80" fill="blue"/></svg>')).png().toBuffer();
+    state.fetch.mockResolvedValueOnce(Response.json({ data: [{ b64_json: png.toString("base64") }] }))
+      .mockResolvedValueOnce(Response.json({ choices: [{ message: { content: JSON.stringify({ confident: true, same_product: true,
+        rigid_pose: true, front_visible: true, rear_visible: false, physical_side: "right", evidence: "Broad front face exposed." }) } }] }));
+    state.putObject.mockRejectedValueOnce(new Error("Synthetic storage failure"));
+    expect(await executeGenerationJob("job", "attempt", "lease")).toEqual({ status: "failed" });
+    expect(state.capture).not.toHaveBeenCalled(); expect(state.release).toHaveBeenCalledOnce();
+    expect(JSON.parse(state.release.mock.calls[0][0].privateError)).toMatchObject({ previewAvailable: false,
+      observed: { front_visible: true, physical_side: "right" } });
   });
 
   it("fails missing originals before marking a provider request started", async () => {

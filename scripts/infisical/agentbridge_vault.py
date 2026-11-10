@@ -56,6 +56,7 @@ def sandbox_prefix(p):
     return ['/usr/bin/sandbox-exec', '-D', 'USER_HOME=' + str(Path.home()),
         '-D', 'REPO_ROOT=' + str(ROOT), '-D', 'CA_FILE=' + p['ca_file'],
         '-D', 'NODE_ROOT=' + str(Path(p['node']).parent.parent),
+        '-D', 'NODE_BIN=' + p['node'],
         '-D', 'APP_CONFIG=' + str(ROOT / ADAPTER),
         '-f', str(ROOT / 'scripts/infisical/agentbridge.sb')]
 

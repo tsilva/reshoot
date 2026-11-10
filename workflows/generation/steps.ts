@@ -1,5 +1,5 @@
 import { providerModel } from "../../lib/generation/agentbridge";
-import { and, count, desc, eq, gt, ne, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import sharp from "sharp";
 import { RetryableError } from "workflow";
 import { db } from "@/lib/db";
@@ -8,16 +8,20 @@ import {
   generationBatches,
   generationInputs,
   generationJobs,
+  generationOutputs,
   generationQuotes,
   shots,
 } from "@/lib/db/schema";
 import { captureGeneration, releaseGeneration } from "@/lib/generation/accounting";
 import { callProviderJson } from "@/lib/generation/provider-calls";
 import { actualImageMime, recoverGenerationOutput } from "@/lib/generation/recovery";
-import { buildImageRequest, shotOrientation } from "@/lib/generation/request";
-import { MAX_PHONE_LEAN_DEGREES, phoneLeanDegrees } from "@/lib/generation/phone-alignment";
-import { mugOrientationFailure } from "@/lib/generation/mug-alignment";
+import { buildImageRequest } from "@/lib/generation/request";
 import { createOrientationGuide } from "@/lib/generation/orientation-guide";
+import { ROTATION_POLICY, rotationTarget } from "@/lib/generation/rotation";
+import { reviewRotationOutput } from "@/lib/generation/rotation-review";
+import type { RotationObservation } from "@/lib/generation/rotation-diagnostics";
+import { previousSequenceShots, requiredSequenceAnchors, reviewContextShots, sequenceContextShots, type PreviousGenerationView } from "@/lib/generation/sequence";
+import { shotOrientation } from "@/lib/generation/orientation";
 import {
   imageProviderConfig,
   requireImageProviderKey,
@@ -29,7 +33,7 @@ import {
 } from "@/lib/storage/r2";
 
 type ClaimResult =
-  | { kind: "terminal" | "duplicate" }
+  | { kind: "terminal" | "duplicate" | "waiting" }
   | { kind: "execute"; attemptId: string; leaseOwner: string };
 
 export async function claimGenerationJob(jobId: string): Promise<ClaimResult> {
@@ -51,6 +55,21 @@ export async function claimGenerationJob(jobId: string): Promise<ClaimResult> {
     const now = new Date();
     if (job.status === "running" && job.leaseExpiresAt && job.leaseExpiresAt > now) {
       return { kind: "duplicate" as const };
+    }
+    const [quote] = await tx.select({ shots: generationQuotes.shots }).from(generationBatches)
+      .innerJoin(generationQuotes, eq(generationQuotes.id, generationBatches.quoteId))
+      .where(and(eq(generationBatches.id, job.batchId), eq(generationBatches.ownerId, job.ownerId),
+        eq(generationQuotes.ownerId, job.ownerId))).limit(1);
+    if (!quote) throw new Error("Generation quote is missing.");
+    const previous = previousSequenceShots(quote.shots, job.shotId);
+    if (previous?.length) {
+      const predecessors = await tx.select({ shotId: generationJobs.shotId, status: generationJobs.status })
+        .from(generationJobs).where(and(eq(generationJobs.batchId, job.batchId), eq(generationJobs.ownerId, job.ownerId),
+          inArray(generationJobs.shotId, previous.map((shot) => shot.shotId!))));
+      if (predecessors.length !== previous.length) throw new Error("Generation sequence jobs are missing.");
+      if (predecessors.some((row) => row.status !== "succeeded" && row.status !== "failed")) {
+        return { kind: "waiting" as const };
+      }
     }
     const [running] = await tx
       .select({ value: count() })
@@ -153,7 +172,6 @@ export async function executeGenerationJob(
   ]);
   if (!job || !attempt || !shotRecord) return { status: "duplicate" as const };
   const { shot, quoteShots } = shotRecord;
-  const guideKind = quoteShots[0]?.orientationGuideKind;
   if (job.status === "succeeded" || job.status === "failed") {
     return { status: "terminal" as const };
   }
@@ -177,16 +195,50 @@ export async function executeGenerationJob(
   let providerStarted = false;
   let providerRequestId: string | undefined;
   let usageCostMicros: number | undefined;
+  let missingAnchor = false;
   try {
     const referenceBuffers = await Promise.all(
       inputs.map((input) => getObjectBuffer(input.frozenR2Key)),
     );
-    // The shared geometry uses the four straight views as appearance sources.
-    // Keep their guides neutral so the rail annotations cannot color those textures.
-    const angle = shotOrientation(shot)?.azimuth;
-    const guide = guideKind === "upright-phone-v2" && angle !== undefined && angle % 90 === 0
-      ? "upright-phone-v1" : guideKind;
-    const orientationGuide = await createOrientationGuide(shot, guide);
+    const contextShots = sequenceContextShots(quoteShots, shot.id);
+    const requiredAnchors = requiredSequenceAnchors(quoteShots, shot.id);
+    const reviewShots = reviewContextShots(quoteShots, shot.id);
+    const previous = [...new Map([...(contextShots ?? []), ...(reviewShots ?? [])].map((view) => [view.shotId!, view])).values()];
+    const previousViews: PreviousGenerationView[] = [];
+    const reviewViews: PreviousGenerationView[] = [];
+    if (previous?.length) {
+      const rows = await db.select({ shotId: generationJobs.shotId, status: generationJobs.status,
+        r2Key: generationOutputs.r2Key, mimeType: generationOutputs.mimeType })
+        .from(generationJobs).leftJoin(generationOutputs, and(eq(generationOutputs.jobId, generationJobs.id),
+          eq(generationOutputs.ownerId, job.ownerId), eq(generationOutputs.projectId, shot.projectId)))
+        .where(and(eq(generationJobs.batchId, job.batchId), eq(generationJobs.ownerId, job.ownerId),
+          inArray(generationJobs.shotId, previous.map((view) => view.shotId!))));
+      for (const prior of previous) {
+        const row = rows.find((row) => row.shotId === prior.shotId);
+        if (row?.status === "failed") {
+          if (requiredAnchors.some((view) => view.shotId === prior.shotId)) {
+            missingAnchor = true;
+            throw new Error("A required cardinal orientation anchor failed.");
+          }
+          continue;
+        }
+        if (row?.status !== "succeeded" || !row.r2Key || !row.mimeType) {
+          throw new Error("An earlier accepted generation is unavailable.");
+        }
+        const bytes = await getObjectBuffer(row.r2Key);
+        const image = await sharp(bytes).resize({ width: 768, height: 768, fit: "inside", withoutEnlargement: true })
+          .flatten({ background: "white" }).webp({ quality: 90 }).toBuffer();
+        const view = { ...shotOrientation(prior)!, image: `data:image/webp;base64,${image.toString("base64")}` };
+        if (contextShots?.some((item) => item.shotId === prior.shotId)) previousViews.push(view);
+        if (reviewShots?.some((item) => item.shotId === prior.shotId)) reviewViews.push(view);
+      }
+    }
+    // Persisted legacy guide identifiers never select category-specific prompts.
+    const orientationGuide = await createOrientationGuide(shot);
+    const rotationPolicy = quoteShots[0]?.rotationPolicy;
+    if (rotationPolicy && (![ROTATION_POLICY, "verified-rotation-v1"].includes(rotationPolicy) || !orientationGuide)) {
+      throw new Error("The frozen rotation policy or orientation is unsupported.");
+    }
     const request = buildImageRequest({
       model: attempt.providerModel ?? imageProviderConfig.model,
       shot,
@@ -194,6 +246,7 @@ export async function executeGenerationJob(
         (buffer) => `data:image/webp;base64,${buffer.toString("base64")}`,
       ),
       orientationGuide,
+      previousViews,
     });
     const providerKey = requireImageProviderKey();
 
@@ -233,12 +286,17 @@ export async function executeGenerationJob(
     providerRequestId = response.providerRequestId;
 
     if (!response.ok) {
+      console.warn("Image provider rejected generation", { jobId, attemptId, status: response.status,
+        model: request.model, referenceCount: request.input_references.length, promptLength: request.prompt.length });
       await releaseGeneration({
         jobId,
         attemptId,
         attemptState: response.status >= 500 ? "ambiguous" : "failed",
         failureCode: response.status === 400 ? "request_rejected" : "provider_failure",
-        publicError: "This shot could not be generated. Credits were released.",
+        publicError: response.status === 402 ? "Image generation is temporarily unavailable. Credits were released."
+          : response.status === 429 ? "The image provider is busy. Credits were released."
+          : response.status >= 500 ? "The image provider was unavailable. Credits were released."
+          : "The image provider rejected this view's request. Credits were released.",
         privateError: result?.error?.message ?? `Image request failed (${response.status}).`,
         providerRequestId,
         usageCostMicros,
@@ -269,29 +327,34 @@ export async function executeGenerationJob(
       });
       return { status: "failed" as const };
     }
-    if (orientationGuide?.kind === "upright-mug-v1" && orientationGuide.elevation === 0) {
-      const failure = await mugOrientationFailure(image, orientationGuide.azimuth);
+    if (rotationPolicy && orientationGuide) {
+      const candidate = await image.clone().resize({ width: 768, height: 768, fit: "inside", withoutEnlargement: true })
+        .flatten({ background: "white" }).webp({ quality: 90 }).toBuffer();
+      let observed: RotationObservation | null = null;
+      const failure = await reviewRotationOutput({
+        ownerId: job.ownerId, projectId: shot.projectId, generationAttemptId: attemptId,
+        shot, guide: orientationGuide, references: request.input_references.slice(0, referenceBuffers.length).map((reference) => reference.image_url.url),
+        candidate: `data:image/webp;base64,${candidate.toString("base64")}`,
+        previousViews: reviewViews, policy: rotationPolicy,
+        onObservation: (observation) => { observed = observation; },
+      });
       if (failure) {
+        console.warn("Rotation output rejected", { jobId, attemptId, reason: failure });
+        let previewAvailable = false;
+        try {
+          // Quarantine only the review-sized preview. The accepted output key
+          // stays absent, so crash recovery cannot capture a rejected image.
+          await putObject({ key: attempt.previewR2Key, body: candidate, mimeType: "image/webp" });
+          previewAvailable = true;
+        } catch {
+          // Diagnostic storage must never prevent the credit release.
+          console.warn("Rejected rotation preview could not be saved", { jobId, attemptId });
+        }
         await releaseGeneration({
-          jobId, attemptId, attemptState: "failed", failureCode: "invalid_mug_orientation",
-          publicError: "This mug view did not match the requested handle position. Credits were released.",
-          privateError: failure, providerRequestId, usageCostMicros,
-        });
-        return { status: "failed" as const };
-      }
-    }
-    if (orientationGuide?.kind.startsWith("upright-phone-") && orientationGuide.elevation === 0) {
-      const lean = await phoneLeanDegrees(image);
-      if (lean !== undefined && Math.abs(lean) > MAX_PHONE_LEAN_DEGREES) {
-        await releaseGeneration({
-          jobId,
-          attemptId,
-          attemptState: "failed",
-          failureCode: "invalid_upright_output",
-          publicError: "This phone view was tilted. Credits were released.",
-          privateError: `The phone silhouette leaned ${lean.toFixed(1)} degrees.`,
-          providerRequestId,
-          usageCostMicros,
+          jobId, attemptId, attemptState: "failed", failureCode: "invalid_rotation_output",
+          publicError: "This view could not be verified at the requested angle. Credits were released.",
+          privateError: JSON.stringify({ kind: "rotation-review-v1", failure, previewAvailable,
+            target: rotationTarget(shot), observed }), providerRequestId, usageCostMicros,
         });
         return { status: "failed" as const };
       }
@@ -348,8 +411,9 @@ export async function executeGenerationJob(
       jobId,
       attemptId,
       attemptState: providerStarted ? "ambiguous" : "failed",
-      failureCode: providerStarted ? "ambiguous_provider_call" : "technical_failure",
-      publicError: "This shot could not be generated. Credits were released.",
+      failureCode: providerStarted ? "ambiguous_provider_call" : missingAnchor ? "missing_rotation_anchor" : "technical_failure",
+      publicError: missingAnchor ? "A required orientation anchor is unavailable. Credits were released."
+        : "This shot could not be generated. Credits were released.",
       privateError: message,
       providerRequestId,
       usageCostMicros,

@@ -259,7 +259,10 @@ export type QuoteShotInput = {
   azimuth?: number;
   elevation?: number;
   referenceAssetIds: string[];
-  orientationGuideKind?: OrientationGuideKind;
+  // Old identifiers remain readable for historical outputs and exports only.
+  orientationGuideKind?: OrientationGuideKind | "generic-cup-v1" | "upright-mug-v1" | "upright-phone-v1" | "upright-phone-v2";
+  rotationPolicy?: "verified-rotation-v1" | "verified-rotation-v2";
+  sequencePolicy?: "previous-views-v1" | "cardinal-anchors-v2";
 };
 
 export const generationQuotes = pgTable(
@@ -445,7 +448,7 @@ export const providerCalls = pgTable("provider_calls", {
   ownerId: uuid("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
   projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "restrict" }),
   generationAttemptId: uuid("generation_attempt_id").references(() => generationAttempts.id, { onDelete: "restrict" }),
-  purpose: text("purpose", { enum: ["image", "project_naming"] }).notNull(),
+  purpose: text("purpose", { enum: ["image", "project_naming", "rotation_review"] }).notNull(),
   provider: text("provider").notNull(),
   endpoint: text("endpoint").notNull(),
   requestedModel: text("requested_model").notNull(),
@@ -463,14 +466,14 @@ export const providerCalls = pgTable("provider_calls", {
   costCheckedAt: timestamp("cost_checked_at", { withTimezone: true }),
   ...timestamps,
 }, (table) => [
-  uniqueIndex("provider_calls_attempt_unique").on(table.generationAttemptId),
+  uniqueIndex("provider_calls_attempt_purpose_unique").on(table.generationAttemptId, table.purpose),
   index("provider_calls_project_started_idx").on(table.projectId, table.startedAt),
-  check("provider_calls_purpose", sql`${table.purpose} in ('image', 'project_naming')`),
+  check("provider_calls_purpose", sql`${table.purpose} in ('image', 'project_naming', 'rotation_review')`),
   check("provider_calls_state", sql`${table.state} in ('started', 'completed', 'http_error', 'transport_error', 'invalid_response', 'interrupted', 'legacy')`),
   check("provider_calls_cost_source", sql`${table.costSource} in ('response', 'generation_lookup', 'legacy')`),
   check("provider_calls_cost_range", sql`${table.usageCostMicros} between 0 and 9007199254740991`),
   check("provider_calls_cost_pair", sql`(${table.usageCostMicros} is null) = (${table.costSource} is null)`),
-  check("provider_calls_attempt_purpose", sql`(${table.purpose} = 'image') = (${table.generationAttemptId} is not null)`),
+  check("provider_calls_attempt_purpose", sql`(${table.purpose} in ('image', 'rotation_review')) = (${table.generationAttemptId} is not null)`),
 ]);
 
 export const generationOutputs = pgTable(

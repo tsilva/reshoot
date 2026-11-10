@@ -2,12 +2,12 @@ import { getTableName, type SQL, type Table } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const state = vi.hoisted(() => ({ select: vi.fn(), insert: vi.fn(), transaction: vi.fn() }));
+const state = vi.hoisted(() => ({ select: vi.fn(), insert: vi.fn(), transaction: vi.fn(), title: "Product shoot" }));
 vi.mock("server-only", () => ({}));
 vi.mock("workflow/api", () => ({ start: vi.fn() }));
 vi.mock("@/workflows/generation", () => ({ generationJobWorkflow: vi.fn() }));
 vi.mock("@/lib/auth/current-user", () => ({ resolveCurrentUser: async () => ({ id: "owner" }) }));
-vi.mock("@/lib/projects/service", () => ({ requireOwnedProject: async () => ({ primaryAssetId: "00000000-0000-4000-8000-000000000001" }) }));
+vi.mock("@/lib/projects/service", () => ({ requireOwnedProject: async () => ({ primaryAssetId: "00000000-0000-4000-8000-000000000001", title: state.title }) }));
 vi.mock("@/lib/db", () => ({ db: { select: state.select, insert: state.insert, transaction: state.transaction } }));
 
 import { createGenerationBatch } from "../lib/generation/batches";
@@ -92,7 +92,22 @@ function request(shots: unknown[] = [shot]) {
 }
 
 describe("one generation per shoot", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => { vi.clearAllMocks(); state.title = "Product shoot"; });
+  it.each([
+    ["Black watch with brown leather strap", "direction-frame-v1", true],
+    ["Blue ceramic mug", "direction-frame-v1", true],
+    ["Black smartphone", "direction-frame-v1", true],
+  ])("freezes the correct acceptance path for %s", async (title, kind, reviewed) => {
+    state.title = title;
+    const tables = database();
+    const response = await request(STUDIO_VIEWS.map(({ id, ...view }) => ({ ...view, clientId: id, presetKey: id })));
+    expect(response.status).toBe(201);
+    for (const frozen of tables.generation_quotes.at(-1)?.shots as Array<Record<string, unknown>>) {
+      expect(frozen.orientationGuideKind).toBe(kind);
+      expect(frozen.rotationPolicy).toBe(reviewed ? "verified-rotation-v2" : undefined);
+      expect(frozen.sequencePolicy).toBe(reviewed ? "cardinal-anchors-v2" : undefined);
+    }
+  });
   it("quotes and confirms all eight views in one batch and credit hold", async () => {
     const tables = database();
     const response = await request(STUDIO_VIEWS.map(({ id, ...view }) => ({
@@ -101,10 +116,15 @@ describe("one generation per shoot", () => {
     expect(response.status).toBe(201);
     const { quote } = await response.json();
     expect(quote.totalCredits).toBe(320);
+    expect(tables.generation_quotes.at(-1)?.shots).toEqual(expect.arrayContaining([
+      expect.objectContaining({ rotationPolicy: "verified-rotation-v2", orientationGuideKind: "direction-frame-v1" }),
+    ]));
     await confirm(quote.id);
     expect(tables.generation_batches).toHaveLength(1);
     expect(tables.shots.map((row) => row.azimuth)).toEqual([0, 45, 90, 135, 180, 225, 270, 315]);
     expect(tables.generation_jobs).toHaveLength(8);
+    expect((tables.generation_quotes.at(-1)?.shots as Array<{ shotId: string }>).map((shot) => shot.shotId))
+      .toEqual(tables.shots.map((shot) => shot.id));
     expect(tables.credit_holds).toHaveLength(1);
     expect(tables.credit_accounts[0]).toMatchObject({ availableCredits: 680, heldCredits: 320 });
   });

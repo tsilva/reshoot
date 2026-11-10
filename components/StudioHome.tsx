@@ -1,24 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { LegalLinks } from "@/components/legal/LegalLinks";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight, Aperture, Coins, Plus, SpinnerGap, User, X,
+  ArrowRight, Coins, Plus, SpinnerGap, User, X,
 } from "@phosphor-icons/react";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ProjectStudioClient } from "@/components/projects/ProjectStudioClient";
 import { ProjectsClient } from "@/components/projects/ProjectsClient";
-import { SampleCarousel } from "@/components/SampleCarousel";
+import { HomeFrame } from "@/components/HomeFrame";
 import { AccountMenu, type AccountMenuHandle } from "@/components/account/AccountMenu";
 import type { CreditSummary, ProjectDetail, ProjectSummary } from "@/lib/api/types";
 import { apiRequest } from "@/lib/client/api";
 import { PROJECT_RETURN_KEY, projectCardId, projectPath } from "@/lib/projects/routes";
 
-export function StudioHome({ initialCredits, initialProjects, currentUser, project: activeProject = null, showLibrary = false, initialWalletOpen = false }: {
+export function StudioHome({ initialCredits, initialProjects, currentUser, sample, project: activeProject = null, showLibrary = false, initialWalletOpen = false }: {
   initialCredits: CreditSummary | null;
   initialProjects: ProjectSummary[];
   currentUser: { displayName: string; email: string; isDemo: boolean } | null;
+  sample: ReactNode;
   project?: ProjectDetail | null;
   showLibrary?: boolean;
   initialWalletOpen?: boolean;
@@ -115,43 +115,23 @@ export function StudioHome({ initialCredits, initialProjects, currentUser, proje
   }
 
   return (
-    <div className="one-page-studio home-page">
-      <header className="home-header">
-        <div className="home-header-inner">
-          <Link href={showLibrary ? "/" : "#"} className="home-brand" aria-label="Reshoot home">
-            <Aperture size={24} weight="light" aria-hidden="true" />reshoot.
-          </Link>
-          {currentUser && credits ? <div className="home-account-controls"><button className="home-wallet-button" aria-label={`Open Plan & usage, ${credits.availableCredits.toLocaleString()} credits`} onClick={openWallet} disabled={busy !== null}>
-            <Coins size={17} />
-            <span>{credits.availableCredits.toLocaleString()} credits</span><Plus size={14} />
-          </button>{accountMenu}</div> : <Link className="home-wallet-button" href="/login">Sign in <User size={18} /></Link>}
-        </div>
-      </header>
-
-      <main className="home-content">
-        {pageError}
-
-        <div className="home-hero">
-          <section className="home-intro" aria-labelledby="home-title">
-            <h1 id="home-title">Your photos.<br />{" "}<em>Professional 360° views.</em></h1>
-            <div className="home-intro-copy">
-              <p>Add your product photos. Get clean studio views, automatically.</p>
-              <div className="home-start-row">
-                <button className="home-primary-button" onClick={() => void startShoot()} disabled={busy !== null}>
-                  <span>{busy === "shoot" ? "Opening shoot…" : "Add photos"}</span>
-                  {busy === "shoot" ? <SpinnerGap className="spin" size={20} /> : <ArrowRight size={20} />}
-                </button>
-                <p className="home-start-note">{currentUser ? "Private to your account. Stripe checkout uses test mode." : "Sign in to save your shoots. Explore the samples for free."}</p>
-              </div>
-            </div>
-          </section>
-
-          <SampleCarousel />
-        </div>
-
+    <HomeFrame
+      brandHref={showLibrary ? "/" : "#"}
+      accountControls={currentUser && credits ? <div className="home-account-controls"><button className="home-wallet-button" aria-label={`Open Plan & usage, ${credits.availableCredits.toLocaleString()} credits`} onClick={openWallet} disabled={busy !== null}>
+        <Coins size={17} />
+        <span>{credits.availableCredits.toLocaleString()} credits</span><Plus size={14} />
+      </button>{accountMenu}</div> : <Link className="home-wallet-button" href="/login">Sign in <User size={18} /></Link>}
+      startAction={<button className="home-primary-button" onClick={() => void startShoot()} disabled={busy !== null}>
+        <span>{busy === "shoot" ? "Opening shoot…" : "Add photos"}</span>
+        {busy === "shoot" ? <SpinnerGap className="spin" size={20} /> : <ArrowRight size={20} />}
+      </button>}
+      startNote={currentUser ? "Private to your account. Stripe checkout uses test mode." : "Sign in to save your shoots. Explore the samples for free."}
+      sample={sample}
+      pageError={pageError}
+    >
+      {currentUser && (
         <ProjectsClient key={initialProjects.map((project) => `${project.id}:${project.updatedAt}:${project.originalCount}:${project.generatedCount}`).join(",")} initialProjects={initialProjects} />
-      </main>
-      <footer className="home-footer"><span>© {new Date().getFullYear()} Reshoot</span><LegalLinks /></footer>
-    </div>
+      )}
+    </HomeFrame>
   );
 }

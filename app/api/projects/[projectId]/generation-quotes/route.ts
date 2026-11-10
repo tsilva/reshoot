@@ -13,8 +13,9 @@ import {
   shots,
   type QuoteShotInput,
 } from "@/lib/db/schema";
-import { turntableAngles } from "@/lib/generation/phone-turntable";
-import { productGuideKind, shotOrientation } from "@/lib/generation/request";
+import { ORIENTATION_GUIDE_KIND, shotOrientation } from "@/lib/generation/request";
+import { ROTATION_POLICY } from "@/lib/generation/rotation";
+import { GENERATION_SEQUENCE_POLICY } from "@/lib/generation/sequence";
 import { MAX_BATCH_SHOTS } from "@/lib/projects/limits";
 import { requireOwnedProject } from "@/lib/projects/service";
 import { spendableBalance } from "@/lib/subscriptions/allowance";
@@ -115,16 +116,12 @@ export async function POST(request: Request, context: RouteContext) {
       bands.map((band) => [band.referenceCount, band.creditsPerShot]),
     );
 
-    const requestedGuideKind = productGuideKind(project.title);
     const orientations = parsed.data.shots.map(shotOrientation);
-    const fullTurn = orientations.length === turntableAngles.length && turntableAngles.every(
-      (angle) => orientations.some((orientation) => orientation?.azimuth === angle && orientation.elevation === 0),
-    );
-    const orientationGuideKind = requestedGuideKind === "upright-phone-v2" && !fullTurn
-      ? "upright-phone-v1" : requestedGuideKind;
+    const verifyRotation = orientations.every(Boolean);
     const frozenShots: QuoteShotInput[] = parsed.data.shots.map((shot) => ({
       clientId: shot.clientId,
-      orientationGuideKind,
+      orientationGuideKind: ORIENTATION_GUIDE_KIND,
+      ...(verifyRotation ? { rotationPolicy: ROTATION_POLICY, sequencePolicy: GENERATION_SEQUENCE_POLICY } : {}),
       ...(shot.shotId ? { shotId: shot.shotId } : {}),
       label: shot.label,
       ...(shot.presetKey ? { presetKey: shot.presetKey } : {}),

@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "migrations": {
+    "0000_acoustic_starjammers.sql": {
+      "sha256": "d787bb5c900ac62d3ec743bd47c33557c33d21994097ad3264f6e7382c068ce2",
+      "omit_data_statements": [
+        "85a2b9d67133264ee58af0b0521dd9106108076317334a80b8b00aaeeb23ea71",
+        "db106f58ca7c6f33dcc29164093714cb61dbec218f387022933e9529c31670aa",
+        "699ae04611dbe65eff78c171955510f942868601dda3fbc7a506e3913a20e5c1",
+        "06e65b0dc439aa68dd3dba8893e6b65a74da8ca95604950c3786b8d037530eb9",
+        "488beb040bc415db748f40a595771de398eda4683419d6ed3cc5403b595b8ad5"
+      ]
+    },
+    "0001_eminent_sleepwalker.sql": {
+      "sha256": "2b004795186a3d6b07f908a1488e759c294318a1b412d23cbf564b0129f18bc4",
+      "omit_data_statements": []
+    },
+    "0002_generation_realtime.sql": {
+      "sha256": "ffaa200e69cfa20798328d8ff983c66eff3ac7265c79387b2372e5c715b7b125",
+      "omit_data_statements": [
+        "fce4c330d50fa231dd0ccb285ee9f8139be3181cbcb9261cff4e1e8d3ee074e1"
+      ]
+    },
+    "0003_flimsy_joseph.sql": {
+      "sha256": "72afcf9cb70d7c985791f7553edfd3267a66f30fa504727dd668a0f873357b53",
+      "omit_data_statements": []
+    },
+    "0004_monthly_subscriptions.sql": {
+      "sha256": "6a0738f87318132505c0e4ef46907b28f5668eacc5789402eafcc9dd0a6216b5",
+      "omit_data_statements": []
+    },
+    "0005_provider_cost_tracking.sql": {
+      "sha256": "272cdbeb3d70059e08188404bf741af2acfcafce2a33f59e1a2cba51d7d119e8",
+      "omit_data_statements": [
+        "4fedb5a5a0033b2559a6c82ca988ba51770f77b3bcae9c9e082ac631ab1af5d0"
+      ]
+    },
+    "0006_rotation_review.sql": {
+      "sha256": "64fd39afd9f36c25f4c2bf4017c825b141d24611adfbeea743ef4bf6b5463817",
+      "omit_data_statements": []
+    }
+  }
+}

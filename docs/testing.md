@@ -18,6 +18,24 @@ not establish natural rotation, photographic quality or identical 3D geometry.
 
 ## Provider cost accounting
 
+Rotation regression coverage is in `tests/rotation-review.test.ts`,
+`tests/orientation-guide.test.ts`, `tests/generation-request.test.ts`,
+`tests/generation-policy.test.ts` and `tests/generation-execution.test.ts`.
+Synthetic responses verify opposite-side acceptance for all eight angles,
+object-independent direction frames, symmetry handling, the new quote policy, rejection before storage or
+credit capture, failed/malformed reviews without retries, and separate review
+cost attribution. These fixtures test enforcement, not a real model's accuracy.
+Before claiming photographic success, evaluate a fresh complete set against its
+originals and inspect all transitions, both profiles and the wrap.
+
+Apply `0006_rotation_review` before deploying the new acceptance path. Its ledger
+uniqueness is per `(generation_attempt_id, purpose)`: one image and one review
+can be recorded, but neither can repeat. Review spend must not overwrite the
+legacy image-attempt amount. On a disposable local database, verify existing
+image rows survive, both duplicate purposes fail, and reviews without an image
+attempt and naming calls with an attempt are rejected. Never migrate a hosted
+database or request paid generation solely to run these checks.
+
 Run `pnpm exec vitest run tests/provider-cost.test.ts tests/provider-calls.test.ts tests/provider-cost-route.test.ts tests/generation-execution.test.ts tests/project-naming.test.ts tests/project-upload-naming.test.ts`
 for credential-free provider-cost coverage. Fixtures verify pre-request ledger
 creation, duplicate-call protection, valid zero versus missing/invalid usage,
@@ -92,6 +110,10 @@ or fixture tests does not establish external configuration or delivery.
 
 ## Studio and gallery checks
 
+Rejected-view regression coverage is in `tests/rejected-views.test.ts`, `tests/generation-execution.test.ts` and `tests/project-cleanup.test.ts`. Verify anonymous, foreign-owner and deleted-project denial, query limits and owner scoping, non-cacheable responses, bounded structured observations, short-lived private preview URLs, credit release after diagnostic storage failure, retention cleanup and prevention of preview-only crash recovery. These checks must never publish a rejected candidate as an accepted output or retry paid inference.
+
+New shoots generate cardinal views before diagonals. Verify each intermediate angle against its two neighboring cardinal anchors, especially both rear quarters and the 270°/0° wrap. A partial set must retain its missing-angle warning on reopening, disable autoplay while preserving manual navigation, and release failed-view credits. The account panel must use the available phone width rather than shrinking to its text.
+
 Use synthetic/local fixtures for generation, credits and storage behavior. Browser
 verification alone does not authorize a paid request, credit minting, migration
 or changes to production data. Follow the repository's configured development
@@ -105,6 +127,17 @@ height below the header, with no lower Add photos or Generate controls. Verify
 that those controls appear after the first saved reference, disappear after the
 last is removed, and show the quoted credits in smaller text below Generate inside the button, without a view count or explanatory label. Select each thumbnail with mouse and keyboard to verify that the large preview changes without changing the quoted cost. Check the top-left remove control and preview fallback after removing the selected reference. Check that adding and removing saved photos refreshes the quoted cost, including removing the primary, removing the last reference and crossing the five-reference cap. The drag target must contain no price. Removal must check ownership, serialize with generation confirmation and reject generated shoots. A removed photo must not be restored by replaying upload finalization.
 Verify that busy or completed shoots reject drops without navigating to the file.
+Click **Choose photos**, cancel the picker, and confirm the upload area has no
+lingering focus outline. Tab to the empty upload area and **Add photos** control
+to confirm their keyboard focus outlines remain visible.
+On supported touch devices, check the rear-facing **Take a photo** chooser.
+Test preset controls,
+original-image dialogs, completed gallery, ZIP download and error/empty states.
+Check the studio header from 320px through desktop widths with long shoot titles,
+multi-digit balances and both Download and Preparing ZIP… states. Account controls
+must reserve their full width; playback buttons, download text and balance must
+remain separate without horizontal overflow. On phones, account controls share
+the title row while playback and download occupy the second row.
 Extract the ZIP and verify its `reshoot_<hyphenated-project-name>_<short-project-id>.zip`
 name, matching top-level folder, perspective-only filenames and original image
 formats. Include older cached shoots, registered phone views and repeated labels.
@@ -131,15 +164,33 @@ The bar must follow actual settled jobs, including failures, and remain
 indeterminate if progress is unavailable. Verify live completion refreshes the
 card without starting or resuming generation.
 
-For handled mugs, compare all eight views against the original and the pose
-sequence: handle right at 0°, edge-on in front at 90°, left at 180°, hidden at
-270°, with the corresponding near/far quarter-view occlusions. Reject a repeated
-handle-right pose labeled as a profile or rear quarter. Check that body height,
-base, rim, handle attachments and glaze remain stable. The synthetic mug tests
-exercise right/left openings, hidden/edge-on silhouettes and release of a rejected
-output; they do not establish photographic quality or coherent 3D geometry.
+For any object, compare all eight views against the originals and the common
+physical coordinate frame. Opposite profiles must expose opposite sides, with
+asymmetric landmarks remaining attached to their original physical surfaces.
+Check near/far occlusion, component attachments, construction, scale and the
+stable display pose across the entire sequence. Allow visually equivalent
+orientations only when genuine rotational symmetry explains them. Missing
+evidence is uncertainty rather than proof of symmetry. Synthetic tests exercise
+these acceptance rules without establishing photographic quality or coherent
+3D geometry.
 
 ## Sample rotation review
+
+The canonical homepage serves a prerender for signed-out HTML navigations
+after Clerk resolves the session. Reshoot uses the Next.js 16 middleware
+entry point to run this routing in the Edge runtime. Signed-in visits, client
+navigation, and requests with query parameters use the account-aware route.
+The response at `/` is private and non-cacheable because it depends on the session.
+The static `/public-home.html` artifact contains only public content and
+declares `/` as its canonical URL. Verify that signed-out visitors still see
+the rotating samples and a signed-in visitor still sees their own shoots.
+
+The homepage uses equal-sized display frames derived from the original sample
+photographs and their approved framing offsets. Regenerate them with
+`node scripts/prepare-sample-frames.mjs` after updating either input. This also
+regenerates the responsive AVIF versions of the opening frame. The framing
+check compares the display frames with the approved product bounds and center.
+Autoplay waits for the current and next image to decode before advancing.
 
 Check the home page at desktop, tablet and phone sizes, including a short laptop
 viewport and a 320 × 568 phone. With no saved shoots or wallet panel, the header,
@@ -173,3 +224,36 @@ node scripts/verify-mug-alignment.mjs
 They require previously captured paused frames and matching geometry; they do not
 capture a browser or generate images. Keep only repeatable procedures, necessary
 asset provenance and supported limitations in public documentation.
+
+## Local database Vault transport
+
+Run `pnpm db:check-local:vault` for bounded database/role/upstream-auth checks and
+`pnpm dev:vault` for the opt-in local application. Its loopback-only
+`/api/internal/local-database` endpoint checks identity through the actual app DB
+binding without reading app rows. It is disabled under normal and hosted defaults.
+
+Run `pnpm exec vitest run tests/local-database-vault.test.ts` for default-preservation
+and fail-closed session tests. The relay package documents fake-key native
+integration tests for transactions, savepoints, row locks, actual cost-recording
+clients, rejected accounting, session expiry and ambiguous commits. Test against
+a disposable database before provisioning a new route. Never use inference,
+production data or billing operations to test this connection.
+
+Run `python3 -m unittest discover -s scripts/infisical -p 'test_local_clerk_relay.py'`
+for offline Clerk relay checks. Synthetic loopback services verify instance-key
+binding, public/profile response filtering, and rejection of unreviewed paths,
+queries, cookies and browser origins without contacting Clerk or Infisical.
+
+For local sign-in/storage, run `pnpm services:check-local:vault` for read-only
+authentication/readiness. Run `python3 -I scripts/infisical/test_local_storage.py`
+and `python3 -I scripts/infisical/test_local_services_native.py` before provisioning
+or modifying routes. They exercise the actual SDK/storage adapter with fake keys,
+rejected JWT signatures, blocked OAuth-token reads, private-metadata filtering,
+checksummed transfers, expiring URLs and denied direct connections.
+
+With an owned `pnpm dev:vault` session already running, the explicit synthetic
+write check is `python3 -I scripts/infisical/test_installed_storage.py`. It writes
+only a randomly named fixture namespace to the isolated local store, verifies
+server and browser-style transfers, rejects upload replay and removes its objects.
+It neither contacts R2 nor prints temporary capability URLs. A real browser sign-in
+and upload review is separate from backend readiness and fake SDK verification.
