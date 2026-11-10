@@ -23,6 +23,7 @@ const display = Instrument_Serif({
 
 const body = Hanken_Grotesk({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-body",
   display: "swap",
 });
