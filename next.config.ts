@@ -11,6 +11,10 @@ const storageHostname = process.env.R2_ENDPOINT
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Match Sentry's existing webpack debug-only removal in Turbopack builds.
+  compiler: process.env.NODE_ENV === "production"
+    ? { define: { __SENTRY_DEBUG__: false } }
+    : undefined,
   ...(process.env.RESHOOT_DATABASE_TRANSPORT === "agent-vault"
     ? { logging: false as const, skipProxyUrlNormalize: true } : {}),
   ...(process.env.RESHOOT_DATABASE_TRANSPORT === "agent-vault" && process.env.RESHOOT_VAULT_TSCONFIG

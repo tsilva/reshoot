@@ -1,5 +1,10 @@
 # Production delivery
 
+Production builds remove Sentry's internal debug statements with the Next.js
+compiler so the existing webpack policy also applies to Turbopack. Error
+capture, performance tracing and configured warning/error logs are preserved.
+For SDK internal debugging, rebuild without the `__SENTRY_DEBUG__` definition.
+
 ## Provider cost ledger
 
 Automatic delivery accepts only successful main-push CI from this repository,
