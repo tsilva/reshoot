@@ -1,4 +1,4 @@
-import { createVaultPool, validateDatabaseSession } from '../../lib/db/vault-pool.mjs';
+import { createVaultPool, validateDatabaseSession } from '../lib/db/vault-pool.mjs';
 const pool=createVaultPool(validateDatabaseSession());
 let stage='database-query';
 try{
@@ -13,6 +13,6 @@ try{
  const base=process.env.AGENTBRIDGE_BASE_URL;
  const headers={Authorization:'Bearer agentbridge_public_placeholder'};
  for(const path of ['/models','/openrouter/key']){stage=path==='/models'?'agentbridge-catalog':'agentbridge-upstream-auth';const response=await fetch(base+path,{headers,signal:AbortSignal.timeout(15000)});if(!response.ok)throw new Error();await response.body?.cancel();}
- console.log(JSON.stringify({ok:true,read_only:true,isolated_database:true,least_privilege:true,upstream_authenticated:true,credential_mode:'public-placeholder'}));
+ console.log(JSON.stringify({ok:true,read_only:true,credential_mode:'public-placeholder'}));
 }catch{console.log(JSON.stringify({ok:false,stage,reason:'Local database check failed; details withheld'}));process.exitCode=1;}
 finally{await pool.end();}

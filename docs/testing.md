@@ -224,36 +224,3 @@ node scripts/verify-mug-alignment.mjs
 They require previously captured paused frames and matching geometry; they do not
 capture a browser or generate images. Keep only repeatable procedures, necessary
 asset provenance and supported limitations in public documentation.
-
-## Local database Vault transport
-
-Run `pnpm db:check-local:vault` for bounded database/role/upstream-auth checks and
-`pnpm dev:vault` for the opt-in local application. Its loopback-only
-`/api/internal/local-database` endpoint checks identity through the actual app DB
-binding without reading app rows. It is disabled under normal and hosted defaults.
-
-Run `pnpm exec vitest run tests/local-database-vault.test.ts` for default-preservation
-and fail-closed session tests. The relay package documents fake-key native
-integration tests for transactions, savepoints, row locks, actual cost-recording
-clients, rejected accounting, session expiry and ambiguous commits. Test against
-a disposable database before provisioning a new route. Never use inference,
-production data or billing operations to test this connection.
-
-Run `python3 -m unittest discover -s scripts/infisical -p 'test_local_clerk_relay.py'`
-for offline Clerk relay checks. Synthetic loopback services verify instance-key
-binding, public/profile response filtering, and rejection of unreviewed paths,
-queries, cookies and browser origins without contacting Clerk or Infisical.
-
-For local sign-in/storage, run `pnpm services:check-local:vault` for read-only
-authentication/readiness. Run `python3 -I scripts/infisical/test_local_storage.py`
-and `python3 -I scripts/infisical/test_local_services_native.py` before provisioning
-or modifying routes. They exercise the actual SDK/storage adapter with fake keys,
-rejected JWT signatures, blocked OAuth-token reads, private-metadata filtering,
-checksummed transfers, expiring URLs and denied direct connections.
-
-With an owned `pnpm dev:vault` session already running, the explicit synthetic
-write check is `python3 -I scripts/infisical/test_installed_storage.py`. It writes
-only a randomly named fixture namespace to the isolated local store, verifies
-server and browser-style transfers, rejects upload replay and removes its objects.
-It neither contacts R2 nor prints temporary capability URLs. A real browser sign-in
-and upload review is separate from backend readiness and fake SDK verification.

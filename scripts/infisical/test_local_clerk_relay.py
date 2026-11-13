@@ -12,7 +12,7 @@ import urllib.error
 import urllib.request
 
 spec = importlib.util.spec_from_file_location(
-    "storage_relay", Path(__file__).with_name("local_storage_relay.py")
+    "storage_relay", Path(__file__).resolve().parents[1] / "local-services-relay.py"
 )
 storage = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(storage)

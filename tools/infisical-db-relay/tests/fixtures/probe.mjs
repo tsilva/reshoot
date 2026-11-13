@@ -8,10 +8,8 @@ import { pool, db, validate } from './fixture-db.mjs';
 const checks = {};
 const base = process.env.AGENTBRIDGE_BASE_URL;
 const root = process.env.FIXTURE_REPO;
-const { gatewayFetch } = await import(new URL(`${root}/scripts/infisical/agentbridge_transport.mjs`, 'file:').href);
 const fetchImpl = globalThis.fetch;
-// The DB adapter already captured the scoped HTTP fetch; only AI calls use this guard.
-globalThis.fetch = gatewayFetch(fetchImpl, base, validate);
+// The disposable native proxy owns the fixture service allowlist.
 const { suggestPhotoTitle } = await import(new URL(`${root}/lib/projects/naming.ts`, 'file:').href);
 const { callProviderJson } = await import(new URL(`${root}/lib/generation/provider-calls.ts`, 'file:').href);
 const context = { ownerId: '00000000-0000-4000-8000-000000000001', projectId: '00000000-0000-4000-8000-000000000002' };

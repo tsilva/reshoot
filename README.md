@@ -52,7 +52,6 @@ The first uploaded original is the identity anchor. The studio automatically inc
 git clone https://github.com/tsilva/reshoot.git
 cd reshoot
 pnpm install
-pnpm secrets:check
 pnpm dev --port auto
 ```
 
@@ -61,17 +60,15 @@ For direct browser storage requests such as uploads, the private R2 bucket's COR
 Development and Vercel Preview use the private `reshoot-development` bucket and
 the Development database. Production keeps the private `reshoot` bucket and its
 Production database. Each bucket has its own Object Read & Write token, with no
-access to the other bucket. Fetch local credentials from the pinned Development
-Infisical project; never copy Production credentials into local or Preview
-configuration. See [R2 environment isolation](docs/production-delivery.md#r2-environments)
+access to the other bucket. Configure Development credentials in the server environment; never copy
+Production credentials into local or Preview configuration. See [R2 environment isolation](docs/production-delivery.md#r2-environments)
 for the source vaults, rotation procedure, and rollback boundary.
 
 ## Authentication and Stripe test payments
 
 The native Clerk/Vercel integration supplies environment-specific
 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and server-only `CLERK_SECRET_KEY` values to
-Production and Preview. These two keys are an approved exception to the Infisical
-source policy: keep them managed by Clerk and do not mirror them into secret sync. Sign-in is at
+Production and Preview. Keep these two keys managed by Clerk; do not mirror them into application secret sync. Sign-in is at
 `/login`; sign-up is at `/sign-up`. Clerk user IDs, rather than email matching or
 browser cookies, identify account ownership. Missing Clerk configuration leaves
 public samples available and private access closed; it never restores the shared demo.
@@ -97,7 +94,7 @@ ID without changing existing users, projects, or balances. Apply additive migrat
 `RESHOOT_PAYMENTS_MODE=stripe_test`, the sandbox key/signing secret, all three monthly Price IDs, and a suitable portal configuration are required before checkout is offered. Live keys, events, sessions and real-money accounts remain rejected. The previous top-up creation routes return 410; historical paid test sessions can still be fulfilled and inspected. See [Stripe test setup](docs/production-delivery.md#stripe-test-checkout) for configuration and activation boundaries.
 
 The trusted Production delivery mapping supplies the public payment-mode setting
-from the isolated Production Infisical vault, while preserving native Clerk keys.
+from the isolated Production environment, while preserving native Clerk keys.
 Local application-service access still requires a separately reviewed credential
 route; the existing migration-audit route is read-only and does not supply
 application credentials. Do not bypass that boundary with raw secret injection.
@@ -112,7 +109,6 @@ pnpm start      # serve the production build
 pnpm lint       # run ESLint
 pnpm typecheck  # check TypeScript
 pnpm test       # run unit and integration tests
-pnpm db:check-migrations # inspect the Production ledger through Agent Vault
 pnpm db:migrate # apply forward database migrations
 ```
 
@@ -121,44 +117,6 @@ Local builds skip Sentry source-map uploads. Runtime error reporting still uses 
 For Codex release work, use [$reshoot_build-release](.codex/skills/reshoot_build-release/SKILL.md).
 It follows the existing [production delivery](docs/production-delivery.md) workflow
 and verifies the exact deployment commit and Production domain assignment.
-
-### Read-only migration inspection
-
-On a configured trusted Mac, `pnpm db:check-migrations` checks the Production
-`main` branch of `reshoot-neon`, database `neondb`, through Agent Vault. It reads
-only permission metadata and `drizzle.__drizzle_migrations`, requiring an exact
-match with the checkout's migration timestamps and SQL hashes. It rejects access
-to application tables, migration writes, elevated roles, role memberships,
-database/schema creation and callable non-system security-definer functions.
-An unconfigured route, authentication failure or ledger mismatch stops the check.
-It does not apply migrations.
-
-Provisioning requires a separate `reshoot_migration_auditor` PostgreSQL login
-without role memberships, superuser, database/role creation, replication or RLS
-bypass. Grant only database `CONNECT`, `USAGE` on schema `drizzle` and `SELECT` on
-`drizzle.__drizzle_migrations`, and set its `default_transaction_read_only` to
-`on`. Create the role through SQL: Neon console-created roles can inherit broader
-permissions. Initialize its password through a trusted administrator, then copy
-the complete connection URL directly from Neon into the Agent Vault service's
-Token field. Never commit or pass that URL to the checker.
-
-The reviewed bundle is `local-reshoot-migration-audit`, with one HTTP service,
-`reshoot-neon-ledger`, restricted to `POST /sql` on the exact pooled Neon endpoint.
-Its bearer credential uses header `Neon-Connection-String` and an empty prefix.
-The checker sends a placeholder; Agent Vault replaces it with the stored URL.
-The local proxy must already be running. A trusted administrator installs an
-owner-only `~/.config/infisical/neon-migration-checks/reshoot.json` containing only
-metadata: `version` (1), `project_id` (matching `.infisical.json`), `bundle`,
-`host`, `database`, `role`, absolute `infisical` and `ca_file` paths, `proxy`
-(`127.0.0.1:8283`) and the reviewed `ca_fingerprint` (`SHA256:…`).
-
-The launcher pins the Infisical instance and proxy CA without changing system
-trust. It runs curl in a macOS sandbox allowing only the local proxy and public
-CA access from the home directory. The trusted launcher manages the session;
-the SQL client receives a placeholder and short-lived proxy-session credentials.
-This protects the SQL client, not full-access processes elsewhere on the host.
-The shared token broker is unnecessary for this static Neon credential. Test a
-new route with synthetic credentials before a bounded authenticated check.
 
 ## Provider cost accounting
 
@@ -203,48 +161,6 @@ spend cannot be reconstructed reliably. Recorded-call totals do not certify
 complete historical project spend. Elapsed durations include response transfer
 and parsing, not just model inference; interrupted records can lack a finish time.
 
-<!-- agent-vault-agentbridge:read:start -->
-## Agent Vault model-catalog probe
-
-On a configured trusted Mac:
-
-```sh
-pnpm agentbridge:check
-pnpm test:agentbridge
-```
-
-Use the first command for a bounded read-only model-catalog check.
-The reviewed mapping is Agent Vault bundle `local-reshoot-agentbridge-read`,
-service `reshoot-agentbridge-models`, for GET `/api/v1/models` on
-`127.0.0.1:8082`. The owner-only local metadata profile is
-`~/.config/infisical/agentbridge-clients/reshoot-read.json`.
-
-The profile validates this repository's native Development source identity and
-pins the existing routing helper's digest. No application key or Sentry token
-is fetched. The local gateway accepts public placeholders; AgentBridge's own
-upstream credential route remains responsible for provider authentication.
-The sandboxed Node client imports the reviewed app routing helper, requires
-`agentbridge_public_placeholder`, and enables proxy support explicitly.
-Its fixed request returns only catalog size and whether the configured default
-is advertised. A missing catalog entry is informational; a catalog does not
-prove that an inference request will succeed or that upstream login is valid.
-
-Outbound access is limited to the local proxy. Home reads are limited to the
-reviewed runtime, public CA and required client/config files. Only the pinned
-Node runtime can be executed inside the sandbox; Keychain service lookup is
-blocked. The trusted launcher and other full-access host processes remain
-outside that isolation boundary. The instance and CA are pinned without
-changing system trust, and sessions last at most ten minutes.
-
-This profile permits only read-only catalog access. It does not migrate or
-launch the full application, authorize inference, or enable chat, image,
-embedding, file or MCP transports. Missing/changed bindings and failed checks
-stop without raw-key or direct-network fallback. Existing app defaults,
-production delivery, Sentry settings/uploads and other service profiles remain
-unchanged. Run `pnpm test:agentbridge` after modifying this client or profile.
-<!-- agent-vault-agentbridge:read:end -->
-
-Trusted provisioning installs the official checksum-reviewed Node v24.22.1 Darwin ARM64 runtime alongside existing runtimes under `~/.config/infisical/runtimes/node-v24.22.1-darwin-arm64`, plus an owner-only metadata profile. The profile records version 1, repository/root, native project/environment/path identity, bundle, fixed loopback URL and proxy, absolute runtime/CLI/public-CA paths, CA fingerprint, routing-helper path/digest and the documented app default model. Review source or profile changes explicitly before replacing these pins; ordinary checks never approve new scope automatically.
 
 ## Notes
 
@@ -277,13 +193,13 @@ Development uses AgentBridge (`AGENTBRIDGE_BASE_URL`, default
 `http://127.0.0.1:8082/api/v1`, and optional `AGENTBRIDGE_API_KEY`).
 Production and Preview call OpenRouter directly using their own server-only
 `OPENROUTER_API_KEY`; a missing production key disables model requests.
-Production credentials come from this app’s isolated Infisical project.
+Production credentials remain isolated from Development and Preview.
 The shared text-routing default is `deepseek/deepseek-v4.1-flash-1017`.
 Image generation keeps the supported image models.
 
 Automatic shoot naming uses the vision-capable [`openai/gpt-4.1-mini`](https://openrouter.ai/openai/gpt-4.1-mini) through the same environment-specific provider routing. It sends only the first validated 640px preview inline, without filenames, owner details, EXIF metadata, or signed storage URLs. One naming attempt has an eight-second timeout and an 80-token output cap; it creates no image-generation jobs or credit holds. The title update is conditional on the original placeholder and primary photo, so a concurrent rename or primary-photo change wins.
 
-Production secrets are delivered through the pinned shared GitHub Actions workflow. The standalone signed Infisical relay triggers synchronization and deployment; see [production delivery](docs/production-delivery.md) for scope and recovery.
+Production delivery uses the pinned shared GitHub Actions workflow; see [production delivery](docs/production-delivery.md) for scope and recovery.
 
 Production delivery keeps Vercel secret isolation enabled and distinguishes public configuration from private credentials; see [production delivery](docs/production-delivery.md).
 
@@ -291,7 +207,7 @@ Production delivery keeps Vercel secret isolation enabled and distinguishes publ
 
 Apply `pnpm db:migrate` through the environment's existing credential workflow before running this version. Migration `0002_generation_realtime` adds an owner-scoped revision table and transactional triggers, including rows for existing batches. The Realtime beta cannot subscribe to the custom enum types in the generation tables, so the subscription reads only built-in UUID and bigint columns.
 
-Enable Realtime on the matching Neon branch and keep `NEON_REALTIME_URL` and the server-only `NEON_REALTIME_SECRET` in that environment's Infisical vault. The local launcher injects both in memory. The server derives the database name from `DATABASE_URL` and seals a short-lived query using the authenticated workspace owner and requested batch; browsers cannot choose another owner or alter that query. Capabilities renew about every 50 seconds without loading generation history. Missing configuration displays a Reconnect action and does not restore interval polling.
+Enable Realtime on the matching Neon branch and keep `NEON_REALTIME_URL` and the server-only `NEON_REALTIME_SECRET` in the matching server environment. The server derives the database name from `DATABASE_URL` and seals a short-lived query using the authenticated workspace owner and requested batch; browsers cannot choose another owner or alter that query. Capabilities renew about every 50 seconds without loading generation history. Missing configuration displays a Reconnect action and does not restore interval polling.
 
 Realtime reduces repeated unchanged result transfers; actual savings depend on batch activity and concurrent viewers. Neon still bills normal database compute and egress during its Realtime beta. A disconnected or backgrounded browser does not stop durable generation or credit settlement.
 
@@ -300,59 +216,3 @@ Realtime reduces repeated unchanged result transfers; actual savings depend on b
 ## License
 
 [MIT License](LICENSE).
-
-
-## Agent Vault image-comparison tool
-
-For local image-model comparisons, use the opt-in commands:
-
-```sh
-pnpm agentbridge:tools:check
-mkdir -p .internal/agent-vault/comparisons/my-run
-pnpm agentbridge:compare:vault --phase baseline --model openai/gpt-image-2.6-sunburst --output-dir "$PWD/.internal/agent-vault/comparisons/my-run"
-```
-
-The check makes only catalog and upstream-authentication requests. The comparison
-command runs the existing comparison client and **makes real image requests**;
-run it only after reviewing and approving the complete prompts, reference images
-and number of requests. Only 2.6 Sunburst is supported. Baseline sends two requests; candidate
-sends three. Omitting `--model` selects 2.6 Sunburst. Changed comparison source
-requires trusted review of the protected profile pins before use. This
-migration was verified with synthetic responses, without real image generation.
-
-Service mapping: native Development project `cdb4be1b-c53c-4b18-87eb-6f90aae2b661`,
-reserved service folder `/agents/agentbridge`, Agent Vault bundle
-`local-reshoot-agentbridge-tools`. The gateway service allows catalog, chat and
-image paths on `127.0.0.1:8082`; its separate authentication service permits only
-GET `/api/v1/openrouter/key` using the `localhost:8082` alias. No application key
-is copied into this folder: the gateway owns upstream authentication. The
-owner-only `agentbridge-clients/reshoot-tools.json` profile under the Infisical
-configuration directory pins the native identity, runtime, helpers, comparison
-source, routing helper and dependency lock. Source changes require trusted review.
-
-The sandbox restricts network access to the proxy, with public placeholders and
-process-local CA trust. Only the selected canonical output directory under
-`.internal/agent-vault/comparisons` is writable. Credential files and Keychain
-access are blocked; provider failure details are withheld and a failed transport
-stops subsequent dispatch. Recorded requests are never automatically replayed.
-This protects the sandboxed client, not other full-access same-user host processes.
-
-For the opt-in local webpage's database route, use the isolated local app setup
-below. It preserves interactive transactions through a trusted local relay;
-the normal Neon transport remains unchanged. The comparison tool still does not
-provide Clerk, storage or signing credentials. Never reuse the read-only
-migration-auditor role for application writes or bypass provider cost recording.
-
-The original catalog check, default app launchers, model choices, production
-delivery and Sentry configuration remain unchanged. Run `pnpm test:agentbridge`
-and the provider/naming tests after changes to these helpers.
-
-
-## Isolated local development
-
-With the reviewed relay installed, use `pnpm dev:vault` to run the local app
-against a separate PostgreSQL database and local object store, with Development
-Clerk sign-in and service credentials kept behind Vault. Run
-`pnpm db:check-local:vault` and `pnpm services:check-local:vault` for read-only
-readiness checks. Existing launch defaults stay unchanged.
-See [local development through Agent Vault](docs/local-agent-vault.md).

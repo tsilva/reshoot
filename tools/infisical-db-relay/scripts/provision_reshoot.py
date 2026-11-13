@@ -98,7 +98,20 @@ def schema_statements(root):
             yield block
 
 
+
+def runbox_administration():
+    location=Path(__file__).resolve()
+    root=next(p for p in location.parents if (p/'scripts/infisical/administration.py').is_file())
+    spec=importlib.util.spec_from_file_location('reviewed_runbox_administration',root/'scripts/infisical/administration.py')
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 def main():
+    if '--plan' in sys.argv[1:]:
+        if sys.argv[1:] != ['--plan']: raise ValueError('Use --plan without provisioning arguments')
+        print(json.dumps(runbox_administration().publication_plan()))
+        return
     parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--release", type=Path, required=True)
@@ -106,6 +119,7 @@ def main():
         "--create-empty-local-database", action="store_true", required=True
     )
     args = parser.parse_args()
+    raise ValueError('Runbox metadata publication requires explicit trusted review before provisioning; no credentials read or changes made')
     root = args.repo.resolve(strict=True)
     release = args.release.resolve(strict=True)
     os.umask(0o077)
@@ -116,11 +130,11 @@ def main():
     if release.parent != PREFIX / "database-relay/releases":
         raise ValueError("Unreviewed runtime")
     spec = importlib.util.spec_from_file_location(
-        "local_vault", root / "scripts/infisical/local_vault.py"
+        "local_vault", root / "scripts/infisical/administration.py"
     )
     v = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(v)
-    native = json.loads((root / ".infisical.json").read_text())
+    native = runbox_administration().reviewed_identity()
     if native != {
         "workspaceId": v.PROJECT,
         "defaultEnvironment": "dev",

@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
-import { CLERK_PLACEHOLDER, validateClerkSession } from '../../lib/auth/vault-session.mjs';
-import { createVaultStorage } from '../../lib/storage/vault-storage.mjs';
+import { CLERK_PLACEHOLDER, validateClerkSession } from '../lib/auth/vault-session.mjs';
+import { createVaultStorage } from '../lib/storage/vault-storage.mjs';
 
 let stage = 'session';
 try {
@@ -19,8 +19,7 @@ try {
   stage = 'storage';
   const storage = await createVaultStorage().check();
   if (!storage.ok || !storage.isolated) throw new Error();
-  console.log(JSON.stringify({ ok: true, read_only: true, clerk_configured: clerk, clerk_backend_authenticated: clerk, isolated_storage: true,
-    credential_mode: 'public-placeholder', user_sign_in_tested: false }));
+  console.log(JSON.stringify({ok:true,read_only:true,credential_mode:'public-placeholder'}));
 } catch (error) {
   const code = error.errors?.[0]?.code;
   console.log(JSON.stringify({ ok: false, stage, reason: 'Local sign-in/storage check failed; details withheld',

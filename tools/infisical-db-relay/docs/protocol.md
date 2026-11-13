@@ -25,7 +25,4 @@ commit succeeded: inspect application state before any separately approved retry
 Callback queries, COPY streams, notifications, cursors and general pg client
 compatibility are outside this adapter's supported surface.
 
-For reviewed source changes, `python3 -I scripts/approve_source.py` updates only
-the protected consumer code digests. Review the diff first. It refuses an active
-session and never changes service permissions, credential values or DB identity.
-Normal app/check commands fail on changed pins rather than approving them.
+Source, runtime and policy changes require explicit administrative review. Ordinary application commands must never approve their own permission changes or provision credentials.

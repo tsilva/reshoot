@@ -48,7 +48,6 @@ application changes, run `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm b
 Use the inert build environment declared in CI for a credential-free local build;
 do not load live secrets merely to build. Install dependencies only if necessary,
 with the frozen lockfile and existing package-age/source protections intact.
-Run `pnpm test:secrets` when the credential-launcher path changes.
 
 For instructions or documentation alone, validate the edited files and references;
 the publication workflow still performs the full application checks. A focused

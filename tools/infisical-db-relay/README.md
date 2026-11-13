@@ -23,8 +23,7 @@ permissions. TLS is disabled only on the explicitly pinned loopback connection.
 Run these package commands from `tools/infisical-db-relay` in the checkout.
 
 Requires macOS, PostgreSQL 17 tools, Python 3.11, uv, the reviewed Infisical CLI
-and a running Agent Vault proxy. The consumer launcher also requires its reviewed
-Node runtime. Never install from an unreviewed consumer working tree.
+and a running Agent Vault proxy. Never install from an unreviewed consumer working tree.
 
 The committed lock covers runtime and build dependencies. Use `--no-config` to
 avoid unrelated global uv exceptions, and retain the seven-day release hold:
@@ -62,33 +61,5 @@ interactive transactions and provider-cost code against synthetic AI responses;
 no real model requests, production data, payments or media generation are used.
 Evidence stays in the consumer's ignored `.internal/` directory.
 
-## Reshoot provisioning
 
-From this package directory, run the following only as reviewed administration:
-
-```sh
-/PROTECTED/RELEASE/bin/python -I scripts/provision_reshoot.py \
-  --repo /ABSOLUTE/RESHOOT --release /PROTECTED/RELEASE \
-  --create-empty-local-database
-```
-
-This creates a separate local PostgreSQL cluster, `reshoot_agent_vault_dev`,
-role `reshoot_agent_vault_app`, and the `local-reshoot-development` Vault bundle.
-The randomly generated password goes directly to PostgreSQL and Agent Vault;
-it is never printed or saved in an app/environment file. No existing Neon,
-Production, Preview or Development source credential is read or replaced.
-
-The schema bootstrap accepts only the exact reviewed migration files and
-statement hashes in `scripts/reshoot-schema.json`. It applies their DDL while
-omitting the reviewed demo seeds and historical backfills. It creates no users,
-credits, prices, subscriptions or media, and does not fabricate a production
-migration ledger. Schema changes require a separately reviewed bootstrap/update.
-The app role can read/write app tables and use sequences; it cannot create
-schemas/databases/roles, bypass RLS, access other roles, or own the tables.
-
-Provisioning refuses existing databases/profiles/bundles. It does not rotate or
-reset credentials. A reset or destructive cleanup requires separate authorization.
-The consumer's ordinary launcher never runs provisioning or raw-secret retrieval.
-
-See [runtime protocol, limits and trusted source approval](docs/protocol.md) for
-request/session behavior, supported client methods and failure handling.
+Trusted provisioning supports an offline `--plan`. Creating or changing a deployment requires a separate administrative review before credentials or infrastructure change.

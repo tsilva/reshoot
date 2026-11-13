@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { gatewayFetch } from "../scripts/infisical/agentbridge_transport.mjs";
 
 vi.mock("server-only", () => ({}));
 const ledger = vi.hoisted(() => ({ available: true, calls: [] as Record<string, unknown>[], updates: [] as unknown[] }));
@@ -28,11 +27,11 @@ beforeEach(() => {
   vi.stubEnv("AGENTBRIDGE_BASE_URL", base);
   vi.stubEnv("AGENTBRIDGE_API_KEY", marker);
   network.mockReset(); ledger.calls = []; ledger.updates = []; ledger.available = true;
-  vi.stubGlobal("fetch", gatewayFetch(network, base, () => {}));
+  vi.stubGlobal("fetch", network);
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
-describe("actual local provider clients under the Vault transport", () => {
+describe("actual provider clients and accounting contract", () => {
   it("routes naming through the guard after recording its cost entry", async () => {
     network.mockImplementation(async (url, init) => {
       expect(ledger.calls).toHaveLength(1);
@@ -60,24 +59,6 @@ describe("actual local provider clients under the Vault transport", () => {
     ledger.available = false;
     expect(await suggestPhotoTitle(Buffer.from("synthetic"), context)).toBeNull();
     await expect(callProviderJson({ ...context, purpose: "image", generationAttemptId: "synthetic", endpoint: `${base}/images`, apiKey: marker, timeoutMs: 1000, body: { model: "synthetic" } })).rejects.toThrow();
-    expect(network).not.toHaveBeenCalled();
-  });
-  it("withholds reflected error bodies and stops subsequent dispatch", async () => {
-    network.mockResolvedValue(Response.json({ error: { message: "synthetic-upstream-secret" } }, { status: 401 }));
-    const guarded = globalThis.fetch;
-    const response = await guarded(`${base}/images`, { method: "POST", headers: { Authorization: `Bearer ${marker}` } });
-    expect(await response.text()).not.toContain("synthetic-upstream-secret");
-    await expect(guarded(`${base}/images`, { method: "POST", headers: { Authorization: `Bearer ${marker}` } })).rejects.toThrow();
-    expect(network).toHaveBeenCalledOnce();
-  });
-  it.each([
-    ["https://openrouter.ai/api/v1/images", "POST", marker],
-    [`${base}/keys`, "POST", marker],
-    [`${base}/images?override=1`, "POST", marker],
-    [`${base}/images`, "DELETE", marker],
-    [`${base}/images`, "POST", "synthetic-real-key"],
-  ])("rejects unreviewed destination, method or authentication", async (url, method, key) => {
-    await expect(fetch(url, { method, headers: { Authorization: `Bearer ${key}` } })).rejects.toThrow();
     expect(network).not.toHaveBeenCalled();
   });
 });

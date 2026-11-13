@@ -126,7 +126,7 @@ A single image cannot verify the back or hidden construction of a real product. 
 
 The local testing workspace generated a four-shot Flare batch (front, front-right three-quarter, right profile, back), using one original and the revised prompt. All four private 1024 × 1024 outputs persisted. The workspace finished with 840 available fake credits, zero held credits, and 160 captured credits.
 
-A validation build ran while this batch was active and erased the Workflow adapter's default `.next/workflow-data` run store, producing “step not found” errors. The four already stored outputs were recovered through the existing idempotent credit-capture path without additional image calls. Future Infisical-backed local launches now put Workflow state under `.workflow-local/`, separately for each dev instance and local start/build modes. Automated verification checks this location is outside build output. Existing running servers retain their launch configuration until their next normal start; none were stopped or restarted for this repair.
+Keep local Workflow state outside build output and isolated per development instance with `WORKFLOW_LOCAL_DATA_DIR`, so builds cannot erase active runs. Existing servers retain their launch configuration until their next normal restart.
 
 Provider usage metadata is now stored before raster persistence, so future output recovery can retain billing evidence. Reported cost for the interrupted four-shot app batch was not recovered; the $0.626490 total above covers only the ten comparison requests. The app test involved four additional image requests.
 

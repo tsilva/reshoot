@@ -11,10 +11,6 @@ Reviewed on 2026-10-07:
 
 - `.github/workflows/ci.yml` (`generic-credential-uri`): Build-only PostgreSQL URL points to loopback; ci is a dummy credential.
 
-Reviewed on 2026-11-06:
-
-- `scripts/agentbridge-vault.check.mjs` (`generic-credential-uri`): two exact synthetic proxy-URI matches used only in offline session validation and rejection tests. Changed fixture values remain detectable; no rule or file is broadly excluded.
-
 Do not add an exposed credential to this list. Revoke or rotate it and remove it
 from source first. Inspect candidate exceptions privately and test that a changed
 credential in the same file is detected before accepting an exception.

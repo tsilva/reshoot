@@ -27,3 +27,4 @@ __pycache__/
 
 # Private working reports and QA evidence
 /.internal/
+/.runbox.yaml

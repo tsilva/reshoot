@@ -82,17 +82,31 @@ def source(admin, project):
     return values, bool(ok)
 
 
+
+def runbox_administration():
+    location=Path(__file__).resolve()
+    root=next(p for p in location.parents if (p/'scripts/infisical/administration.py').is_file())
+    spec=importlib.util.spec_from_file_location('reviewed_runbox_administration',root/'scripts/infisical/administration.py')
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 def main():
+    if '--plan' in sys.argv[1:]:
+        if sys.argv[1:] != ['--plan']: raise ValueError('Use --plan without provisioning arguments')
+        print(json.dumps(runbox_administration().publication_plan()))
+        return
     parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument("--install", action="store_true")
     parser.add_argument("--storage-only", action="store_true")
     args = parser.parse_args()
+    raise ValueError('Runbox metadata publication requires explicit trusted review before provisioning; no credentials read or changes made')
     os.umask(0o077)
     admin = load(
         "admin", ROOT / "tools/infisical-db-relay/scripts/provision_reshoot.py"
     )
-    launcher = load("launcher", ROOT / "scripts/infisical/local_vault.py")
-    native = json.loads((ROOT / ".infisical.json").read_text())
+    launcher = load("launcher", ROOT / "scripts/infisical/administration.py")
+    native = runbox_administration().reviewed_identity()
     if native != {
         "workspaceId": launcher.PROJECT,
         "defaultEnvironment": "dev",
@@ -167,7 +181,7 @@ def main():
             raise ValueError("Bundle services changed; explicit review required")
         storage_token = secrets.token_urlsafe(40)
         storage_port = admin.free_port()
-        storage_source = ROOT / "scripts/infisical/local_storage_relay.py"
+        storage_source = ROOT / "scripts/local-services-relay.py"
         digest = hashlib.sha256(storage_source.read_bytes()).hexdigest()
         program = base / ("storage-" + digest[:16] + ".py")
         added = []
