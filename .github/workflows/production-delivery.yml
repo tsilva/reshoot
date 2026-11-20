@@ -75,7 +75,7 @@ jobs:
     with:
       project_id: prj_L1D4dlxsUv8zZORHmxEmDZnE3lCV
       project_name: reshoot
-      production_domains: '["reshoot.tsilva.eu","reshoot-zeta.vercel.app"]'
+      production_domains: '["reshoot.tsilva.eu"]'
       public_environment: '["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY","NEXT_PUBLIC_GOOGLE_ANALYTICS_ID","NEXT_PUBLIC_SENTRY_DSN","SENTRY_ORG","SENTRY_PROJECT","R2_ENDPOINT"]'
       source_maps: true
       verify_clerk_runtime: true
