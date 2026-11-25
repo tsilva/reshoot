@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Hanken_Grotesk, Instrument_Serif } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Analytics } from "@vercel/analytics/next";
 import "@/app/base.css";
 import "@/app/home.css";
 import {
@@ -119,7 +118,6 @@ export default function RootLayout({
         {googleAnalyticsId ? (
           <GoogleAnalytics gaId={googleAnalyticsId} />
         ) : null}
-        <Analytics />
       </body>
     </html>
   );

@@ -55,7 +55,7 @@ export const privacyPolicy: LegalDocument = {
       id: "cookies",
       title: "Cookies and analytics",
       paragraphs: [
-        "Clerk uses cookies and similar browser storage to keep you signed in and protect sessions. Vercel Analytics measures site use. Where configured, Google Analytics also measures visits and may use cookies. Analytics can include pages visited, approximate location and device or browser information. Sentry records technical errors and performance information.",
+        "Clerk uses cookies and similar browser storage to keep you signed in and protect sessions. Where configured, Google Analytics measures visits and may use cookies. Analytics can include pages visited, approximate location and device or browser information. Sentry records technical errors and performance information.",
         "You can manage cookies and site storage in your browser and use browser tracking controls. Blocking essential authentication storage can prevent sign-in. Contact us if you want to object to processing based on legitimate interests or ask about analytics data.",
       ],
     },
