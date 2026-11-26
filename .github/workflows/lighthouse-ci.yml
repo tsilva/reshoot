@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   audit:
-    uses: tsilva/.github/.github/workflows/lighthouse-ci.yml@1eb40277dd97b1c617d4ae53aef7bf21f5dd1dd3
+    uses: tsilva/.github/.github/workflows/lighthouse-ci.yml@a32bd33740c0470629495085db4a9360ac9c6306
     with:
       url: "https://reshoot.tsilva.eu/"
       sample_timings: true
